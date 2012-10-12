@@ -4,7 +4,13 @@ import java.util.ArrayList;
 
 import sim.engine.SimState;
 import sim.util.Interval;
-
+/**
+ * An agent-based model of students interest in STEM with SYNERGIES project.
+ * @author Joey Harrison
+ * @author Matthew Hendrey
+ * @version 0.1, October 12, 2012
+ *
+ */
 public class StemStudents extends SimState
 {
 	private static final long serialVersionUID = 1L;
