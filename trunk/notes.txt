@@ -1,0 +1,49 @@
+Some Mechanisms Related to Interest Development
+
+AGENTS
+
+Child/Youth
+Each begins with a level of interest in a particular cluster of science topics (e.g., “astronomy”).
+When a child/youth has an interaction in a science activity, their interest level changes.
+
+Peers
+When friends are participants in an activity, the value to interest increases (below the interest threshold).
+When no friends are participants in an activity, the value to interest decreases (below the interest threshold).
+Above the interest threshold, children/youth have a certain probability of making friends with others in the activity.
+
+Parents/Caregivers
+When parents are participants in an activity, the value to interest increases.
+When no parents are participants in an activity, the value to interest decreases.
+When parents actively broker access to activities to allow children to pursue interest, value to interest increases. 
+
+Unrelated Adults
+Unrelated adults are associated with interactions in activities; each has an arbitrary level of expertise and passion in the topic of that activity.
+There are some arbitrary fixed number of unrelated adults available for interactions in the community.
+When unrelated adults are skilled at sharing their expertise and passion in a topic in an activity, the value to interest increases.
+When unrelated adults are skilled at sharing expertise but not passion in a topic in an activity, the value to interest stays the same (unless the interest threshold has been exceeded, then it increases).
+When unrelated adults are skilled at sharing passion but not expertise in a topic in an activity, the value to interest stays the same.
+When unrelated adults are neither skilled nor passionate, the value to interest decreases.
+
+Web resource
+Web resources vary in their fit to interest and expertise level of youth.
+Web resources that are a good fit to both increase interest.
+Web resources that are a poor fit to both decrease interest. 
+Relative to interactions with people, 
+
+INTERACTIONS
+Interactions among agents take place within science activities.
+Activities can take place in physical spaces or online.
+Interactions include the child/youth, and they can also include parents, peers, and unrelated adults. Or, interactions can be with the self, interacting with a web-based resource.
+There are school interactions and non-school interactions.
+School interactions with unrelated adults in science activity are a weekly occurrence. 
+Up to a certain age (say 10-11), interactions in non-school science activity depend on access determined by parents.
+Beyond age 10-11 but below a certain threshold of interest, non-school interactions are random, and dependent on available activities in the community.
+Beyond age 10-11 and above a certain threshold of interest, non-school interactions can be pursued by the self (occur more than chance), but are still dependent on available activities in the community.
+
+ENVIRONMENTS
+Children/youth live in a particular place and have a spatial zone of weekly activity within which most of their activities occur.
+The environment has a fixed number of potential science activities that are located in particular places.
+School is a place where children have regular (weekly) interactions with science activities.
+Occasionally, children/youth venture out of this zone to pursue science-related activities (e.g., zoo, science museum).
+The spatial distance of non-school science activities from the child matter: the farther away from home, the less likely to pursue (all other things being equal).
+
