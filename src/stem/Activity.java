@@ -38,6 +38,10 @@ public class Activity implements Steppable
 		this.participants = participants;
 	}
 
+	public Activity(TopicVector content) {
+		this.content = content;
+	}
+
 	@Override
 	public void step(SimState state) {
 		for (Student s : participants)

@@ -12,13 +12,15 @@ import java.util.ArrayList;
  */
 public class Student
 {
+	StemStudents model;
 	public TopicVector interest;
 	public double interestThreshold = 0.5; // TODO figure out what this should be
 	public Adult parent;
 
-	public ArrayList<Student> peers;
+	public ArrayList<Student> friends = new ArrayList<Student>();
 
-	public Student(TopicVector interest) {
+	public Student(StemStudents model, TopicVector interest) {
+		this.model = model;
 		this.interest = interest;
 	}
 
@@ -89,20 +91,81 @@ public class Student
 	 */
 	public void doActivity(Activity activity) {
 
-		//count peers
-		int peerCount = 0;
+		// --- Peers
+		// count friends
+		int friendCount = 0;
 		for (Student p : activity.participants) 
-			if (peers.contains(p))
-				peerCount++;
+			if (friends.contains(p))
+				friendCount++;
 		
-		if (peerCount == 0) {
+		if (friendCount == 0) {
 			// interest decreases
 		}
 		else {
 			// interest increases, perhaps moreso if multiple friends are present,
 			// but shall not exceed the interest threshold
 		}
+		
+		// --- Parents / Caregivers
+		boolean parentPresent = false;
+		for (Adult a : activity.leaders)
+			if (a == parent)
+				parentPresent = true;
+				
+		if (parentPresent) {
+			// interest increases
+		}
+		else {
+			// interest decreases
+		}
+		
+		if (activity.isParentMediated) {
+			// interest increases
+		}
+		
+		// --- Unrelated Adults
+		// if expertise & passion, interest increases
+		// if expertise & !passion
+		//		if interest > threshold, interest increases. else, no change
+		// if !expertise & passion, no change
+		// if !expertise & !passion, interest decreases
+		
+		for (Adult a : activity.leaders)
+			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
+				boolean expertise = a.expertise.topics[i] > model.expertiseThreshold;
+				boolean passion = a.passion.topics[i] > model.passionThreshold;
+				
+				if (expertise && passion)
+					increaseInterest(i);
+				else if (expertise && !passion && interest.topics[i] > model.interestThreshold)
+					increaseInterest(i);
+				else if (!expertise && passion) 
+					{} // no change
+				else if (!expertise && !passion)
+					decreaseInterest(i);
+			}
 			
+			
+	}
+	
+	public void increaseInterest(int topicIndex) {
+		interest.topics[topicIndex] += model.interestChangeRate;
+		if (interest.topics[topicIndex] > TopicVector.MAX_INTEREST)
+			interest.topics[topicIndex] = TopicVector.MAX_INTEREST;
+	}
+	
+	public void decreaseInterest(int topicIndex) {
+		interest.topics[topicIndex] -= model.interestChangeRate;
+		if (interest.topics[topicIndex] < TopicVector.MIN_INTEREST)
+			interest.topics[topicIndex] = TopicVector.MIN_INTEREST;
+	}
+	
+	public double[] getInterest() {
+		return interest.topics;
+	}
+
+	public double getAverageInterest() {
+		return interest.getAverage();
 	}
 
 }
