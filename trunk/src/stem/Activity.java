@@ -7,7 +7,9 @@ import sim.engine.*;
 /**
  * An Activity contains all the information needed for the activity to be
  * done. 
- * @author jharrison
+ * @author Joey Harrison
+ * @author Matthew Hendrey
+ * @version 0.1, October 12, 2012
  *
  */
 public class Activity implements Steppable

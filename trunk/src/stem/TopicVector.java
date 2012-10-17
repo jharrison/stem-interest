@@ -1,7 +1,20 @@
 package stem;
 
 import ec.util.MersenneTwisterFast;
-
+/**
+ * TopicVector represents the three cluster groups given to us during Skype 
+ * call on 10/10/2012.  These represent
+ * <UL>
+ * <LI>technology/engineering/math
+ * <LI>earth/space science
+ * <LI>human/biology
+ * </UL>
+ * 
+ * @author Joey Harrison
+ * @author Matthew Hendrey
+ * @version 0.1, October 12, 2012
+ *
+ */
 public class TopicVector
 {
 	static public int VECTOR_SIZE = 3;
