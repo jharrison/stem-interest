@@ -3,11 +3,14 @@ package stem;
 import java.util.ArrayList;
 
 /**
- * Student (Child/Youth) Each begins with a level of interest in a particular
+ * Student (Child/Youth) 
+ * <p>Each begins with a level of interest in a particular
  * cluster of science topics (e.g., “astronomy”). When a child/youth has an
- * interaction in a science activity, their interest level changes.
+ * interaction in a science activity, their interest level changes.</p>
  * 
- * @author jharrison
+ * @author Joey Harrison
+ * @author Matthew Hendrey
+ * @version 0.1, October 12, 2012
  * 
  */
 public class Student

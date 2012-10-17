@@ -10,6 +10,13 @@ import sim.portrayal.SimpleInspector;
 import sim.util.Bag;
 import stem.network.NetworkDisplay;
 
+/**
+ * GUI front end to the StemStudents model.
+ * @author Joey Harrison
+ * @author Matthew Hendrey
+ * @version 0.1, October 12, 2012
+ *
+ */
 public class StemStudentsWithUI extends GUIState
 {
 
