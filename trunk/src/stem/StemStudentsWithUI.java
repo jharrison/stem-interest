@@ -35,7 +35,7 @@ public class StemStudentsWithUI extends GUIState
 	}
 
 	public static String getName() {
-		return "Individual adoption model with decay";
+		return "STEM Students";
 	}
 
 	public Object getSimulationInspectedObject() {
