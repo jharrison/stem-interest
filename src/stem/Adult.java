@@ -30,4 +30,12 @@ public class Adult
 		this.passion = passion;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("Expertise: %s, Passion: %s", expertise, passion);
+	}
+	
+	
+
+
 }

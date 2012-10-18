@@ -34,6 +34,12 @@ public class TopicVector
 		return total / VECTOR_SIZE;
 	}
 	
+	@Override
+	public String toString() {
+		//TODO generalize this for any vector size
+		return String.format("[%.2f, %.2f, %.2f]", topics[0], topics[1], topics[2]);
+	}
+	
 	static public TopicVector createRandom(MersenneTwisterFast random) {
 		TopicVector tv = new TopicVector();
 		for (int i = 0; i < VECTOR_SIZE; i++)

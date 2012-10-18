@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class SimpleEdge implements Serializable
 {
-	// child parent spouse
+	private static final long serialVersionUID = 1L;
 
 	public SimpleEdge(String string) {
 		// TODO Auto-generated constructor stub
