@@ -133,32 +133,32 @@ public class Student
 		// if !expertise & passion, no change
 		// if !expertise & !passion, interest decreases
 		
-		for (Adult a : activity.leaders)
+		for (Adult adult : activity.leaders)
 			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
-				boolean expertise = a.expertise.topics[i] > model.expertiseThreshold;
-				boolean passion = a.passion.topics[i] > model.passionThreshold;
+				boolean expertise = adult.expertise.topics[i] > model.expertiseThreshold;
+				boolean passion = adult.passion.topics[i] > model.passionThreshold;
 				
 				if (expertise && passion)
-					increaseInterest(i);
+					increaseInterest(i, activity.content.topics[i]);
 				else if (expertise && !passion && interest.topics[i] > model.interestThreshold)
-					increaseInterest(i);
+					increaseInterest(i, activity.content.topics[i]);
 				else if (!expertise && passion) 
 					{} // no change
 				else if (!expertise && !passion)
-					decreaseInterest(i);
+					decreaseInterest(i, activity.content.topics[i]);
 			}
 			
 			
 	}
 	
-	public void increaseInterest(int topicIndex) {
-		interest.topics[topicIndex] += model.interestChangeRate;
+	public void increaseInterest(int topicIndex, double topicRelevance) {
+		interest.topics[topicIndex] += model.interestChangeRate * topicRelevance;
 		if (interest.topics[topicIndex] > TopicVector.MAX_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MAX_INTEREST;
 	}
 	
-	public void decreaseInterest(int topicIndex) {
-		interest.topics[topicIndex] -= model.interestChangeRate;
+	public void decreaseInterest(int topicIndex, double topicRelevance) {
+		interest.topics[topicIndex] -= model.interestChangeRate * topicRelevance;
 		if (interest.topics[topicIndex] < TopicVector.MIN_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MIN_INTEREST;
 	}

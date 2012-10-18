@@ -97,9 +97,12 @@ public class StemStudents extends SimState
 			scienceClass.isParentMediated = false;
 			
 			scienceClasses.add(scienceClass);
+
+			System.out.format("Science class: %s\n", scienceClass.content);
+			System.out.format("Teacher %s\n", scienceClass.leaders.get(0));
 		}
-		
 	}
+	
 	/**
 	 * Create a small-world network representing friendships between players.
 	 * Based on pseudocode from Prettejohn, Berryman, and McDonnell (2011)
