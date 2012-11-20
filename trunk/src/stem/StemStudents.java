@@ -2,9 +2,12 @@ package stem;
 
 import java.util.ArrayList;
 
+import masoncsc.datawatcher.*;
+
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
 import sim.engine.SimState;
+import sim.engine.Steppable;
 import sim.util.Interval;
 import stem.network.*;
 
@@ -58,10 +61,18 @@ public class StemStudents extends SimState
 	public void setInterestChangeRate(double val) { interestChangeRate = val; }
 	public Object domInterestChangeRate() { return new Interval(0.0, 1.0); }
 	
+	public double nodeSize = 2.5;
+	public double getNodeSize() { return nodeSize; }
+	public void setNodeSize(double val) { nodeSize = val; }
+	public Object domNodeSize() { return new Interval(0.0, 10.0); }
+	
 	
 	public ArrayList<Activity> scienceClasses = new ArrayList<Activity>();
 
 	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
+	
+	ScreenDataWriter averageInterestScreenWriter;
+	DoubleArrayWatcher averageInterestWatcher;
 	
 
 	public StemStudents(long seed) {
@@ -155,6 +166,11 @@ public class StemStudents extends SimState
 		}
 	}
 	
+	public void initDataLogging() {
+		
+	}
+	
+	@SuppressWarnings("serial")
 	public void start() {
 		super.start();
 		initStudents();
@@ -162,6 +178,36 @@ public class StemStudents extends SimState
 		
 		for (Activity a : scienceClasses)
 			schedule.scheduleRepeating(a);
+		
+		averageInterestWatcher = new DoubleArrayWatcher() {
+			// anonymous constructor
+			{
+				data = new double[numStudents];
+			}
+
+			@Override
+			protected void updateDataPoint() {
+				for (int i = 0; i < students.size(); i++)
+					data[i] = students.get(i).getAverageInterest();				
+			}
+			
+			@Override
+			public String getCSVHeader() {
+				return null;
+			}
+		};
+		
+		averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
+		
+		schedule.scheduleRepeating(new Steppable() {
+			@Override
+			public void step(SimState state) {
+				averageInterestWatcher.update();
+				
+				if (state.schedule.getSteps() > 100)
+					state.finish();
+			}
+		});
 	}
 	
 

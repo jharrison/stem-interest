@@ -70,17 +70,16 @@ import edu.uci.ics.jung.visualization.util.Animator;
 public class NetworkDisplay implements Steppable {
 	private static final long serialVersionUID = 1L;
 	
-	public static final ImageIcon CAMERA_ICON = iconFor("Camera.png");
-	public static final ImageIcon CAMERA_ICON_P = iconFor("CameraPressed.png");
+	private static final ImageIcon CAMERA_ICON = iconFor("Camera.png");
+	private static final ImageIcon CAMERA_ICON_P = iconFor("CameraPressed.png");
 
-	protected static UndirectedSparseGraph<Student, SimpleEdge> graph;
-
-	StemStudents model;
-	StemStudentsWithUI modelWithUI;
+	private static UndirectedSparseGraph<Student, SimpleEdge> graph;
+	private StemStudents model;
+	private StemStudentsWithUI modelWithUI;
 
 	public static JFrame frame;
-
-	static VisualizationViewer<Student, SimpleEdge> vv;
+	private LayoutChooser layoutChooser;
+	private static VisualizationViewer<Student, SimpleEdge> vv;
 
 	private static final class LayoutChooser implements ActionListener {
 
@@ -98,11 +97,11 @@ public class NetworkDisplay implements Steppable {
 
 			Object[] constructorArgs = { graph };
 
-			Class layoutC = (Class) jcb.getSelectedItem();
-			Class lay = layoutC;
+			Class<?> layoutClass = (Class<?>) jcb.getSelectedItem();
 			try {
-				Constructor constructor = lay.getConstructor(new Class[] { Graph.class });
+				Constructor<?> constructor = layoutClass.getConstructor(new Class[] { Graph.class });
 				Object o = constructor.newInstance(constructorArgs);
+				@SuppressWarnings("unchecked")
 				Layout<Student, SimpleEdge> l = (Layout<Student, SimpleEdge>) o;
 				l.setInitializer(vv.getGraphLayout());
 				l.setSize(vv.getSize());
@@ -134,6 +133,7 @@ public class NetworkDisplay implements Steppable {
 		frame.setVisible(true);
 	}
 
+	@SuppressWarnings("unchecked")
 	private JPanel getGraphPanel() {
 
 		vv = new VisualizationViewer<Student, SimpleEdge>(new FRLayout<Student, SimpleEdge>(graph));
@@ -170,7 +170,9 @@ public class NetworkDisplay implements Steppable {
 		
 		Transformer<Student, Shape> vertexShapeTransformer = new Transformer<Student, Shape>() {
 			public Shape transform(Student v) {
-                return new Ellipse2D.Double(-5, -5, 10, 10);
+				double radius = v.friends.size() * model.nodeSize;
+//                return new Ellipse2D.Double(-5, -5, 10, 10);
+                return new Ellipse2D.Double(-radius, -radius, 2*radius, 2*radius);
 			}			
 		};
 
@@ -212,19 +214,13 @@ public class NetworkDisplay implements Steppable {
 
 		JComboBox modeBox = graphMouse.getModeComboBox();
 		modeBox.addItemListener(((DefaultModalGraphMouse<Student, SimpleEdge>) vv.getGraphMouse()).getModeListener());
-		vv.addGraphMouseListener(new GraphMouseListener<Student>() {
+		
+		vv.addGraphMouseListener(new GraphMouseListener<Student>() {			
+			@Override
+			public void graphReleased(Student arg0, MouseEvent arg1) {}
 			
 			@Override
-			public void graphReleased(Student arg0, MouseEvent arg1) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void graphPressed(Student arg0, MouseEvent arg1) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void graphPressed(Student arg0, MouseEvent arg1) {}
 			
 			@Override
 			public void graphClicked(Student arg0, MouseEvent arg1) {
@@ -236,7 +232,7 @@ public class NetworkDisplay implements Steppable {
 		jp.setBackground(Color.WHITE);
 		jp.setLayout(new BorderLayout());
 		jp.add(vv, BorderLayout.CENTER);
-		Class[] combos = getCombos();
+		Class<?>[] combos = getCombos();
 		final JComboBox jcb = new JComboBox(combos);
 		// use a renderer to shorten the layout name presentation
 		jcb.setRenderer(new DefaultListCellRenderer() {
@@ -246,7 +242,9 @@ public class NetworkDisplay implements Steppable {
 				return super.getListCellRendererComponent(list, valueString, index, isSelected, cellHasFocus);
 			}
 		});
-		jcb.addActionListener(new LayoutChooser(jcb, vv));
+		
+		layoutChooser = new LayoutChooser(jcb, vv);
+		jcb.addActionListener(layoutChooser);
 		jcb.setSelectedItem(FRLayout.class);
 
 		JPanel control_panel = new JPanel(new GridLayout(1, 1));
@@ -293,6 +291,8 @@ public class NetworkDisplay implements Steppable {
 		recreateGraph();
 		Layout<Student, SimpleEdge> layout = vv.getGraphLayout();
 		layout.setGraph(graph);
+		
+		layoutChooser.actionPerformed(null);
 
 		vv.repaint();
 	}

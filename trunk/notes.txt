@@ -47,3 +47,9 @@ School is a place where children have regular (weekly) interactions with science
 Occasionally, children/youth venture out of this zone to pursue science-related activities (e.g., zoo, science museum).
 The spatial distance of non-school science activities from the child matter: the farther away from home, the less likely to pursue (all other things being equal).
 
+
+TODO:
+Data logging
+Graphs
+	- Histogram of interest distribution (x3)
+	

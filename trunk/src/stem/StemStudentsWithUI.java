@@ -1,5 +1,11 @@
 package stem;
 
+import java.util.ArrayList;
+
+import javax.swing.JFrame;
+
+import masoncsc.util.ChartUtils;
+
 import sim.display.Console;
 import sim.display.Controller;
 import sim.display.GUIState;
@@ -8,6 +14,8 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.portrayal.SimpleInspector;
 import sim.util.Bag;
+import sim.util.media.chart.ChartGenerator;
+import sim.util.media.chart.HistogramGenerator;
 import stem.network.NetworkDisplay;
 
 /**
@@ -21,13 +29,18 @@ public class StemStudentsWithUI extends GUIState
 {
 
 	public NetworkDisplay networkDisplay;
+	StemStudents model;
+    private ArrayList<ChartGenerator> chartGenerators = new ArrayList<ChartGenerator>();
+    HistogramGenerator aveInterestHist;
 
 	public StemStudentsWithUI() {
 		super(new StemStudents(System.currentTimeMillis()));
+		model = (StemStudents)state;
 	}
 
 	public StemStudentsWithUI(SimState state) {
 		super(state);
+		model = (StemStudents)state;
 	}
 
 	public static void main(String[] args) {
@@ -46,17 +59,22 @@ public class StemStudentsWithUI extends GUIState
 		super.start();
 		// set up our portrayals
 		setupPortrayals();
+		System.out.println("Start");
 	}
 
 	public void load(SimState state) {
 		super.load(state);
 		setupPortrayals();
 	}
+	
+	
 
 	@SuppressWarnings("serial")
 	public void setupPortrayals() {
 		networkDisplay.reset();
 		networkDisplay.repaint();
+		
+		chartGenerators.clear();
 		
 		this.scheduleRepeatingImmediatelyBefore(networkDisplay);
 		
@@ -67,7 +85,24 @@ public class StemStudentsWithUI extends GUIState
 					return;
 			}			
 		});
+		
+		this.scheduleRepeatingImmediatelyAfter(new Steppable() {
+			
+			@Override
+			public void step(SimState state) {
+//				for (ChartGenerator c : chartGenerators)
+//					c.updateChartLater(state.schedule.getSteps());
+				updateCharts();
+			}
+		});
+		
 
+	}
+	
+	public void updateCharts() {
+
+		aveInterestHist.updateSeries(0, model.averageInterestWatcher.getDataPoint());
+		aveInterestHist.update(ChartGenerator.FORCE_KEY, true);
 	}
 
 	public void init(final Controller c) {
@@ -77,6 +112,8 @@ public class StemStudentsWithUI extends GUIState
 		NetworkDisplay.frame.setTitle("Friend Network");
 		c.registerFrame(NetworkDisplay.frame);
 		NetworkDisplay.frame.setVisible(true);
+
+		aveInterestHist = ChartUtils.attachHistogram(null, 10, "Average Interest", "Interest Level", "Count", controller);
 
 		((Console)controller).setSize(400, 500);
 	}
@@ -89,4 +126,5 @@ public class StemStudentsWithUI extends GUIState
 		names.add("Student");
 		controller.setInspectors(inspectors, names);
 	}
+
 }
