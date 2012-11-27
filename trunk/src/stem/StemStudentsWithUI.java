@@ -32,6 +32,9 @@ public class StemStudentsWithUI extends GUIState
 	StemStudents model;
     private ArrayList<ChartGenerator> chartGenerators = new ArrayList<ChartGenerator>();
     HistogramGenerator aveInterestHist;
+    HistogramGenerator interest1Hist;
+    HistogramGenerator interest2Hist;
+    HistogramGenerator interest3Hist;
 
 	public StemStudentsWithUI() {
 		super(new StemStudents(System.currentTimeMillis()));
@@ -86,12 +89,9 @@ public class StemStudentsWithUI extends GUIState
 			}			
 		});
 		
-		this.scheduleRepeatingImmediatelyAfter(new Steppable() {
-			
+		this.scheduleRepeatingImmediatelyAfter(new Steppable() {			
 			@Override
 			public void step(SimState state) {
-//				for (ChartGenerator c : chartGenerators)
-//					c.updateChartLater(state.schedule.getSteps());
 				updateCharts();
 			}
 		});
@@ -103,6 +103,15 @@ public class StemStudentsWithUI extends GUIState
 
 		aveInterestHist.updateSeries(0, model.averageInterestWatcher.getDataPoint());
 		aveInterestHist.update(ChartGenerator.FORCE_KEY, true);
+
+		interest1Hist.updateSeries(0, model.interest1Watcher.getDataPoint());
+		interest1Hist.update(ChartGenerator.FORCE_KEY, true);
+
+		interest2Hist.updateSeries(0, model.interest2Watcher.getDataPoint());
+		interest2Hist.update(ChartGenerator.FORCE_KEY, true);
+
+		interest3Hist.updateSeries(0, model.interest3Watcher.getDataPoint());
+		interest3Hist.update(ChartGenerator.FORCE_KEY, true);
 	}
 
 	public void init(final Controller c) {
@@ -114,6 +123,9 @@ public class StemStudentsWithUI extends GUIState
 		NetworkDisplay.frame.setVisible(true);
 
 		aveInterestHist = ChartUtils.attachHistogram(null, 10, "Average Interest", "Interest Level", "Count", controller);
+		interest1Hist = ChartUtils.attachHistogram(null, 10, "Topic 1 Interest", "Interest Level", "Count", controller);
+		interest2Hist = ChartUtils.attachHistogram(null, 10, "Topic 2 Interest", "Interest Level", "Count", controller);
+		interest3Hist = ChartUtils.attachHistogram(null, 10, "Topic 3 Interest", "Interest Level", "Count", controller);
 
 		((Console)controller).setSize(400, 500);
 	}
