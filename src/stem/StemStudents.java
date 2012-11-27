@@ -73,6 +73,9 @@ public class StemStudents extends SimState
 	
 	ScreenDataWriter averageInterestScreenWriter;
 	DoubleArrayWatcher averageInterestWatcher;
+	DoubleArrayWatcher interest1Watcher;
+	DoubleArrayWatcher interest2Watcher;
+	DoubleArrayWatcher interest3Watcher;
 	
 
 	public StemStudents(long seed) {
@@ -167,18 +170,6 @@ public class StemStudents extends SimState
 	}
 	
 	public void initDataLogging() {
-		
-	}
-	
-	@SuppressWarnings("serial")
-	public void start() {
-		super.start();
-		initStudents();
-		initSmallWorldNetwork();
-		
-		for (Activity a : scienceClasses)
-			schedule.scheduleRepeating(a);
-		
 		averageInterestWatcher = new DoubleArrayWatcher() {
 			// anonymous constructor
 			{
@@ -197,12 +188,81 @@ public class StemStudents extends SimState
 			}
 		};
 		
+		interest1Watcher = new DoubleArrayWatcher() {
+			// anonymous constructor
+			{
+				data = new double[numStudents];
+			}
+
+			@Override
+			protected void updateDataPoint() {
+				for (int i = 0; i < students.size(); i++)
+					data[i] = students.get(i).interest.topics[0];				
+			}
+			
+			@Override
+			public String getCSVHeader() {
+				return null;
+			}
+		};
+		
+		interest2Watcher = new DoubleArrayWatcher() {
+			// anonymous constructor
+			{
+				data = new double[numStudents];
+			}
+
+			@Override
+			protected void updateDataPoint() {
+				for (int i = 0; i < students.size(); i++)
+					data[i] = students.get(i).interest.topics[1];				
+			}
+			
+			@Override
+			public String getCSVHeader() {
+				return null;
+			}
+		};
+		
+		interest3Watcher = new DoubleArrayWatcher() {
+			// anonymous constructor
+			{
+				data = new double[numStudents];
+			}
+
+			@Override
+			protected void updateDataPoint() {
+				for (int i = 0; i < students.size(); i++)
+					data[i] = students.get(i).interest.topics[2];				
+			}
+			
+			@Override
+			public String getCSVHeader() {
+				return null;
+			}
+		};
+		
+	}
+	
+	@SuppressWarnings("serial")
+	public void start() {
+		super.start();
+		initStudents();
+		initSmallWorldNetwork();				
+		initDataLogging();		
+
 		averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
+		
+		for (Activity a : scienceClasses)
+			schedule.scheduleRepeating(a);
 		
 		schedule.scheduleRepeating(new Steppable() {
 			@Override
 			public void step(SimState state) {
 				averageInterestWatcher.update();
+				interest1Watcher.update();
+				interest2Watcher.update();
+				interest3Watcher.update();				
 				
 				if (state.schedule.getSteps() > 100)
 					state.finish();
