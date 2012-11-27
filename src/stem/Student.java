@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * @version 0.1, October 12, 2012
  * 
  */
-public class Student implements Loggable
+public class Student
 {
 	StemStudents model;
 	public TopicVector interest;
@@ -170,21 +170,6 @@ public class Student implements Loggable
 
 	public double getAverageInterest() {
 		return interest.getAverage();
-	}
-
-	@Override
-	public String toHeader() {
-		return "ID, interest0, interest1, interest2, interestThreshold";
-	}
-
-	@Override
-	public String toCsvString() {
-		return String.format("%d, %.4f, %.4f, %.4f, %.4f", id, interest.topics[0], interest.topics[1], interest.topics[2], interestThreshold);
-	}
-
-	@Override
-	public String toAltString() {
-		return null;
 	}
 
 }
