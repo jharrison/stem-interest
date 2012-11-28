@@ -1,5 +1,8 @@
 package stem;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import masoncsc.datawatcher.*;
@@ -24,11 +27,11 @@ public class StemStudents extends SimState
 	
 	ArrayList<Student> students = new ArrayList<Student>();
 	
-	public int numStudents = 30;
+	public int numStudents = 208;  //# from survey that have valid values
 	public int getNumStudents() { return numStudents; }
 	public void setNumStudents(int val) { numStudents = val; }
 
-	public int classSize = 30;
+	public int classSize = 16; //Approx. # from data.  Adjusted slightly to get same number in each class.
 	public int getClassSize() { return classSize; }
 	public void getClassSize(int val) { classSize = val; }
 	
@@ -84,10 +87,53 @@ public class StemStudents extends SimState
 	
 	public void initStudents() {
 		students.clear();
+		BufferedReader initInterests = null;
+		
+		/*
+		 * Read in initial interests from data file, initialInterests.csv
+		 */
+		try {
+			initInterests = new BufferedReader(new FileReader("./data/initialInterests.csv"));
+			initInterests.readLine(); //Read in the header line of the file.
+		}
+		catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		
 		for (int i = 0; i < numStudents; i++) {
-			Student s = new Student(this, TopicVector.createRandom(random));
+			String line = null;
+			TopicVector initialTopicVector = null;
+			int id = random.nextInt();
+			try {
+				line = initInterests.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (line != null)
+			{
+				String[] tokens = new String[1];
+				tokens = line.split(",");
+				id = Integer.parseInt(tokens[0]);
+				initialTopicVector = new TopicVector(Double.parseDouble(tokens[1]), 
+						Double.parseDouble(tokens[2]), Double.parseDouble(tokens[3]));						
+			}
+			else
+			{
+				initialTopicVector = TopicVector.createRandom(random);
+			}
+			
+			Student s = new Student(this, initialTopicVector);
 			s.parent = new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random));
+			s.id = id;
 			students.add(s);
+		}
+		// Close the buffered reader
+		try {
+			initInterests.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		// init classes

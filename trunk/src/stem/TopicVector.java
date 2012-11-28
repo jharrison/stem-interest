@@ -25,6 +25,17 @@ public class TopicVector
 	
 	public TopicVector() {
 	}
+	/*
+	 * Constructor that takes in specific values
+	 * @param a1 This is the first element of TopicVector
+	 * @param a2 This is the second element of TopicVector
+	 * @param a3 This is the third element of TopicVector
+	 */
+	public TopicVector(double a1, double a2, double a3) {
+		topics[0] = a1;
+		topics[1] = a2;
+		topics[2] = a3;
+	}
 	
 	public double getAverage() {
 		double total = 0;
@@ -37,7 +48,7 @@ public class TopicVector
 	@Override
 	public String toString() {
 		//TODO generalize this for any vector size
-		return String.format("[%.2f, %.2f, %.2f]", topics[0], topics[1], topics[2]);
+		return String.format("[%.4f, %.4f, %.4f]", topics[0], topics[1], topics[2]);
 	}
 	
 	static public TopicVector createRandom(MersenneTwisterFast random) {
