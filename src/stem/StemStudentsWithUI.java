@@ -2,8 +2,6 @@ package stem;
 
 import java.util.ArrayList;
 
-import javax.swing.JFrame;
-
 import masoncsc.util.ChartUtils;
 
 import sim.display.Console;
@@ -122,10 +120,10 @@ public class StemStudentsWithUI extends GUIState
 		c.registerFrame(NetworkDisplay.frame);
 		NetworkDisplay.frame.setVisible(true);
 
-		aveInterestHist = ChartUtils.attachHistogram(null, 10, "Average Interest", "Interest Level", "Count", controller);
-		interest1Hist = ChartUtils.attachHistogram(null, 10, "Topic 1 Interest", "Interest Level", "Count", controller);
-		interest2Hist = ChartUtils.attachHistogram(null, 10, "Topic 2 Interest", "Interest Level", "Count", controller);
-		interest3Hist = ChartUtils.attachHistogram(null, 10, "Topic 3 Interest", "Interest Level", "Count", controller);
+		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
+		interest1Hist = ChartUtils.attachHistogram(null, 7, "Technology/Engineering/Math", "Interest Level", "Count", controller);
+		interest2Hist = ChartUtils.attachHistogram(null, 7, "Earth/Space Science", "Interest Level", "Count", controller);
+		interest3Hist = ChartUtils.attachHistogram(null, 7, "Human/Biology", "Interest Level", "Count", controller);
 
 		((Console)controller).setSize(400, 500);
 	}
