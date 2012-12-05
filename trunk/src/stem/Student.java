@@ -21,6 +21,8 @@ public class Student
 	public Adult parent;
 	public int id;
 
+	public int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
+	
 	public ArrayList<Student> friends = new ArrayList<Student>();
 
 	public Student(StemStudents model, TopicVector interest) {
