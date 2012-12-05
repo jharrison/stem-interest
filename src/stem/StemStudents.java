@@ -27,6 +27,8 @@ public class StemStudents extends SimState
 	
 	ArrayList<Student> students = new ArrayList<Student>();
 	
+	static public final int NUM_ACTIVITY_TYPES = 15;
+	
 	public int numStudents = 208;  //# from survey that have valid values
 	public int getNumStudents() { return numStudents; }
 	public void setNumStudents(int val) { numStudents = val; }

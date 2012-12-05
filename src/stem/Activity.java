@@ -16,6 +16,8 @@ public class Activity implements Steppable
 {
 	private static final long serialVersionUID = 1L;
 	
+	/** name of the activity, e.g. Library, Scouts, etc. */
+	public String name;
 	public TopicVector content;
 	public ArrayList<Student> participants = new ArrayList<Student>();
 	public ArrayList<Adult> leaders = new ArrayList<Adult>();
@@ -23,6 +25,11 @@ public class Activity implements Steppable
 	public boolean isSchoolRelated = false;
 	public boolean isVoluntary = false;
 	public boolean isParentMediated = false;
+	
+	/** how often this activity is repeated */
+	public int daysBetween;	
+	/** how many times this activity is repeated */
+	public int numRepeats; 	
 	
 	public Activity(TopicVector content, ArrayList<Student> participants, ArrayList<Adult> leaders, 
 			boolean isSchoolRelated, boolean isVoluntary, boolean isParentMediated) {
