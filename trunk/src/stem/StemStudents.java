@@ -26,6 +26,7 @@ public class StemStudents extends SimState
 	private static final long serialVersionUID = 1L;
 	
 	ArrayList<Student> students = new ArrayList<Student>();
+	ArrayList<ActivityInput> activities = new ArrayList<ActivityInput>();
 	
 	static public final int NUM_ACTIVITY_TYPES = 15;
 	
@@ -87,6 +88,60 @@ public class StemStudents extends SimState
 		super(seed);
 	}
 	
+	public void readInActivities() throws IOException {
+		activities.clear();
+		BufferedReader initActivities = null;
+
+		int id;
+		String name;
+		TopicVector content;
+		int numLeaders;
+		int numParents;
+		int maxParticipants;
+		float probSchoolRelated;
+		float probVoluntary;
+		float probParentMediated;
+		int daysBetween;
+		int numRepeats;
+		int meetingsBetweenTopicChange;
+		boolean onSchoolDay;
+		boolean onWeekendDay;
+		boolean onSummer;
+		
+		initActivities = new BufferedReader(new FileReader ("./data/initialActivityInput.csv"));
+		initActivities.readLine(); //Read in the header line of the file
+		
+		String line = null;
+		while ((line = initActivities.readLine()) != null)
+		{
+			String[] tokens = new String[1];
+			tokens = line.split(",");
+			
+			id = Integer.parseInt(tokens[0]);
+			name = tokens[1];
+			content = new TopicVector(Double.parseDouble(tokens[2]), 
+					Double.parseDouble(tokens[3]), Double.parseDouble(tokens[4]));						
+			numLeaders = Integer.parseInt(tokens[5]);
+			numParents = Integer.parseInt(tokens[6]);
+			maxParticipants = Integer.parseInt(tokens[7]);
+			probSchoolRelated = Float.parseFloat(tokens[8]);
+			probVoluntary = Float.parseFloat(tokens[9]);
+			probParentMediated = Float.parseFloat(tokens[10]);
+			daysBetween = Integer.parseInt(tokens[11]);
+			numRepeats = Integer.parseInt(tokens[12]);
+			meetingsBetweenTopicChange = Integer.parseInt(tokens[13]);
+			onSchoolDay = Boolean.parseBoolean(tokens[14]);
+			onWeekendDay = Boolean.parseBoolean(tokens[15]);
+			onSummer = Boolean.parseBoolean(tokens[16]);
+
+			ActivityInput a = new ActivityInput(id, name, content, numLeaders, 
+					numParents, maxParticipants, probSchoolRelated, probVoluntary, 
+					probParentMediated, daysBetween, numRepeats, 
+					meetingsBetweenTopicChange, onSchoolDay, onWeekendDay, onSummer);
+			activities.add(a);
+		}	
+	}
+
 	public void initStudents() {
 		students.clear();
 		BufferedReader initInterests = null;
@@ -295,6 +350,15 @@ public class StemStudents extends SimState
 	@SuppressWarnings("serial")
 	public void start() {
 		super.start();
+		
+		// Read in the characteristics of each activity
+		try {
+			readInActivities();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Problem Reading in Activities");
+		}
+
 		initStudents();
 		initSmallWorldNetwork();				
 		initDataLogging();		
