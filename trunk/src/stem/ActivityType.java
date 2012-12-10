@@ -1,6 +1,6 @@
 package stem;
 
-public class ActivityInput
+public class ActivityType
 {
 	public int id;
 	public String name;
@@ -18,7 +18,7 @@ public class ActivityInput
 	public boolean onWeekendDay;
 	public boolean onSummer;
 	
-	public ActivityInput(int id, String name, TopicVector content,
+	public ActivityType(int id, String name, TopicVector content,
 			int numLeaders, int numParents, int maxParticipants,
 			float probSchoolRelated, float probVoluntary,
 			float probParentMediated, int daysBetween, int numRepeats,
