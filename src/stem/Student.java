@@ -25,6 +25,10 @@ public class Student
 	
 	public ArrayList<Student> friends = new ArrayList<Student>();
 
+	public Student(StemStudents model) {
+		this.model = model;
+	}
+
 	public Student(StemStudents model, TopicVector interest) {
 		this.model = model;
 		this.interest = interest;
@@ -172,6 +176,30 @@ public class Student
 
 	public double getAverageInterest() {
 		return interest.getAverage();
+	}
+	
+	public static Student createFromCSV(StemStudents model, String line) {
+		Student student = new Student(model);
+
+		String[] tokens = line.split(",");
+		student.id = Integer.parseInt(tokens[0]);
+		// skip 1: gender
+		// skip 2: school
+		// skip 3: teacher
+		// read 4-18: the 15 activities
+		for (int i = 0; i < 15; i++)
+			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
+		// skip 19: Other_me
+		// skip 20: Name_other
+		// skip 21-43: Stuff that interests me
+		// read 44, 45, 46: interest levels for the three aggregate categories
+		double techInterest 	= Double.parseDouble(tokens[44]);
+		double earthInterest 	= Double.parseDouble(tokens[45]);
+		double humanInterest 	= Double.parseDouble(tokens[46]);
+		
+		student.interest = new TopicVector(techInterest, earthInterest, humanInterest);
+		
+		return student;
 	}
 
 }

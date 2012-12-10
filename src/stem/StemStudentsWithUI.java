@@ -30,9 +30,7 @@ public class StemStudentsWithUI extends GUIState
 	StemStudents model;
     private ArrayList<ChartGenerator> chartGenerators = new ArrayList<ChartGenerator>();
     HistogramGenerator aveInterestHist;
-    HistogramGenerator interest1Hist;
-    HistogramGenerator interest2Hist;
-    HistogramGenerator interest3Hist;
+    HistogramGenerator[] interestHist = new HistogramGenerator[StemStudents.NUM_TOPICS];
 
 	public StemStudentsWithUI() {
 		super(new StemStudents(System.currentTimeMillis()));
@@ -101,15 +99,11 @@ public class StemStudentsWithUI extends GUIState
 
 		aveInterestHist.updateSeries(0, model.averageInterestWatcher.getDataPoint());
 		aveInterestHist.update(ChartGenerator.FORCE_KEY, true);
-
-		interest1Hist.updateSeries(0, model.interest1Watcher.getDataPoint());
-		interest1Hist.update(ChartGenerator.FORCE_KEY, true);
-
-		interest2Hist.updateSeries(0, model.interest2Watcher.getDataPoint());
-		interest2Hist.update(ChartGenerator.FORCE_KEY, true);
-
-		interest3Hist.updateSeries(0, model.interest3Watcher.getDataPoint());
-		interest3Hist.update(ChartGenerator.FORCE_KEY, true);
+		
+		for (int i = 0; i < StemStudents.NUM_TOPICS; i++) {
+			interestHist[i].updateSeries(0, model.interestWatcher[i].getDataPoint());
+			interestHist[i].update(ChartGenerator.FORCE_KEY, true);
+		}
 	}
 
 	public void init(final Controller c) {
@@ -121,9 +115,9 @@ public class StemStudentsWithUI extends GUIState
 		NetworkDisplay.frame.setVisible(true);
 
 		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
-		interest1Hist = ChartUtils.attachHistogram(null, 7, "Technology/Engineering/Math", "Interest Level", "Count", controller);
-		interest2Hist = ChartUtils.attachHistogram(null, 7, "Earth/Space Science", "Interest Level", "Count", controller);
-		interest3Hist = ChartUtils.attachHistogram(null, 7, "Human/Biology", "Interest Level", "Count", controller);
+		interestHist[0] = ChartUtils.attachHistogram(null, 7, "Technology/Engineering/Math", "Interest Level", "Count", controller);
+		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Earth/Space Science", "Interest Level", "Count", controller);
+		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human/Biology", "Interest Level", "Count", controller);
 
 		((Console)controller).setSize(400, 500);
 	}

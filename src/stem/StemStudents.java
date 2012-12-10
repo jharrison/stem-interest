@@ -26,11 +26,12 @@ public class StemStudents extends SimState
 	private static final long serialVersionUID = 1L;
 	
 	ArrayList<Student> students = new ArrayList<Student>();
-	ArrayList<ActivityInput> activities = new ArrayList<ActivityInput>();
+	ArrayList<ActivityType> activityTypes = new ArrayList<ActivityType>();
+
+	static public final int NUM_ACTIVITY_TYPES = 16;
+	static public final int NUM_TOPICS = 3;
 	
-	static public final int NUM_ACTIVITY_TYPES = 15;
-	
-	public int numStudents = 208;  //# from survey that have valid values
+	public int numStudents = 170;  //# from survey that have valid values
 	public int getNumStudents() { return numStudents; }
 	public void setNumStudents(int val) { numStudents = val; }
 
@@ -72,24 +73,23 @@ public class StemStudents extends SimState
 	public void setNodeSize(double val) { nodeSize = val; }
 	public Object domNodeSize() { return new Interval(0.0, 10.0); }
 	
-	
+
 	public ArrayList<Activity> scienceClasses = new ArrayList<Activity>();
+	public ArrayList<Activity> activities = new ArrayList<Activity>();
 
 	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
 	
 	ScreenDataWriter averageInterestScreenWriter;
 	DoubleArrayWatcher averageInterestWatcher;
-	DoubleArrayWatcher interest1Watcher;
-	DoubleArrayWatcher interest2Watcher;
-	DoubleArrayWatcher interest3Watcher;
+	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[NUM_TOPICS];
 	
 
 	public StemStudents(long seed) {
 		super(seed);
 	}
 	
-	public void readInActivities() throws IOException {
-		activities.clear();
+	public void readInActivityTypes() throws IOException {
+		activityTypes.clear();
 		BufferedReader initActivities = null;
 
 		int id;
@@ -134,11 +134,11 @@ public class StemStudents extends SimState
 			onWeekendDay = Boolean.parseBoolean(tokens[15]);
 			onSummer = Boolean.parseBoolean(tokens[16]);
 
-			ActivityInput a = new ActivityInput(id, name, content, numLeaders, 
+			ActivityType a = new ActivityType(id, name, content, numLeaders, 
 					numParents, maxParticipants, probSchoolRelated, probVoluntary, 
 					probParentMediated, daysBetween, numRepeats, 
 					meetingsBetweenTopicChange, onSchoolDay, onWeekendDay, onSummer);
-			activities.add(a);
+			activityTypes.add(a);
 		}	
 	}
 
@@ -150,7 +150,7 @@ public class StemStudents extends SimState
 		 * Read in initial interests from data file, initialInterests.csv
 		 */
 		try {
-			initInterests = new BufferedReader(new FileReader("./data/initialInterests.csv"));
+			initInterests = new BufferedReader(new FileReader("./data/initialStudentInput.csv"));
 			initInterests.readLine(); //Read in the header line of the file.
 		}
 		catch (IOException ex) {
@@ -159,30 +159,18 @@ public class StemStudents extends SimState
 		
 		for (int i = 0; i < numStudents; i++) {
 			String line = null;
-			TopicVector initialTopicVector = null;
-			int id = random.nextInt();
 			try {
 				line = initInterests.readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			if (line != null)
-			{
-				String[] tokens = new String[1];
-				tokens = line.split(",");
-				id = Integer.parseInt(tokens[0]);
-				initialTopicVector = new TopicVector(Double.parseDouble(tokens[1]), 
-						Double.parseDouble(tokens[2]), Double.parseDouble(tokens[3]));						
-			}
-			else
-			{
-				initialTopicVector = TopicVector.createRandom(random);
+			if (line == null) {
+				System.err.format("Error: input file only contains %d entries but numStudents is set to %d.\n", i, numStudents);
+				break;
 			}
 			
-			Student s = new Student(this, initialTopicVector);
+			Student s = Student.createFromCSV(this, line);
 			s.parent = new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random));
-			s.id = id;
 			students.add(s);
 		}
 		// Close the buffered reader
@@ -193,6 +181,9 @@ public class StemStudents extends SimState
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public void initScienceClasses() {
 		// init classes
 		scienceClasses.clear();
 		int numClasses = (int)Math.ceil(numStudents / (double)classSize);
@@ -271,7 +262,7 @@ public class StemStudents extends SimState
 			}
 		}
 	}
-	
+
 	public void initDataLogging() {
 		averageInterestWatcher = new DoubleArrayWatcher() {
 			// anonymous constructor
@@ -290,60 +281,54 @@ public class StemStudents extends SimState
 				return null;
 			}
 		};
-		
-		interest1Watcher = new DoubleArrayWatcher() {
-			// anonymous constructor
-			{
-				data = new double[numStudents];
-			}
 
-			@Override
-			protected void updateDataPoint() {
-				for (int i = 0; i < students.size(); i++)
-					data[i] = students.get(i).interest.topics[0];				
-			}
-			
-			@Override
-			public String getCSVHeader() {
-				return null;
-			}
-		};
-		
-		interest2Watcher = new DoubleArrayWatcher() {
-			// anonymous constructor
-			{
-				data = new double[numStudents];
-			}
+		for (int j = 0; j < NUM_TOPICS; j++) {
+			final int topic = j;
+			interestWatcher[j] = new DoubleArrayWatcher() {
+				// anonymous constructor
+				{
+					data = new double[numStudents];
+				}
 
-			@Override
-			protected void updateDataPoint() {
-				for (int i = 0; i < students.size(); i++)
-					data[i] = students.get(i).interest.topics[1];				
+				@Override
+				protected void updateDataPoint() {
+					for (int i = 0; i < students.size(); i++)
+						data[i] = students.get(i).interest.topics[topic];				
+				}
+				
+				@Override
+				public String getCSVHeader() {
+					return null;
+				}
+			};		
+		}
+	}
+	
+	/**
+	 * Initialize the activity schedule based on survey data. Students were asked
+	 * how often, from 1-5, they did certain activites outside of school. For now,
+	 * we are interpretting these values to mean:
+	 * 1: never
+	 * 2: once every 30 days
+	 * 3: once every 10 days
+	 * 4: once every 3 days
+	 * 5: every day
+	 * 
+	 */
+	public void initSchedule() {
+		int daysBetween;
+		for (Student s : students) {
+			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
+				switch (s.stuffIDo[i]) {
+				case 1:	break;	// never
+				case 2:	break;
+				case 3: break;
+				case 4: break;
+				case 5: break;
+					
+				}
 			}
-			
-			@Override
-			public String getCSVHeader() {
-				return null;
-			}
-		};
-		
-		interest3Watcher = new DoubleArrayWatcher() {
-			// anonymous constructor
-			{
-				data = new double[numStudents];
-			}
-
-			@Override
-			protected void updateDataPoint() {
-				for (int i = 0; i < students.size(); i++)
-					data[i] = students.get(i).interest.topics[2];				
-			}
-			
-			@Override
-			public String getCSVHeader() {
-				return null;
-			}
-		};
+		}
 		
 	}
 	
@@ -353,17 +338,21 @@ public class StemStudents extends SimState
 		
 		// Read in the characteristics of each activity
 		try {
-			readInActivities();
+			readInActivityTypes();
+			if (activityTypes.size() != NUM_ACTIVITY_TYPES)
+				System.err.format("Error: %d activity types read from file, should be %d.\n", activityTypes.size(), NUM_ACTIVITY_TYPES);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Problem Reading in Activities");
 		}
 
 		initStudents();
-		initSmallWorldNetwork();				
-		initDataLogging();		
+		initScienceClasses();
+		initSmallWorldNetwork();
+		initSchedule();		
+		initDataLogging();
 
-		averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
+		//averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
 		
 		for (Activity a : scienceClasses)
 			schedule.scheduleRepeating(a);
@@ -372,9 +361,9 @@ public class StemStudents extends SimState
 			@Override
 			public void step(SimState state) {
 				averageInterestWatcher.update();
-				interest1Watcher.update();
-				interest2Watcher.update();
-				interest3Watcher.update();				
+				for (int i = 0; i < NUM_TOPICS; i++)
+					interestWatcher[i].update();
+				
 				
 				if (state.schedule.getSteps() > 100)
 					state.finish();
