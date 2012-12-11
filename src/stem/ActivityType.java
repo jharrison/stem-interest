@@ -17,29 +17,11 @@ public class ActivityType
 	public boolean onSchoolDay;
 	public boolean onWeekendDay;
 	public boolean onSummer;
+	public boolean withFriendsOnly;
+	public boolean isRepeating;
 	
-	public ActivityType(int id, String name, TopicVector content,
-			int numLeaders, int numParents, int maxParticipants,
-			float probSchoolRelated, float probVoluntary,
-			float probParentMediated, int daysBetween, int numRepeats,
-			int meetingsBetweenTopicChange, boolean onSchoolDay,
-			boolean onWeekendDay, boolean onSummer) 
-	{
-		this.id = id;
-		this.name = name;
-		this.content = content;
-		this.numLeaders = numLeaders;
-		this.numParents = numParents;
-		this.maxParticipants = maxParticipants;
-		this.probSchoolRelated = probSchoolRelated;
-		this.probVoluntary = probVoluntary;
-		this.probParentMediated = probParentMediated;
-		this.daysBetween = daysBetween;
-		this.numRepeats = numRepeats;
-		this.meetingsBetweenTopicChange = meetingsBetweenTopicChange;
-		this.onSchoolDay = onSchoolDay;
-		this.onWeekendDay = onWeekendDay;
-		this.onSummer = onSummer;
+	public ActivityType() {
+		
 	}
 	
 	public String toString()
@@ -52,8 +34,33 @@ public class ActivityType
 				+ Float.toString(probParentMediated) + sep + Integer.toString(daysBetween) 
 				+ sep + Integer.toString(numRepeats) + sep 
 				+ Integer.toString(meetingsBetweenTopicChange) + sep + Boolean.toString(onSchoolDay)
-				+ sep + Boolean.toString(onWeekendDay) + sep + Boolean.toString(onWeekendDay) + "\n";
+				+ sep + Boolean.toString(onWeekendDay) + sep + Boolean.toString(onWeekendDay) + sep +
+				Boolean.toString(withFriendsOnly) + "\n";
 		return result;
+	}
+	
+	static public ActivityType parseActivityType(String line) {
+		String[] tokens = line.split(",");
+
+		ActivityType at = new ActivityType();
+		at.id = Integer.parseInt(tokens[0]);
+		at.name = tokens[1].trim();
+		at.content = new TopicVector(Double.parseDouble(tokens[2]),	Double.parseDouble(tokens[3]), Double.parseDouble(tokens[4]));						
+		at.numLeaders = Integer.parseInt(tokens[5]);
+		at.numParents = Integer.parseInt(tokens[6]);
+		at.maxParticipants = Integer.parseInt(tokens[7]);
+		at.probSchoolRelated = Float.parseFloat(tokens[8]);
+		at.probVoluntary = Float.parseFloat(tokens[9]);
+		at.probParentMediated = Float.parseFloat(tokens[10]);
+		at.daysBetween = Integer.parseInt(tokens[11]);
+		at.numRepeats = Integer.parseInt(tokens[12]);
+		at.meetingsBetweenTopicChange = Integer.parseInt(tokens[13]);
+		at.onSchoolDay = Boolean.parseBoolean(tokens[14]);
+		at.onWeekendDay = Boolean.parseBoolean(tokens[15]);
+		at.onSummer = Boolean.parseBoolean(tokens[16]);
+		at.withFriendsOnly = Boolean.parseBoolean(tokens[17]);
+		
+		return at;
 	}
 	
 }
