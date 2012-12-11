@@ -24,6 +24,9 @@ public class Student
 	public int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
 	
 	public ArrayList<Student> friends = new ArrayList<Student>();
+	
+	/** Activities for today */
+	public ArrayList<Activity> activities = new ArrayList<Activity>();
 
 	public Student(StemStudents model) {
 		this.model = model;
@@ -107,13 +110,20 @@ public class Student
 		for (Student p : activity.participants) 
 			if (friends.contains(p))
 				friendCount++;
-		
-		if (friendCount == 0) {
-			// interest decreases
-		}
+				
+		if (friendCount > 0) {
+			increaseInterest(activity.content);
+		}		
 		else {
-			// interest increases, perhaps moreso if multiple friends are present,
-			// but shall not exceed the interest threshold
+
+			boolean makeFriends = false;
+			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
+				if (interest.topics[i] < model.interestThreshold)
+					decreaseInterest(i, activity.content.topics[i]);
+				else
+					makeFriends = true;
+
+			//TODO make friends
 		}
 		
 		// --- Parents / Caregivers
@@ -123,14 +133,14 @@ public class Student
 				parentPresent = true;
 				
 		if (parentPresent) {
-			// interest increases
+			increaseInterest(activity.content);
 		}
 		else {
-			// interest decreases
+			decreaseInterest(activity.content);
 		}
 		
 		if (activity.isParentMediated) {
-			// interest increases
+			increaseInterest(activity.content);
 		}
 		
 		// --- Unrelated Adults
@@ -158,10 +168,28 @@ public class Student
 			
 	}
 	
+	/**
+	 * Check to see if the student is interested in the given content.
+	 * @param content
+	 * @return true if any topic exceeds threshold, false otherwise
+	 */
+	public boolean isInterestedInContent(TopicVector content) {
+		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
+			if (content.topics[i] > model.interestThreshold)
+				return true;
+		
+		return false;		
+	}
+	
 	public void increaseInterest(int topicIndex, double topicRelevance) {
 		interest.topics[topicIndex] += model.interestChangeRate * topicRelevance;
 		if (interest.topics[topicIndex] > TopicVector.MAX_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MAX_INTEREST;
+	}
+	
+	public void increaseInterest(TopicVector relevance) {
+		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
+			increaseInterest(i, relevance.topics[i]);		
 	}
 	
 	public void decreaseInterest(int topicIndex, double topicRelevance) {
@@ -169,6 +197,12 @@ public class Student
 		if (interest.topics[topicIndex] < TopicVector.MIN_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MIN_INTEREST;
 	}
+
+	public void decreaseInterest(TopicVector relevance) {
+		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
+			decreaseInterest(i, relevance.topics[i]);		
+	}
+	
 	
 	public double[] getInterest() {
 		return interest.topics;
@@ -178,7 +212,7 @@ public class Student
 		return interest.getAverage();
 	}
 	
-	public static Student createFromCSV(StemStudents model, String line) {
+	public static Student parseStudent(StemStudents model, String line) {
 		Student student = new Student(model);
 
 		String[] tokens = line.split(",");

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import org.jfree.data.xy.XYSeries;
 
-import masoncsc.datawatcher.TimeSeriesDataStore;
 import masoncsc.util.ChartUtils;
 
 import sim.display.Console;
@@ -122,7 +121,7 @@ public class StemStudentsWithUI extends GUIState
 		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Earth/Space Science", "Interest Level", "Count", controller);
 		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human/Biology", "Interest Level", "Count", controller);
 		
-		interestHist[0].setScale(0.5);
+//		interestHist[0].setScale(0.5);
 
 //		ChartUtils.attachTimeSeries(new XYSeries[] {model.interestSeries.get(0).series, model.interestSeries.get(1).series, model.interestSeries.get(2).series}, 
 //        		"Average Interest Over Time", "Days", "Interest Level", c, 1);

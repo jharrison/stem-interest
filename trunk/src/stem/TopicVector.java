@@ -45,6 +45,14 @@ public class TopicVector
 		return total / VECTOR_SIZE;
 	}
 	
+	/**
+	 * Multiply all values of the topic vector by the given scale.
+	 */
+	public void scale(double scale) {
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			topics[i] *= scale;
+	}
+	
 	@Override
 	public String toString() {
 		//TODO generalize this for any vector size

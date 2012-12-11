@@ -59,7 +59,7 @@ public class StemStudents extends SimState
 	public int getNumStudents() { return numStudents; }
 	public void setNumStudents(int val) { numStudents = val; }
 
-	public int classSize = 16; //Approx. # from data.  Adjusted slightly to get same number in each class.
+	public int classSize = 17; //Approx. # from data.  Adjusted slightly to get same number in each class.
 	public int getClassSize() { return classSize; }
 	public void getClassSize(int val) { classSize = val; }
 	
@@ -91,11 +91,21 @@ public class StemStudents extends SimState
 	public double getInterestChangeRate() { return interestChangeRate; }
 	public void setInterestChangeRate(double val) { interestChangeRate = val; }
 	public Object domInterestChangeRate() { return new Interval(0.0, 1.0); }
+
+	public double interestDecayRate = 1.0;
+	public double getInterestDecayExponent() { return interestDecayRate; }
+	public void setInterestDecayExponent(double val) { interestDecayRate = val; }
+	public Object domInterestDecayExponent() { return new Interval(0.0, 1.0); }
 	
 	public double nodeSize = 2.5;
 	public double getNodeSize() { return nodeSize; }
 	public void setNodeSize(double val) { nodeSize = val; }
 	public Object domNodeSize() { return new Interval(0.0, 10.0); }
+
+	
+	public int maxActivitiesPerDay = 3;	
+	public int getMaxActivitiesPerDay() { return maxActivitiesPerDay; }
+	public void setgetMaxActivitiesPerDay(int val) { maxActivitiesPerDay = val; }
 	
 
 	public StemStudents(long seed) {
@@ -105,22 +115,6 @@ public class StemStudents extends SimState
 	public void readInActivityTypes() throws IOException {
 		activityTypes.clear();
 		BufferedReader initActivities = null;
-
-		int id;
-		String name;
-		TopicVector content;
-		int numLeaders;
-		int numParents;
-		int maxParticipants;
-		float probSchoolRelated;
-		float probVoluntary;
-		float probParentMediated;
-		int daysBetween;
-		int numRepeats;
-		int meetingsBetweenTopicChange;
-		boolean onSchoolDay;
-		boolean onWeekendDay;
-		boolean onSummer;
 		
 		initActivities = new BufferedReader(new FileReader ("./data/initialActivityInput.csv"));
 		initActivities.readLine(); //Read in the header line of the file
@@ -128,30 +122,7 @@ public class StemStudents extends SimState
 		String line = null;
 		while ((line = initActivities.readLine()) != null)
 		{
-			String[] tokens = new String[1];
-			tokens = line.split(",");
-			
-			id = Integer.parseInt(tokens[0]);
-			name = tokens[1];
-			content = new TopicVector(Double.parseDouble(tokens[2]), 
-					Double.parseDouble(tokens[3]), Double.parseDouble(tokens[4]));						
-			numLeaders = Integer.parseInt(tokens[5]);
-			numParents = Integer.parseInt(tokens[6]);
-			maxParticipants = Integer.parseInt(tokens[7]);
-			probSchoolRelated = Float.parseFloat(tokens[8]);
-			probVoluntary = Float.parseFloat(tokens[9]);
-			probParentMediated = Float.parseFloat(tokens[10]);
-			daysBetween = Integer.parseInt(tokens[11]);
-			numRepeats = Integer.parseInt(tokens[12]);
-			meetingsBetweenTopicChange = Integer.parseInt(tokens[13]);
-			onSchoolDay = Boolean.parseBoolean(tokens[14]);
-			onWeekendDay = Boolean.parseBoolean(tokens[15]);
-			onSummer = Boolean.parseBoolean(tokens[16]);
-
-			ActivityType a = new ActivityType(id, name, content, numLeaders, 
-					numParents, maxParticipants, probSchoolRelated, probVoluntary, 
-					probParentMediated, daysBetween, numRepeats, 
-					meetingsBetweenTopicChange, onSchoolDay, onWeekendDay, onSummer);
+			ActivityType a = ActivityType.parseActivityType(line);
 			activityTypes.add(a);
 		}	
 	}
@@ -183,7 +154,7 @@ public class StemStudents extends SimState
 				break;
 			}
 			
-			Student s = Student.createFromCSV(this, line);
+			Student s = Student.parseStudent(this, line);
 			s.parent = new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random));
 			students.add(s);
 		}
@@ -439,11 +410,15 @@ public class StemStudents extends SimState
 		double[] probOfParticipating = new double[] { 0, 0, 0.25, 0.5, 0.75, 1.0 };	// it's one-based so stuff an extra zero in there
 		
 		for (Student s : students) {
+			s.activities.clear();
 			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
 				if (s.stuffIDo[i] == 1)	// never
 					continue;
 
 				ActivityType type = activityTypes.get(i);
+				//TODO implement repeating activities
+//				if (type.isRepeating)	
+//					continue;
 				
 				// is this a valid day for this activity?
 				if ((schoolDay && !type.onSchoolDay) ||
@@ -451,8 +426,13 @@ public class StemStudents extends SimState
 					(summer && !type.onSummer))
 					continue;
 
+				// stochastically decide whether to do this activity today or not
 				if (random.nextDouble() < probOfParticipating[s.stuffIDo[i]])
-					createOrJoinActivity(s, type);		
+					createOrJoinActivity(s, type);
+				
+				// don't overschedule
+				if (s.activities.size() >= maxActivitiesPerDay)
+					break;
 			}
 		}
 		
@@ -485,6 +465,11 @@ public class StemStudents extends SimState
 				if (s.friends.contains(p))
 					return a;
 					
+		// if this is a friends-only activity and none of the matches contains a friend, don't join
+		if (type.withFriendsOnly)
+			return null;
+		
+		// randomly pick one of the matching open activities to join
 		return matches.get(random.nextInt(matches.size()));
 	}
 
@@ -498,13 +483,20 @@ public class StemStudents extends SimState
 		
 		if (a == null) {	
 			a = Activity.createFromType(this, type);
-			if (a.isParentMediated)
+			
+			// if this activity involves a parent, add one
+			if (type.numParents > 0)
 				a.leaders.add(s.parent);
+			
+			// add leaders
+			while (a.leaders.size() < type.numLeaders)
+				a.leaders.add(new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random)));
 			
 			activities.add(a);			
 		}
 		
 		a.participants.add(s);
+		s.activities.add(a);
 	}
 	
 	public void printDayInfo() {
@@ -546,6 +538,8 @@ public class StemStudents extends SimState
 			public void step(SimState state) {
 				printDayInfo();
 				doActivitiesForDay();
+				decayInterests();
+						
 				for (DataWatcher<?> dw : dataWatchers)
 					dw.update();
 				
@@ -555,6 +549,14 @@ public class StemStudents extends SimState
 					state.finish();
 			}
 		});
+	}
+	
+	/**
+	 * Decay all the student's interest levels.
+	 */
+	public void decayInterests() {
+		for (Student s : students)
+			s.interest.scale(interestDecayRate);
 	}
 	
 	/**

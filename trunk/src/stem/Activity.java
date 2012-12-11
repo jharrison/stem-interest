@@ -63,9 +63,9 @@ public class Activity implements Steppable
 		Activity a = new Activity(type.content);
 		a.type = type;
 
-		a.isParentMediated = model.random.nextDouble() < type.probParentMediated;
+		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
 		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
-		a.isParentMediated = model.random.nextDouble() < type.probSchoolRelated;
+		a.isParentMediated = model.random.nextDouble() < type.probParentMediated;
 		
 		return a;
 	}
