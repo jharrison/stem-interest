@@ -189,6 +189,8 @@ public class Student
 		// read 4-18: the 15 activities
 		for (int i = 0; i < 15; i++)
 			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
+		// hard-code school for everyday
+		student.stuffIDo[15] = 5;
 		// skip 19: Other_me
 		// skip 20: Name_other
 		// skip 21-43: Stuff that interests me
