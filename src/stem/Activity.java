@@ -16,6 +16,8 @@ public class Activity implements Steppable
 {
 	private static final long serialVersionUID = 1L;
 	
+	public ActivityType type;
+	
 	/** name of the activity, e.g. Library, Scouts, etc. */
 	public String name;
 	public TopicVector content;
@@ -55,6 +57,17 @@ public class Activity implements Steppable
 	public void step(SimState state) {
 		for (Student s : participants)
 			s.doActivity(this);		
+	}
+	
+	static public Activity createFromType(StemStudents model, ActivityType type) {
+		Activity a = new Activity(type.content);
+		a.type = type;
+
+		a.isParentMediated = model.random.nextDouble() < type.probParentMediated;
+		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
+		a.isParentMediated = model.random.nextDouble() < type.probSchoolRelated;
+		
+		return a;
 	}
 
 }

@@ -53,3 +53,8 @@ Data logging
 Graphs
 	- Histogram of interest distribution (x3)
 	
+
+Info about Prescott Elementary
+First day of schoolyear: Tuesday, Sept 4th 2012 (jday: 247)
+Winter break Dec 24 - Jan 4
+Last day of schoolyear: Friday, June 7th 2013 (jday: 158)

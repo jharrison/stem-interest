@@ -3,9 +3,13 @@ package stem;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import masoncsc.datawatcher.*;
+import masoncsc.util.Pair;
 
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
@@ -25,11 +29,31 @@ public class StemStudents extends SimState
 {
 	private static final long serialVersionUID = 1L;
 	
+	public GregorianCalendar date;
+	
 	ArrayList<Student> students = new ArrayList<Student>();
 	ArrayList<ActivityType> activityTypes = new ArrayList<ActivityType>();
 
 	static public final int NUM_ACTIVITY_TYPES = 16;
-	static public final int NUM_TOPICS = 3;
+	static public final int NUM_TOPICS = 3;	
+
+	public ArrayList<Activity> scienceClasses = new ArrayList<Activity>();
+	public ArrayList<Activity> activities = new ArrayList<Activity>();
+
+	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
+	
+	ScreenDataWriter averageInterestScreenWriter;
+	DoubleArrayWatcher averageInterestWatcher;
+	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[NUM_TOPICS];
+
+	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Technology/Engineering/Math");
+	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Earth/Space Science");
+	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human/Biology");
+	
+	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
+	
+	
+	// Start getters/setters here
 	
 	public int numStudents = 170;  //# from survey that have valid values
 	public int getNumStudents() { return numStudents; }
@@ -72,16 +96,6 @@ public class StemStudents extends SimState
 	public double getNodeSize() { return nodeSize; }
 	public void setNodeSize(double val) { nodeSize = val; }
 	public Object domNodeSize() { return new Interval(0.0, 10.0); }
-	
-
-	public ArrayList<Activity> scienceClasses = new ArrayList<Activity>();
-	public ArrayList<Activity> activities = new ArrayList<Activity>();
-
-	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
-	
-	ScreenDataWriter averageInterestScreenWriter;
-	DoubleArrayWatcher averageInterestWatcher;
-	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[NUM_TOPICS];
 	
 
 	public StemStudents(long seed) {
@@ -264,6 +278,8 @@ public class StemStudents extends SimState
 	}
 
 	public void initDataLogging() {
+		dataWatchers.clear();
+		
 		averageInterestWatcher = new DoubleArrayWatcher() {
 			// anonymous constructor
 			{
@@ -281,10 +297,11 @@ public class StemStudents extends SimState
 				return null;
 			}
 		};
+		dataWatchers.add(averageInterestWatcher);
 
-		for (int j = 0; j < NUM_TOPICS; j++) {
-			final int topic = j;
-			interestWatcher[j] = new DoubleArrayWatcher() {
+		for (int i = 0; i < NUM_TOPICS; i++) {
+			final int topic = i;
+			interestWatcher[i] = new DoubleArrayWatcher() {
 				// anonymous constructor
 				{
 					data = new double[numStudents];
@@ -292,16 +309,75 @@ public class StemStudents extends SimState
 
 				@Override
 				protected void updateDataPoint() {
-					for (int i = 0; i < students.size(); i++)
-						data[i] = students.get(i).interest.topics[topic];				
+					for (int j = 0; j < students.size(); j++)
+						data[j] = students.get(j).interest.topics[topic];				
 				}
 				
 				@Override
 				public String getCSVHeader() {
 					return null;
 				}
-			};		
+			};
+			dataWatchers.add(interestWatcher[i]);
 		}
+		
+		interest1Series.clear();
+        dataWatchers.add(new PairDataWatcher<Long, Double>() {
+            { addListener(interest1Series); }
+
+            @Override
+            protected void updateDataPoint() {
+                final long currentStep = schedule.getSteps();
+                double total = 0;
+                for (Student s : students)
+                	total += s.interest.topics[0];
+                dataPoint = new Pair<Long, Double>(currentStep, (total / students.size()));
+            }
+
+            @Override
+            public String getCSVHeader() {
+                return "Step, " + interest1Series.getDescription();
+            }
+        });
+
+        interest2Series.clear();
+        dataWatchers.add(new PairDataWatcher<Long, Double>() {
+            { addListener(interest2Series); }
+
+            @Override
+            protected void updateDataPoint() {
+                final long currentStep = schedule.getSteps();
+                double total = 0;
+                for (Student s : students)
+                	total += s.interest.topics[1];
+                dataPoint = new Pair<Long, Double>(currentStep, (total / students.size()));
+            }
+
+            @Override
+            public String getCSVHeader() {
+                return "Step, " + interest2Series.getDescription();
+            }
+        });
+
+        interest3Series.clear();
+        dataWatchers.add(new PairDataWatcher<Long, Double>() {
+            { addListener(interest3Series); }
+
+            @Override
+            protected void updateDataPoint() {
+                final long currentStep = schedule.getSteps();
+                double total = 0;
+                for (Student s : students)
+                	total += s.interest.topics[2];
+                dataPoint = new Pair<Long, Double>(currentStep, (total / students.size()));
+            }
+
+            @Override
+            public String getCSVHeader() {
+                return "Step, " + interest3Series.getDescription();
+            }
+        });
+		
 	}
 	
 	/**
@@ -314,27 +390,134 @@ public class StemStudents extends SimState
 	 * 4: once every 3 days
 	 * 5: every day
 	 * 
+	 * NOTE: This function employs static, fixed-interval scheduling
+	 * 
 	 */
-	public void initSchedule() {
-		int daysBetween;
+	public void initStaticSchedule() {
+		int[] intervals = new int[] { 0, 0, 30, 10, 3, 1 };	// it's one-based so stuff an extra zero in there
+
+		activities.clear();
 		for (Student s : students) {
 			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
-				switch (s.stuffIDo[i]) {
-				case 1:	break;	// never
-				case 2:	break;
-				case 3: break;
-				case 4: break;
-				case 5: break;
-					
-				}
+				if (s.stuffIDo[i] == 1)	// never
+					continue;
+				int daysBetween = intervals[s.stuffIDo[i]];
+
+				Activity a = Activity.createFromType(this, activityTypes.get(i));
+				a.participants.add(s);
+				a.daysBetween = daysBetween;
+				if (a.isParentMediated)
+					a.leaders.add(s.parent);
+				activities.add(a);					
 			}
 		}
 		
+		for (Activity a : activities)
+			schedule.scheduleRepeating(a.daysBetween, a);
+		
+	}
+	
+	/**
+	 * Schedule one day's worth of activities.
+	 */
+	public void doActivitiesForDay() {
+		activities.clear();
+		boolean schoolDay = isSchoolDay();
+		boolean weekend = isWeekend();
+		boolean summer = isSummer();
+		
+		/**
+		 * The responses to the question of "how often do you do the following...?" are mapped as follows:
+		 * All the time:			1.0
+		 * Often:					0.75
+		 * Every once in a while:	0.5			
+		 * Very rarely:				0.25
+		 * Never:					0.0
+		 * 
+		 * These represent the probabilities that the student will do the activity at any given opportunity.
+		 */
+		double[] probOfParticipating = new double[] { 0, 0, 0.25, 0.5, 0.75, 1.0 };	// it's one-based so stuff an extra zero in there
+		
+		for (Student s : students) {
+			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
+				if (s.stuffIDo[i] == 1)	// never
+					continue;
+
+				ActivityType type = activityTypes.get(i);
+				
+				// is this a valid day for this activity?
+				if ((schoolDay && !type.onSchoolDay) ||
+					(weekend && !type.onWeekendDay) ||
+					(summer && !type.onSummer))
+					continue;
+
+				if (random.nextDouble() < probOfParticipating[s.stuffIDo[i]])
+					createOrJoinActivity(s, type);		
+			}
+		}
+		
+		// Now do them
+		for (Activity a : activities)
+			a.step(this);
+	}
+	
+	/**
+	 * Find an activity to join. If there are no existing activities that match 
+	 * the given type, return null. If there's a matching activity in which a 
+	 * friend is participating, join that one. Otherwise, pick a random matching
+	 * activity.
+	 * @param s Student that wants to join an activity.
+	 * @param type Type of the activity.
+	 * @return The matching activity or null if none exists
+	 */
+	public Activity findActivityToJoin(Student s, ActivityType type) {
+		ArrayList<Activity> matches = new ArrayList<Activity>();
+		for (Activity a : activities)
+			if ((a.type == type) && (a.participants.size() < type.maxParticipants))
+				matches.add(a);
+				
+		if (matches.size() == 0)
+			return null;
+				
+		// check for friends
+		for (Activity a : matches)
+			for (Student p : a.participants)
+				if (s.friends.contains(p))
+					return a;
+					
+		return matches.get(random.nextInt(matches.size()));
+	}
+
+	/**
+	 * If a matching activity already exists, join it. Otherwise, create a new one.
+	 * @param s Student that will be participating in the activity.
+	 * @param type Type of the activity.
+	 */
+	public void createOrJoinActivity(Student s, ActivityType type) {
+		Activity a = findActivityToJoin(s, type);
+		
+		if (a == null) {	
+			a = Activity.createFromType(this, type);
+			if (a.isParentMediated)
+				a.leaders.add(s.parent);
+			
+			activities.add(a);			
+		}
+		
+		a.participants.add(s);
+	}
+	
+	public void printDayInfo() {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        System.out.format("Step: %d, Date: %s, %d, %d, %d, %s, %s, %s\n", schedule.getSteps(), df.format(date.getTime()), 
+        	date.get(Calendar.DAY_OF_WEEK), date.get(Calendar.DAY_OF_MONTH), date.get(Calendar.DAY_OF_YEAR),
+        	isSchoolDay(), isWeekend(), isSummer());
 	}
 	
 	@SuppressWarnings("serial")
 	public void start() {
 		super.start();
+		date = new GregorianCalendar(2012, 8, 4);	// Sept 4th. Month is zero-based for some strange reason
 		
 		// Read in the characteristics of each activity
 		try {
@@ -349,26 +532,54 @@ public class StemStudents extends SimState
 		initStudents();
 		initScienceClasses();
 		initSmallWorldNetwork();
-		initSchedule();		
+//		initStaticSchedule();		
 		initDataLogging();
 
 		//averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
+
 		
-		for (Activity a : scienceClasses)
-			schedule.scheduleRepeating(a);
+//		for (Activity a : scienceClasses)
+//			schedule.scheduleRepeating(a);
 		
 		schedule.scheduleRepeating(new Steppable() {
 			@Override
 			public void step(SimState state) {
-				averageInterestWatcher.update();
-				for (int i = 0; i < NUM_TOPICS; i++)
-					interestWatcher[i].update();
+				printDayInfo();
+				doActivitiesForDay();
+				for (DataWatcher<?> dw : dataWatchers)
+					dw.update();
 				
+				date.add(Calendar.DATE, 1);
 				
-				if (state.schedule.getSteps() > 100)
+				if (state.schedule.getSteps() > 1000)
 					state.finish();
 			}
 		});
+	}
+	
+	/**
+	 * Let's assume day 0 is a Monday
+	 * @param day
+	 * @return
+	 */
+	private boolean isSchoolDay() {
+		//TODO make this more comprehensive, e.g. exclude breaks
+		return !isWeekend() && !isSummer();
+	}
+	
+	private boolean isWeekend() {
+		int day = date.get(Calendar.DAY_OF_WEEK);
+		if ((day == Calendar.SATURDAY) || (day == Calendar.SUNDAY))
+			return true;
+		return false;
+	}
+	
+	private boolean isSummer() {
+		int day = date.get(Calendar.DAY_OF_YEAR);
+		if ((day > 158) && (day < 247))
+			return true;
+		
+		return false;		
 	}
 	
 
