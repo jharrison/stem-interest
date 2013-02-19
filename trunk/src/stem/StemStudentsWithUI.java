@@ -117,9 +117,9 @@ public class StemStudentsWithUI extends GUIState
 		NetworkDisplay.frame.setVisible(true);
 
 		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
-		interestHist[0] = ChartUtils.attachHistogram(null, 7, "Technology/Engineering/Math", "Interest Level", "Count", controller);
-		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Earth/Space Science", "Interest Level", "Count", controller);
-		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human/Biology", "Interest Level", "Count", controller);
+		interestHist[0] = ChartUtils.attachHistogram(null, 7, "Exploration Index", "Interest Level", "Count", controller);
+		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Science Index", "Interest Level", "Count", controller);
+		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human Index", "Interest Level", "Count", controller);
 		
 //		interestHist[0].setScale(0.5);
 

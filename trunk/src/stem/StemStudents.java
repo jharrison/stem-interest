@@ -46,16 +46,21 @@ public class StemStudents extends SimState
 	DoubleArrayWatcher averageInterestWatcher;
 	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[NUM_TOPICS];
 
-	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Technology/Engineering/Math");
-	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Earth/Space Science");
-	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human/Biology");
+	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Exploration Index");
+	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Science Index");
+	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human Index");
 	
 	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
 	
 	
 	// Start getters/setters here
-	
-	public int numStudents = 170;  //# from survey that have valid values
+	/*
+	 * TODO
+	 * The model doesn't seem to handle trying to instantiate with more 
+	 * youth than in the input file well.  The histograms have way too 
+	 * many records in the 0 bin.
+	 */
+	public int numStudents = 127;  //# from survey that have valid values
 	public int getNumStudents() { return numStudents; }
 	public void setNumStudents(int val) { numStudents = val; }
 
@@ -149,6 +154,12 @@ public class StemStudents extends SimState
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			/*
+			 * TODO
+			 * The model doesn't seem to handle trying to instantiate with more 
+			 * youth than in the input file well.  The histograms have way too 
+			 * many records in the 0 bin.
+			 */
 			if (line == null) {
 				System.err.format("Error: input file only contains %d entries but numStudents is set to %d.\n", i, numStudents);
 				break;
