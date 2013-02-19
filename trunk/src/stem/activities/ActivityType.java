@@ -1,8 +1,10 @@
-package stem;
+package stem.activities;
+
+import stem.TopicVector;
 
 public class ActivityType
 {
-	public int id;
+	public int id;	// this can double as an index
 	public String name;
 	public TopicVector content;
 	public int numLeaders;

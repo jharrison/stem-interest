@@ -2,6 +2,11 @@ package stem;
 
 import java.util.ArrayList;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
 
 import masoncsc.util.ChartUtils;
@@ -16,6 +21,7 @@ import sim.portrayal.SimpleInspector;
 import sim.util.Bag;
 import sim.util.media.chart.ChartGenerator;
 import sim.util.media.chart.HistogramGenerator;
+import sim.util.media.chart.TimeSeriesChartGenerator;
 import stem.network.NetworkDisplay;
 
 /**
@@ -32,7 +38,9 @@ public class StemStudentsWithUI extends GUIState
 	StemStudents model;
     private ArrayList<ChartGenerator> chartGenerators = new ArrayList<ChartGenerator>();
     HistogramGenerator aveInterestHist;
+    HistogramGenerator activitiesDoneHist;
     HistogramGenerator[] interestHist = new HistogramGenerator[StemStudents.NUM_TOPICS];
+    TimeSeriesChartGenerator aveInterestTimeSeries;
 
 	public StemStudentsWithUI() {
 		super(new StemStudents(System.currentTimeMillis()));
@@ -49,7 +57,7 @@ public class StemStudentsWithUI extends GUIState
 	}
 
 	public static String getName() {
-		return "STEM Students";
+		return "STEM Kids";
 	}
 
 	public Object getSimulationInspectedObject() {
@@ -60,7 +68,6 @@ public class StemStudentsWithUI extends GUIState
 		super.start();
 		// set up our portrayals
 		setupPortrayals();
-		System.out.println("Start");
 	}
 
 	public void load(SimState state) {
@@ -93,9 +100,35 @@ public class StemStudentsWithUI extends GUIState
 				updateCharts();
 			}
 		});
-		
-
 	}
+	
+	public JFreeChart createBarChart(final CategoryDataset dataset) {
+		final JFreeChart chart = ChartFactory.createBarChart("Activity Counts", "Activity", "Count", dataset, PlotOrientation.VERTICAL, true, true, false);
+		
+		return chart;
+	}
+    private CategoryDataset createDataset() {
+        
+        // row keys...
+        final String series1 = "Activity";
+
+        // column keys...
+        final String category1 = "Category 1";
+        final String category2 = "Category 2";
+        final String category3 = "Category 3";
+        final String category4 = "Category 4";
+        final String category5 = "Category 5";
+
+        // create the dataset...
+        final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        
+        for (int i = 0; i < model.activityNames.length; i++) {
+        	dataset.addValue(i, series1, model.activityNames[i]);
+        }
+        
+        return dataset;
+        
+    }
 	
 	public void updateCharts() {
 
@@ -106,6 +139,8 @@ public class StemStudentsWithUI extends GUIState
 			interestHist[i].updateSeries(0, model.interestWatcher[i].getDataPoint());
 			interestHist[i].update(ChartGenerator.FORCE_KEY, true);
 		}
+		activitiesDoneHist.updateSeries(0, model.activitiesDoneWatcher.getDataPoint());
+		activitiesDoneHist.update(ChartGenerator.FORCE_KEY, true);
 	}
 
 	public void init(final Controller c) {
@@ -117,24 +152,31 @@ public class StemStudentsWithUI extends GUIState
 		NetworkDisplay.frame.setVisible(true);
 
 		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
+		aveInterestHist.getFrame().setVisible(false);
+		
 		interestHist[0] = ChartUtils.attachHistogram(null, 7, "Exploration Index", "Interest Level", "Count", controller);
 		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Science Index", "Interest Level", "Count", controller);
 		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human Index", "Interest Level", "Count", controller);
-		
-//		interestHist[0].setScale(0.5);
+		// Make the histograms small
+		for (int i = 0; i < 3; i++) {
+			interestHist[i].setScale(0.5);
+			interestHist[i].getFrame().setSize(373, 294);
+		}
 
-//		ChartUtils.attachTimeSeries(new XYSeries[] {model.interestSeries.get(0).series, model.interestSeries.get(1).series, model.interestSeries.get(2).series}, 
-//        		"Average Interest Over Time", "Days", "Interest Level", c, 1);
-		ChartUtils.attachTimeSeries(new XYSeries[] {model.interest1Series.series, model.interest2Series.series, model.interest3Series.series}, 
+		activitiesDoneHist = ChartUtils.attachHistogram(null, 7, "Activities Done per Day", "Number of Activities per Day", "Count", controller);
+		activitiesDoneHist.getFrame().setVisible(false);
+
+		aveInterestTimeSeries = ChartUtils.attachTimeSeries(
+				new XYSeries[] {model.interest1Series.series, model.interest2Series.series, model.interest3Series.series}, 
         		"Average Interest Over Time", "Days", "Interest Level", c, 1);
-		
-
+		aveInterestTimeSeries.getFrame().setVisible(true);
+		aveInterestTimeSeries.setYAxisRange(0, 1);
 
 		((Console)controller).setSize(400, 500);
 	}
 	
 	public void studentSelected(Student s) {
-		System.out.println("Student clicked.");
+		System.out.println("Kid clicked.");
 		Bag inspectors = new Bag();
 		Bag names = new Bag();
 		inspectors.add(new SimpleInspector(s, this));

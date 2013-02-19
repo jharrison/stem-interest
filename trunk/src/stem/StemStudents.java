@@ -5,8 +5,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
+
 
 import masoncsc.datawatcher.*;
 import masoncsc.util.Pair;
@@ -16,6 +19,9 @@ import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.util.Interval;
+import stem.activities.Activity;
+import stem.activities.ActivityType;
+import stem.activities.ScienceClass;
 import stem.network.*;
 
 /**
@@ -45,6 +51,7 @@ public class StemStudents extends SimState
 	ScreenDataWriter averageInterestScreenWriter;
 	DoubleArrayWatcher averageInterestWatcher;
 	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[NUM_TOPICS];
+	DoubleArrayWatcher activitiesDoneWatcher;
 
 	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Exploration Index");
 	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Science Index");
@@ -52,8 +59,17 @@ public class StemStudents extends SimState
 	
 	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
 	
+	private ArrayList<Integer> indices = new ArrayList<Integer>();	
 	
-	// Start getters/setters here
+	public int[] activityCounts = new int[NUM_ACTIVITY_TYPES];
+	public int[] getActivityCounts() { return activityCounts; }
+	
+    String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
+    		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
+    public String[] getActivityNames() { return activityNames; }
+	
+	
+	// Start getters/setters here =======================================================
 	/*
 	 * TODO
 	 * The model doesn't seem to handle trying to instantiate with more 
@@ -61,23 +77,23 @@ public class StemStudents extends SimState
 	 * many records in the 0 bin.
 	 */
 	public int numStudents = 127;  //# from survey that have valid values
-	public int getNumStudents() { return numStudents; }
-	public void setNumStudents(int val) { numStudents = val; }
+	public int getNumKids() { return numStudents; }
+	public void setNumKids(int val) { numStudents = val; }
 
 	public int classSize = 17; //Approx. # from data.  Adjusted slightly to get same number in each class.
 	public int getClassSize() { return classSize; }
-	public void getClassSize(int val) { classSize = val; }
+	public void setClassSize(int val) { classSize = val; }
 	
 	public int numFriendsPerStudent = 3;	
-	public int getNumFriendsPerStudent() { return numFriendsPerStudent; }
-	public void setNumFriendsPerStudent(int val) { numFriendsPerStudent = val; }
+	public int getNumFriendsPerKid() { return numFriendsPerStudent; }
+	public void setNumFriendsPerKid(int val) { numFriendsPerStudent = val; }
 
 	public double smallWorldRewireProbability = 0.5;
 	public double getSmallWorldRewireProbability() { return smallWorldRewireProbability; }
 	public void setSmallWorldRewireProbability(double val) { smallWorldRewireProbability = val; }
 	public Object domSmallWorldRewireProbability() { return new Interval(0.0, 1.0); }
 
-	public double interestThreshold = 0.5;
+	public double interestThreshold = 0.75;
 	public double getInterestThreshold() { return interestThreshold; }
 	public void setInterestThreshold(double val) { interestThreshold = val; }
 	public Object domInterestThreshold() { return new Interval(0.0, 1.0); }
@@ -107,14 +123,23 @@ public class StemStudents extends SimState
 	public void setNodeSize(double val) { nodeSize = val; }
 	public Object domNodeSize() { return new Interval(0.0, 10.0); }
 
-	
 	public int maxActivitiesPerDay = 3;	
 	public int getMaxActivitiesPerDay() { return maxActivitiesPerDay; }
-	public void setgetMaxActivitiesPerDay(int val) { maxActivitiesPerDay = val; }
+	public void setMaxActivitiesPerDay(int val) { maxActivitiesPerDay = val; }
+	
+	public boolean randomizeInterests = false;
+//	public boolean getRandomizeInterests() { return randomizeInterests; }
+//	public void setRandomizeInterests(boolean val) { randomizeInterests = val; }
+	
+	public boolean randomizeStuffIDo = false;
+//	public boolean getRandomizeStuffIDo() { return randomizeStuffIDo; }
+//	public void setRandomizeStuffIDo(boolean val) { randomizeStuffIDo = val; }
 	
 
 	public StemStudents(long seed) {
 		super(seed);
+		for (int i = 0; i < NUM_ACTIVITY_TYPES-1; i++)	// don't add an index for science class
+			indices.add(i);
 	}
 	
 	public void readInActivityTypes() throws IOException {
@@ -130,6 +155,28 @@ public class StemStudents extends SimState
 			ActivityType a = ActivityType.parseActivityType(line);
 			activityTypes.add(a);
 		}	
+	}
+	
+	public double clamp(double val, double min, double max) {
+		if (val < min)
+			return min;
+		if (val > max)
+			return max;
+		return val;
+	}
+	
+	/**
+	 * Checks the model parameters and possibly randomize the given student's
+	 * interests and stuffIDo.
+	 * @param s
+	 */
+	public void possiblyRandomize(Student s) {
+		if (randomizeInterests)
+			s.interest = TopicVector.createRandom(random);
+		
+		if (randomizeStuffIDo)
+			for (int i = 0; i < 15; i++)
+				s.stuffIDo[i] = random.nextInt(5) + 1;	// [1,5]
 	}
 
 	public void initStudents() {
@@ -166,6 +213,7 @@ public class StemStudents extends SimState
 			}
 			
 			Student s = Student.parseStudent(this, line);
+			possiblyRandomize(s);
 			s.parent = new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random));
 			students.add(s);
 		}
@@ -173,7 +221,6 @@ public class StemStudents extends SimState
 		try {
 			initInterests.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -184,27 +231,27 @@ public class StemStudents extends SimState
 		scienceClasses.clear();
 		int numClasses = (int)Math.ceil(numStudents / (double)classSize);
 		int studentIndex = 0;
+		int totalStudents = 0;
 		
 		for (int i = 0; i < numClasses; i++) {
 			// create activity for science class
-			Activity scienceClass = new Activity(TopicVector.createRandom(random));
+			ScienceClass scienceClass = new ScienceClass();
 			
 			// add students
 			for (int j = 0; (j < classSize) && (studentIndex < students.size()); j++)
-				scienceClass.participants.add(students.get(studentIndex++));
+				scienceClass.addParticipant(students.get(studentIndex++));
 			
 			// add teacher
 			scienceClass.leaders.add(new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random)));
-
-			scienceClass.isSchoolRelated = true;
-			scienceClass.isVoluntary = false;			
-			scienceClass.isParentMediated = false;
 			
 			scienceClasses.add(scienceClass);
+			totalStudents += scienceClass.potentialParticipants.size();
 
-			System.out.format("Science class: %s\n", scienceClass.content);
-			System.out.format("Teacher %s\n", scienceClass.leaders.get(0));
+//			System.out.format("Science class: %s\n", scienceClass.content);
+//			System.out.format("Teacher %s\n", scienceClass.leaders.get(0));
 		}
+		
+		System.out.format("ScienceClasses: %d, total students: %d\n", scienceClasses.size(), totalStudents);
 	}
 	
 	/**
@@ -260,6 +307,7 @@ public class StemStudents extends SimState
 	}
 
 	public void initDataLogging() {
+		Arrays.fill(activityCounts, 0);
 		dataWatchers.clear();
 		
 		averageInterestWatcher = new DoubleArrayWatcher() {
@@ -359,6 +407,25 @@ public class StemStudents extends SimState
                 return "Step, " + interest3Series.getDescription();
             }
         });
+        
+		activitiesDoneWatcher = new DoubleArrayWatcher() {
+			// anonymous constructor
+			{
+				data = new double[numStudents];
+			}
+
+			@Override
+			protected void updateDataPoint() {
+				for (int i = 0; i < students.size(); i++)
+					data[i] = students.get(i).activitesDone / Math.max(schedule.getSteps(), 1.0);				
+			}
+			
+			@Override
+			public String getCSVHeader() {
+				return null;
+			}
+		};
+		dataWatchers.add(activitiesDoneWatcher);
 		
 	}
 	
@@ -386,7 +453,7 @@ public class StemStudents extends SimState
 				int daysBetween = intervals[s.stuffIDo[i]];
 
 				Activity a = Activity.createFromType(this, activityTypes.get(i));
-				a.participants.add(s);
+				a.addParticipant(s);
 				a.daysBetween = daysBetween;
 				if (a.isParentMediated)
 					a.leaders.add(s.parent);
@@ -399,15 +466,23 @@ public class StemStudents extends SimState
 		
 	}
 	
-	/**
-	 * Schedule one day's worth of activities.
-	 */
-	public void doActivitiesForDay() {
-		activities.clear();
-		boolean schoolDay = isSchoolDay();
-		boolean weekend = isWeekend();
-		boolean summer = isSummer();
+	public void swap(int[] array, int i, int j) {
+		int temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+	
+	public void temp() {
+		int[] indices = new int[NUM_ACTIVITY_TYPES];
+		for (int i = 0; i < NUM_ACTIVITY_TYPES; i++)
+			indices[i] = i;
+
+		for (int i = NUM_ACTIVITY_TYPES - 1; i > 0; i--)
+			swap(indices, i, random.nextInt(i+1));
 		
+	}
+	
+	public boolean willDoToday(Student s, ActivityType type) {
 		/**
 		 * The responses to the question of "how often do you do the following...?" are mapped as follows:
 		 * All the time:			1.0
@@ -418,38 +493,54 @@ public class StemStudents extends SimState
 		 * 
 		 * These represent the probabilities that the student will do the activity at any given opportunity.
 		 */
-		double[] probOfParticipating = new double[] { 0, 0, 0.25, 0.5, 0.75, 1.0 };	// it's one-based so stuff an extra zero in there
+		final double[] probOfParticipating = new double[] { 0, 0, 0.25, 0.5, 0.75, 1.0 };	// it's one-based so stuff an extra zero in there
+
+		boolean schoolDay = isSchoolDay(date);
+		boolean weekend = isWeekend(date);
+		boolean summer = isSummer(date);
+
+		// is this a valid day for this activity?
+		if ((schoolDay && !type.onSchoolDay) ||
+			(weekend && !type.onWeekendDay) ||
+			(summer && !type.onSummer))
+			return false;
+
+		// stochastically decide whether to do this activity today or not
+		if (random.nextDouble() < probOfParticipating[s.stuffIDo[type.id]])
+			return true;
+		
+		return false;
+	}
+	
+	/**
+	 * Schedule one day's worth of activities.
+	 */
+	public void doActivitiesForDay() {
+		activities.clear();
 		
 		for (Student s : students) {
 			s.activities.clear();
-			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
-				if (s.stuffIDo[i] == 1)	// never
+			Collections.shuffle(indices);
+			for (int i : indices) {
+				if (s.stuffIDo[i] == 1)	// student never does this one
 					continue;
 
-				ActivityType type = activityTypes.get(i);
-				//TODO implement repeating activities
-//				if (type.isRepeating)	
-//					continue;
-				
-				// is this a valid day for this activity?
-				if ((schoolDay && !type.onSchoolDay) ||
-					(weekend && !type.onWeekendDay) ||
-					(summer && !type.onSummer))
-					continue;
-
-				// stochastically decide whether to do this activity today or not
-				if (random.nextDouble() < probOfParticipating[s.stuffIDo[i]])
-					createOrJoinActivity(s, type);
-				
 				// don't overschedule
 				if (s.activities.size() >= maxActivitiesPerDay)
 					break;
+
+				ActivityType type = activityTypes.get(i);
+				
+				if (willDoToday(s, type))
+					createOrJoinActivity(s, type);				
 			}
 		}
 		
 		// Now do them
-		for (Activity a : activities)
+		for (Activity a : activities) {
 			a.step(this);
+//			activityCounts[a.type.id]++;
+		}
 	}
 	
 	/**
@@ -464,7 +555,7 @@ public class StemStudents extends SimState
 	public Activity findActivityToJoin(Student s, ActivityType type) {
 		ArrayList<Activity> matches = new ArrayList<Activity>();
 		for (Activity a : activities)
-			if ((a.type == type) && (a.participants.size() < type.maxParticipants))
+			if ((a.type == type) && !a.isFull())
 				matches.add(a);
 				
 		if (matches.size() == 0)
@@ -472,9 +563,8 @@ public class StemStudents extends SimState
 				
 		// check for friends
 		for (Activity a : matches)
-			for (Student p : a.participants)
-				if (s.friends.contains(p))
-					return a;
+			if (a.contains(s.friends))
+				return a;
 					
 		// if this is a friends-only activity and none of the matches contains a friend, don't join
 		if (type.withFriendsOnly)
@@ -506,7 +596,7 @@ public class StemStudents extends SimState
 			activities.add(a);			
 		}
 		
-		a.participants.add(s);
+		a.addParticipant(s);
 		s.activities.add(a);
 	}
 	
@@ -514,7 +604,7 @@ public class StemStudents extends SimState
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         System.out.format("Step: %d, Date: %s, %d, %d, %d, %s, %s, %s\n", schedule.getSteps(), df.format(date.getTime()), 
         	date.get(Calendar.DAY_OF_WEEK), date.get(Calendar.DAY_OF_MONTH), date.get(Calendar.DAY_OF_YEAR),
-        	isSchoolDay(), isWeekend(), isSummer());
+        	isSchoolDay(date), isWeekend(date), isSummer(date));
 	}
 	
 	@SuppressWarnings("serial")
@@ -541,13 +631,14 @@ public class StemStudents extends SimState
 		//averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
 
 		
-//		for (Activity a : scienceClasses)
-//			schedule.scheduleRepeating(a);
+		System.out.format("scienceClasses.size(): %d\n", scienceClasses.size());
+		for (Activity a : scienceClasses)
+			schedule.scheduleRepeating(a);
 		
 		schedule.scheduleRepeating(new Steppable() {
 			@Override
 			public void step(SimState state) {
-				printDayInfo();
+//				printDayInfo();
 				doActivitiesForDay();
 				decayInterests();
 						
@@ -556,7 +647,7 @@ public class StemStudents extends SimState
 				
 				date.add(Calendar.DATE, 1);
 				
-				if (state.schedule.getSteps() > 1000)
+				if (state.schedule.getSteps() > 365)
 					state.finish();
 			}
 		});
@@ -570,24 +661,22 @@ public class StemStudents extends SimState
 			s.interest.scale(interestDecayRate);
 	}
 	
-	/**
-	 * Let's assume day 0 is a Monday
-	 * @param day
-	 * @return
-	 */
-	private boolean isSchoolDay() {
+	/** Is the given day a school day? */
+	private boolean isSchoolDay(Calendar date) {
 		//TODO make this more comprehensive, e.g. exclude breaks
-		return !isWeekend() && !isSummer();
+		return !isWeekend(date) && !isSummer(date);
 	}
-	
-	private boolean isWeekend() {
+
+	/** Is the given day a weekend? */
+	private boolean isWeekend(Calendar date) {
 		int day = date.get(Calendar.DAY_OF_WEEK);
 		if ((day == Calendar.SATURDAY) || (day == Calendar.SUNDAY))
 			return true;
 		return false;
 	}
-	
-	private boolean isSummer() {
+
+	/** Is the given day in the summer break? */
+	private boolean isSummer(Calendar date) {
 		int day = date.get(Calendar.DAY_OF_YEAR);
 		if ((day > 158) && (day < 247))
 			return true;
