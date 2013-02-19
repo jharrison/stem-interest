@@ -2,6 +2,9 @@ package stem;
 
 import java.util.ArrayList;
 
+import stem.activities.Activity;
+
+
 /**
  * Student (Child/Youth) 
  * <p>Each begins with a level of interest in a particular
@@ -20,6 +23,8 @@ public class Student
 	public double interestThreshold = 0.5; // TODO figure out what this should be
 	public Adult parent;
 	public int id;
+	/** Count of activities this student has done. */
+	public int activitesDone = 0;
 
 	public int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
 	
@@ -106,10 +111,7 @@ public class Student
 
 		// --- Peers
 		// count friends
-		int friendCount = 0;
-		for (Student p : activity.participants) 
-			if (friends.contains(p))
-				friendCount++;
+		int friendCount = activity.countParticipants(friends);
 				
 		if (friendCount > 0) {
 			increaseInterest(activity.content);
@@ -165,7 +167,8 @@ public class Student
 					decreaseInterest(i, activity.content.topics[i]);
 			}
 			
-			
+		activitesDone++;
+		model.activityCounts[activity.type.id]++;
 	}
 	
 	/**

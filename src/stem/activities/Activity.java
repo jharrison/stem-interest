@@ -1,8 +1,12 @@
-package stem;
+package stem.activities;
 
 import java.util.ArrayList;
 
 import sim.engine.*;
+import stem.Adult;
+import stem.StemStudents;
+import stem.Student;
+import stem.TopicVector;
 
 /**
  * An Activity contains all the information needed for the activity to be
@@ -19,9 +23,8 @@ public class Activity implements Steppable
 	public ActivityType type;
 	
 	/** name of the activity, e.g. Library, Scouts, etc. */
-	public String name;
 	public TopicVector content;
-	public ArrayList<Student> participants = new ArrayList<Student>();
+	protected ArrayList<Student> participants = new ArrayList<Student>();
 	public ArrayList<Adult> leaders = new ArrayList<Adult>();
 
 	public boolean isSchoolRelated = false;
@@ -31,11 +34,22 @@ public class Activity implements Steppable
 	/** how often this activity is repeated */
 	public int daysBetween;	
 	/** how many times this activity is repeated */
-	public int numRepeats; 	
+	public int numRepeats; 
+	
+	public Activity() {
+	}
+
+	public Activity(TopicVector content) {
+		this.content = content;
+	}
+
+	public Activity(TopicVector content, ArrayList<Student> participants) {
+		this.content = content;
+		this.participants = participants;
+	}
 	
 	public Activity(TopicVector content, ArrayList<Student> participants, ArrayList<Adult> leaders, 
 			boolean isSchoolRelated, boolean isVoluntary, boolean isParentMediated) {
-		super();
 		this.content = content;
 		this.participants = participants;
 		this.leaders = leaders;
@@ -43,20 +57,40 @@ public class Activity implements Steppable
 		this.isVoluntary = isVoluntary;
 		this.isParentMediated = isParentMediated;
 	}
-
-	public Activity(TopicVector content, ArrayList<Student> participants) {
-		this.content = content;
-		this.participants = participants;
+	
+	public void addParticipant(Student s) {
+		participants.add(s);
 	}
-
-	public Activity(TopicVector content) {
-		this.content = content;
+	
+	public boolean isFull() {
+		return participants.size() >= type.maxParticipants;
+	}
+	
+	public boolean contains(Student s) {
+		return participants.contains(s);
+	}
+	
+	public boolean contains(ArrayList<Student> students) {
+		return participants.contains(students);
+	}
+	
+	/** Count how many students in the given list are participating in this activity. */ 
+	public int countParticipants(ArrayList<Student> students) {
+		int participantCount = 0;
+		for (Student p : participants) 
+			if (students.contains(p))
+				participantCount++;
+		return participantCount;
 	}
 
 	@Override
 	public void step(SimState state) {
+		System.out.format("Step: %d, activity: %s, content: %s\n", state.schedule.getSteps(), type.name, content.toString());
 		for (Student s : participants)
 			s.doActivity(this);		
+				
+				
+//		((StemStudents)state).activityCounts[this.type.id]++;
 	}
 	
 	static public Activity createFromType(StemStudents model, ActivityType type) {

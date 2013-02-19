@@ -49,12 +49,58 @@ The spatial distance of non-school science activities from the child matter: the
 
 
 TODO:
-Data logging
-Graphs
-	- Histogram of interest distribution (x3)
+Data logging:
+[ ] Effect of individual activites
+
+Graphs:
+[x]	Histogram of interest distribution (x3)
+[x] Histogram of number of activities done per day
+[ ] Histogram of how many times each activity is being done (minus class maybe)
+
+Ideas from meeting (12/16):
+[ ] Change the effect of parent participation as kids get older
+[ ] Heterogeneous student parameter for learning rate
+[ ] Some parents don't actively participate
+[ ] Unrelated adults might have an emotional intelligence parameter (not sure what this means)
+[ ] Disruption caused by the changing of leaders
+[x] Vary level of adult expertise and passion
+[ ] Come up with some way of initializing expertise and passion that isn't just random
+[ ] GIS
+	[ ] Families
+	[ ] Schools
+	[ ] Resources (e.g. museums, etc.)
 	
+[ ] Make the Reset button work in the network display
+[ ] Look into the literature on the effect of small world rewire probability
+[ ] Init model parameters from properties to allow sweeps
+[x] Make NetworkDisplay hide on close
+[ ] Do multiple runs with random interests and stuffIDo to get average and error bars (make script)
+[ ] Add column(s) to student data file to represent parent participation level
+[ ] Add a mechanism for consensus formation ("balance seeking")
+[ ] Use daysBetween (or something) to reduce frequency of activities
+[ ] Use Nancy's correlation data to populate activity topic vectors
+[ ] Randomize order of activities when scheduling to eliminate bias
+[ ] Find a way to quantify parent involvement and use it to determine if parent is an activity leader
+[ ] Add a column to activity type to specify activies as dynamically tailored to individual interest
+
+r = i + epsilon
+epsilon = N(0,sigma^2)
+
+Issues with the rules:
+Solo activities always result in a decrease in interest
+	- Make rules only have effect when they are relevant, e.g. with solo activities, lack of friends isn't relevant
+
+	
+Problems with data:
+- IDs
+- School 
+- Teacher
+
 
 Info about Prescott Elementary
 First day of schoolyear: Tuesday, Sept 4th 2012 (jday: 247)
 Winter break Dec 24 - Jan 4
 Last day of schoolyear: Friday, June 7th 2013 (jday: 158)
+
+Potential Experiments:
+- Would higher teacher expertise yield different results?
