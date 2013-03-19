@@ -3,6 +3,7 @@ package stem;
 import java.util.ArrayList;
 
 import stem.activities.Activity;
+import stem.rules.Rule;
 
 
 /**
@@ -18,7 +19,7 @@ import stem.activities.Activity;
  */
 public class Student
 {
-	StemStudents model;
+	public StemStudents model;
 	public TopicVector interest;
 	public double interestThreshold = 0.5; // TODO figure out what this should be
 	public Adult parent;
@@ -44,128 +45,13 @@ public class Student
 
 	/**
 	 * The student engages in the given activity, possibly changing the
-	 * student's interest vector in the process. The change in interest
-	 * is determined by the following factors:
-	 * <p>
-	 * 
-	 * Peers
-	 * <ul>
-	 * <li>
-	 * When friends are participants in an activity, the value to interest
-	 * increases (below the interest threshold). 
-	 * <li>When no friends are
-	 * participants in an activity, the value to interest decreases (below the
-	 * interest threshold). 
-	 * <li>
-	 * Above the interest threshold, children/youth have a
-	 * certain probability of making friends with others in the activity.
-	 * </ul>
-	 * 
-	 * Parents/Caregivers
-	 * <ul>
-	 * <li>
-	 * When parents are participants in an activity, the value to interest
-	 * increases. 
-	 * <li>
-	 * When no parents are participants in an activity, the value to
-	 * interest decreases. 
-	 * <li>
-	 * When parents actively broker access to activities to
-	 * allow children to pursue interest, value to interest increases.
-	 * </ul>
-	 * <p>
-	 * 
-	 * Unrelated Adults<BR>
-	 * Unrelated adults are associated with interactions in activities; each has
-	 * an arbitrary level of expertise and passion in the topic of that
-	 * activity. There are some arbitrary fixed number of unrelated adults
-	 * available for interactions in the community. 
-	 * <ul>
-	 * <li>
-	 * When unrelated adults are
-	 * skilled at sharing their expertise and passion in a topic in an activity,
-	 * the value to interest increases. 
-	 * <li>
-	 * When unrelated adults are skilled at
-	 * sharing expertise but not passion in a topic in an activity, the value to
-	 * interest stays the same (unless the interest threshold has been exceeded,
-	 * then it increases). 
-	 * <li>
-	 * When unrelated adults are skilled at sharing passion
-	 * but not expertise in a topic in an activity, the value to interest stays
-	 * the same.
-	 * <li> 
-	 * When unrelated adults are neither skilled nor passionate, the
-	 * value to interest decreases.
-	 * </ul>
-	 * 
-	 * Web resource
-	 * Web resources vary in their fit to interest and expertise level of youth.
-	 * Web resources that are a good fit to both increase interest. Web
-	 * resources that are a poor fit to both decrease interest. Relative to
-	 * interactions with people,
-	 * 
-	 * 
+	 * student's interest vector in the process.
 	 */
 	public void doActivity(Activity activity) {
-
-		// --- Peers
-		// count friends
-		int friendCount = activity.countParticipants(friends);
-				
-		if (friendCount > 0) {
-			increaseInterest(activity.content);
-		}		
-		else {
-
-			boolean makeFriends = false;
-			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-				if (interest.topics[i] < model.interestThreshold)
-					decreaseInterest(i, activity.content.topics[i]);
-				else
-					makeFriends = true;
-
-			//TODO make friends
+		for (Rule r : model.ruleSet.rules) {
+			if (r.isActive)
+				r.apply(this, activity);
 		}
-		
-		// --- Parents / Caregivers
-		boolean parentPresent = false;
-		for (Adult a : activity.leaders)
-			if (a == parent)
-				parentPresent = true;
-				
-		if (parentPresent) {
-			increaseInterest(activity.content);
-		}
-		else {
-			decreaseInterest(activity.content);
-		}
-		
-		if (activity.isParentMediated) {
-			increaseInterest(activity.content);
-		}
-		
-		// --- Unrelated Adults
-		// if expertise & passion, interest increases
-		// if expertise & !passion
-		//		if interest > threshold, interest increases. else, no change
-		// if !expertise & passion, no change
-		// if !expertise & !passion, interest decreases
-		
-		for (Adult adult : activity.leaders)
-			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
-				boolean expertise = adult.expertise.topics[i] > model.expertiseThreshold;
-				boolean passion = adult.passion.topics[i] > model.passionThreshold;
-				
-				if (expertise && passion)
-					increaseInterest(i, activity.content.topics[i]);
-				else if (expertise && !passion && interest.topics[i] > model.interestThreshold)
-					increaseInterest(i, activity.content.topics[i]);
-				else if (!expertise && passion) 
-					{} // no change
-				else if (!expertise && !passion)
-					decreaseInterest(i, activity.content.topics[i]);
-			}
 			
 		activitesDone++;
 		model.activityCounts[activity.type.id]++;
@@ -184,28 +70,27 @@ public class Student
 		return false;		
 	}
 	
-	public void increaseInterest(int topicIndex, double topicRelevance) {
+	public void increaseInterest(int topicIndex, double topicRelevance, double weight) {
 		interest.topics[topicIndex] += model.interestChangeRate * topicRelevance;
 		if (interest.topics[topicIndex] > TopicVector.MAX_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MAX_INTEREST;
 	}
 	
-	public void increaseInterest(TopicVector relevance) {
+	public void increaseInterest(TopicVector relevance, double weight) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			increaseInterest(i, relevance.topics[i]);		
+			increaseInterest(i, relevance.topics[i], weight);		
 	}
 	
-	public void decreaseInterest(int topicIndex, double topicRelevance) {
+	public void decreaseInterest(int topicIndex, double topicRelevance, double weight) {
 		interest.topics[topicIndex] -= model.interestChangeRate * topicRelevance;
 		if (interest.topics[topicIndex] < TopicVector.MIN_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MIN_INTEREST;
 	}
 
-	public void decreaseInterest(TopicVector relevance) {
+	public void decreaseInterest(TopicVector relevance, double weight) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			decreaseInterest(i, relevance.topics[i]);		
+			decreaseInterest(i, relevance.topics[i], weight);		
 	}
-	
 	
 	public double[] getInterest() {
 		return interest.topics;

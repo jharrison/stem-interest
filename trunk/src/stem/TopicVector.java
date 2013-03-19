@@ -21,7 +21,7 @@ public class TopicVector
 	static public double MAX_INTEREST = 1.0;
 	static public double MIN_INTEREST = 0.0;
 	
-	double[] topics = new double[VECTOR_SIZE];
+	public double[] topics = new double[VECTOR_SIZE];
 	
 	public TopicVector() {
 	}
