@@ -12,7 +12,7 @@ public class ActivityType
 	public int maxParticipants;
 	public float probSchoolRelated;
 	public float probVoluntary;
-	public float probParentMediated;
+	public float probParentEncouraged;
 	public int daysBetween;
 	public int numRepeats;
 	public int meetingsBetweenTopicChange;
@@ -33,7 +33,7 @@ public class ActivityType
 				+ Integer.toString(numLeaders) + sep + Integer.toString(numParents) + sep 
 				+ Integer.toString(maxParticipants) + sep + Float.toString(probSchoolRelated) 
 				+ sep + Float.toString(probVoluntary) + sep 
-				+ Float.toString(probParentMediated) + sep + Integer.toString(daysBetween) 
+				+ Float.toString(probParentEncouraged) + sep + Integer.toString(daysBetween) 
 				+ sep + Integer.toString(numRepeats) + sep 
 				+ Integer.toString(meetingsBetweenTopicChange) + sep + Boolean.toString(onSchoolDay)
 				+ sep + Boolean.toString(onWeekendDay) + sep + Boolean.toString(onWeekendDay) + sep +
@@ -53,7 +53,7 @@ public class ActivityType
 		at.maxParticipants = Integer.parseInt(tokens[7]);
 		at.probSchoolRelated = Float.parseFloat(tokens[8]);
 		at.probVoluntary = Float.parseFloat(tokens[9]);
-		at.probParentMediated = Float.parseFloat(tokens[10]);
+		at.probParentEncouraged = Float.parseFloat(tokens[10]);
 		at.daysBetween = Integer.parseInt(tokens[11]);
 		at.numRepeats = Integer.parseInt(tokens[12]);
 		at.meetingsBetweenTopicChange = Integer.parseInt(tokens[13]);

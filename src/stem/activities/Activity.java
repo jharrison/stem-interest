@@ -29,7 +29,13 @@ public class Activity implements Steppable
 
 	public boolean isSchoolRelated = false;
 	public boolean isVoluntary = false;
-	public boolean isParentMediated = false;
+	public boolean isParentEncouraged = false;
+	/** Within this activity, how much choice does each participant have in what they do. 
+	 * 0 = low 
+	 * 1 = moderate
+	 * 2 = high 
+	 */
+	public int degreeOfChoice = 0;
 	
 	/** how often this activity is repeated */
 	public int daysBetween;	
@@ -49,13 +55,13 @@ public class Activity implements Steppable
 	}
 	
 	public Activity(TopicVector content, ArrayList<Student> participants, ArrayList<Adult> leaders, 
-			boolean isSchoolRelated, boolean isVoluntary, boolean isParentMediated) {
+			boolean isSchoolRelated, boolean isVoluntary, boolean isParentEncouraged) {
 		this.content = content;
 		this.participants = participants;
 		this.leaders = leaders;
 		this.isSchoolRelated = isSchoolRelated;
 		this.isVoluntary = isVoluntary;
-		this.isParentMediated = isParentMediated;
+		this.isParentEncouraged = isParentEncouraged;
 	}
 	
 	public void addParticipant(Student s) {
@@ -99,7 +105,7 @@ public class Activity implements Steppable
 
 		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
 		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
-		a.isParentMediated = model.random.nextDouble() < type.probParentMediated;
+		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
 		
 		return a;
 	}

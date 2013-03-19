@@ -33,7 +33,7 @@ public class ScienceClass extends RepeatingActivity
 		
 		isSchoolRelated = true;
 		isVoluntary = false;
-		isParentMediated = false;
+		isParentEncouraged = false;
 
 		topics.add(new TopicVector(1.0, 0.0, 0.0));
 		topics.add(new TopicVector(0.0, 1.0, 0.0));

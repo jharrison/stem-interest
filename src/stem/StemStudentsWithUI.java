@@ -17,7 +17,9 @@ import sim.display.GUIState;
 import sim.engine.Schedule;
 import sim.engine.SimState;
 import sim.engine.Steppable;
+import sim.portrayal.Inspector;
 import sim.portrayal.SimpleInspector;
+import sim.portrayal.inspector.TabbedInspector;
 import sim.util.Bag;
 import sim.util.media.chart.ChartGenerator;
 import sim.util.media.chart.HistogramGenerator;
@@ -64,6 +66,20 @@ public class StemStudentsWithUI extends GUIState
 		return state;
 	} // non-volatile
 
+    @Override
+    public Inspector getInspector()
+    {
+//        super.getInspector();
+
+        TabbedInspector i = new TabbedInspector();
+
+        i.setVolatile(true);
+        i.addInspector(new SimpleInspector(model, this), "System");
+        i.addInspector(new SimpleInspector(model.ruleSet, this), "Rules");
+
+        return i;
+    }
+    
 	public void start() {
 		super.start();
 		// set up our portrayals

@@ -23,6 +23,7 @@ import stem.activities.Activity;
 import stem.activities.ActivityType;
 import stem.activities.ScienceClass;
 import stem.network.*;
+import stem.rules.RuleSet;
 
 /**
  * An agent-based model of students interest in STEM with SYNERGIES project.
@@ -34,19 +35,24 @@ import stem.network.*;
 public class StemStudents extends SimState
 {
 	private static final long serialVersionUID = 1L;
+
+	public static final int NUM_ACTIVITY_TYPES = 16;
+	public static final int NUM_TOPICS = 3;	
 	
 	public GregorianCalendar date;
 	
 	ArrayList<Student> students = new ArrayList<Student>();
 	ArrayList<ActivityType> activityTypes = new ArrayList<ActivityType>();
 
-	static public final int NUM_ACTIVITY_TYPES = 16;
-	static public final int NUM_TOPICS = 3;	
-
 	public ArrayList<Activity> scienceClasses = new ArrayList<Activity>();
 	public ArrayList<Activity> activities = new ArrayList<Activity>();
+	/** Indices of the activities, allows for shuffling to randomize the order. */
+	private ArrayList<Integer> indices = new ArrayList<Integer>();
+	
+	public RuleSet ruleSet = new RuleSet();
 
 	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
+
 	
 	ScreenDataWriter averageInterestScreenWriter;
 	DoubleArrayWatcher averageInterestWatcher;
@@ -58,8 +64,6 @@ public class StemStudents extends SimState
 	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human Index");
 	
 	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
-	
-	private ArrayList<Integer> indices = new ArrayList<Integer>();	
 	
 	public int[] activityCounts = new int[NUM_ACTIVITY_TYPES];
 	public int[] getActivityCounts() { return activityCounts; }
@@ -455,7 +459,7 @@ public class StemStudents extends SimState
 				Activity a = Activity.createFromType(this, activityTypes.get(i));
 				a.addParticipant(s);
 				a.daysBetween = daysBetween;
-				if (a.isParentMediated)
+				if (a.isParentEncouraged)
 					a.leaders.add(s.parent);
 				activities.add(a);					
 			}

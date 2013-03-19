@@ -55,7 +55,7 @@ Data logging:
 Graphs:
 [x]	Histogram of interest distribution (x3)
 [x] Histogram of number of activities done per day
-[ ] Histogram of how many times each activity is being done (minus class maybe)
+[x] Histogram of how many times each activity is being done (minus class maybe)
 
 Ideas from meeting (12/16):
 [ ] Change the effect of parent participation as kids get older
@@ -75,13 +75,26 @@ Ideas from meeting (12/16):
 [ ] Init model parameters from properties to allow sweeps
 [x] Make NetworkDisplay hide on close
 [ ] Do multiple runs with random interests and stuffIDo to get average and error bars (make script)
-[ ] Add column(s) to student data file to represent parent participation level
 [ ] Add a mechanism for consensus formation ("balance seeking")
 [ ] Use daysBetween (or something) to reduce frequency of activities
-[ ] Use Nancy's correlation data to populate activity topic vectors
-[ ] Randomize order of activities when scheduling to eliminate bias
+[/] Use Nancy's correlation data to populate activity topic vectors
+[x] Randomize order of activities when scheduling to eliminate bias
 [ ] Find a way to quantify parent involvement and use it to determine if parent is an activity leader
+[ ] Add column(s) to student data file to represent parent encouragement level
 [ ] Add a column to activity type to specify activies as dynamically tailored to individual interest
+[ ] Switch the model over to use the new Rule types
+
+Individual-level visualization
+[ ] Interest vectors
+[ ] Activities
+[ ] Friend network
+
+Idea for visualization:
+GIS of area showing house locations for each student, draw links connecting friends. 
+Links will change over time to be based less on geography and more on interests.
+
+See:
+Add Health Survey for a dataset of adolescents
 
 r = i + epsilon
 epsilon = N(0,sigma^2)
