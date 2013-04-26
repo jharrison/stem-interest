@@ -25,21 +25,30 @@ public class FriendRule extends Rule
 	public void apply(Student s, Activity a) {		
 		// count friends
 		int friendCount = a.countParticipants(s.friends);
+		int goodExperience = 0;
 				
 		if (friendCount > 0) {
 			s.increaseInterest(a.content, weight);
+			goodExperience = 1;
 		}		
 		else {
 
 			boolean makeFriends = false;
 			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-				if (s.interest.topics[i] < s.model.interestThreshold)
+				if (s.interest.topics[i] < s.model.interestThreshold) {
 					s.decreaseInterest(i, a.content.topics[i], weight);
+					goodExperience = -1;
+				}
 				else
 					makeFriends = true;
 
 			//TODO make friends
 		}
+		//Now adjust prob. of doing activity again based on good/bad experience
+		if (goodExperience == 1)
+			s.increaseProbOfParticipating(a.type.id);
+		else if (goodExperience == -1)
+			s.decreaseProbOfParticipating(a.type.id);
 	}
 
 }

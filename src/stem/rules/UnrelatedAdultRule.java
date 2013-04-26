@@ -45,22 +45,36 @@ public class UnrelatedAdultRule extends Rule
 		// if !expertise & passion, no change
 		//		if interest < threshold, interest increases. else, no change
 		// if !expertise & !passion, interest decreases
+		int goodExperience = 0;  //Should prob. participation inc or dec.
 		
-		for (Adult adult : a.leaders)
+		for (Adult adult : a.leaders) {
 			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
 				boolean expertise = adult.expertise.topics[i] > s.model.expertiseThreshold;
 				boolean passion = adult.passion.topics[i] > s.model.passionThreshold;
 				
-				if (expertise && passion)
+				if (expertise && passion) {
 					s.increaseInterest(i, a.content.topics[i], weight);
-				else if (expertise && !passion && s.interest.topics[i] > s.model.interestThreshold)
+					goodExperience = 1;
+				}
+				else if (expertise && !passion && s.interest.topics[i] > s.model.interestThreshold) {
 					s.increaseInterest(i, a.content.topics[i], weight);
-				else if (!expertise && passion && s.interest.topics[i] < s.model.interestThreshold) 
+					goodExperience = 1;
+				}
+				else if (!expertise && passion && s.interest.topics[i] < s.model.interestThreshold) { 
 					s.increaseInterest(i, a.content.topics[i], weight);
-				else if (!expertise && !passion)
+					goodExperience = 1;
+				}
+				else if (!expertise && !passion) {
 					s.decreaseInterest(i, a.content.topics[i], weight);
+					goodExperience = -1;
+				}
 			}
-
+		}
+		//Change probability of participation for the next time
+		if (goodExperience == 1)
+			s.increaseProbOfParticipating(a.type.id);
+		else if (goodExperience == -1)
+			s.decreaseProbOfParticipating(a.type.id);
 	}
 
 }

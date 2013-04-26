@@ -138,6 +138,13 @@ public class StemStudents extends SimState
 	public boolean randomizeStuffIDo = false;
 //	public boolean getRandomizeStuffIDo() { return randomizeStuffIDo; }
 //	public void setRandomizeStuffIDo(boolean val) { randomizeStuffIDo = val; }
+
+	//How much to change the participation rate in an activity if interest has
+	//been increased or decreased.
+	public double changeParticipationRate = 0.05;
+	public double getChangeParticipationRate() {return changeParticipationRate;}
+	public void setChangeParticipationRate(double val) {changeParticipationRate = val;}
+	public Object domChangeParticipationRate() {return new Interval(0.0,0.5);}
 	
 
 	public StemStudents(long seed) {
@@ -497,7 +504,7 @@ public class StemStudents extends SimState
 		 * 
 		 * These represent the probabilities that the student will do the activity at any given opportunity.
 		 */
-		final double[] probOfParticipating = new double[] { 0, 0, 0.25, 0.5, 0.75, 1.0 };	// it's one-based so stuff an extra zero in there
+		//final double[] probOfParticipating = new double[] { 0, 0, 0.25, 0.5, 0.75, 1.0 };	// it's one-based so stuff an extra zero in there
 
 		boolean schoolDay = isSchoolDay(date);
 		boolean weekend = isWeekend(date);
@@ -510,7 +517,7 @@ public class StemStudents extends SimState
 			return false;
 
 		// stochastically decide whether to do this activity today or not
-		if (random.nextDouble() < probOfParticipating[s.stuffIDo[type.id]])
+		if (random.nextDouble() < s.probOfParticipating[type.id])  // Old way had probOfParticipating[s.stuffIDo[type.id]])
 			return true;
 		
 		return false;
