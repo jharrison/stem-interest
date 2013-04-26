@@ -34,10 +34,6 @@ public class ParentRule extends Rule
 			s.increaseInterest(a.content, weight);
 			s.increaseProbOfParticipating(a.type.id);
 		}
-		else {
-			s.decreaseInterest(a.content, weight);
-			s.decreaseProbOfParticipating(a.type.id);
-		}
 		
 		if (a.isParentEncouraged) {
 			s.increaseInterest(a.content, weight);
