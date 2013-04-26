@@ -28,6 +28,13 @@ public class Student
 	public int activitesDone = 0;
 
 	public int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
+	/*
+	 * Array containing the probability of participating in each of the activities.
+	 * This was moved into Students so that the probs can evolve depending upon
+	 * participation
+	 */
+	public double [] probOfParticipating = new double[StemStudents.NUM_ACTIVITY_TYPES];
+	
 	
 	public ArrayList<Student> friends = new ArrayList<Student>();
 	
@@ -78,7 +85,17 @@ public class Student
 	
 	public void increaseInterest(TopicVector relevance, double weight) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			increaseInterest(i, relevance.topics[i], weight);		
+			increaseInterest(i, relevance.topics[i], weight);
+	}
+	
+	public void increaseProbOfParticipating(int activityID)
+	{
+		//Don't change prob. of participating in school
+		if (activityID < (StemStudents.NUM_ACTIVITY_TYPES - 1))
+			this.probOfParticipating[activityID] += model.changeParticipationRate;
+		//Don't let it go over 1.0
+		if (model.changeParticipationRate > 1.0)
+			model.changeParticipationRate = 1.0;
 	}
 	
 	public void decreaseInterest(int topicIndex, double topicRelevance, double weight) {
@@ -89,9 +106,18 @@ public class Student
 
 	public void decreaseInterest(TopicVector relevance, double weight) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			decreaseInterest(i, relevance.topics[i], weight);		
+			decreaseInterest(i, relevance.topics[i], weight);
 	}
 	
+	public void decreaseProbOfParticipating(int activityID)
+	{
+		//Don't change the prob. of participating in school
+		if (activityID < (StemStudents.NUM_ACTIVITY_TYPES - 1))
+			this.probOfParticipating[activityID] -= model.changeParticipationRate;
+		//Don't let it go below 0.0
+		if (model.changeParticipationRate < 0.0)
+			model.changeParticipationRate = 0.0;
+	}
 	public double[] getInterest() {
 		return interest.topics;
 	}
@@ -103,6 +129,10 @@ public class Student
 	public static Student parseStudent(StemStudents model, String line) {
 		Student student = new Student(model);
 
+		// HARD-CODED initial probability of participation for an event. 
+		// It is one-based so stuff an extra zero in there
+		final double[] participationRate = new double[] {0,0,0.25,0.5,0.75,1.0};
+		
 		String[] tokens = line.split(",");
 		student.id = Integer.parseInt(tokens[0]);
 		// skip 1: gender
@@ -110,9 +140,13 @@ public class Student
 		// skip 3: teacher
 		// read 4-18: the 15 activities
 		for (int i = 0; i < 15; i++)
+		{
 			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
+			student.probOfParticipating[i] = participationRate[student.stuffIDo[i]];
+		}
 		// hard-code school for everyday
 		student.stuffIDo[15] = 5;
+		student.probOfParticipating[15] = 1.0;
 		// skip 19: Other_me
 		// skip 20: Name_other
 		// skip 21-43: Stuff that interests me
