@@ -42,7 +42,7 @@ public class UnrelatedAdultRule extends Rule
 		// if expertise & passion, interest increases
 		// if expertise & !passion
 		//		if interest > threshold, interest increases. else, no change
-		// if !expertise & passion, no change
+		// if !expertise & passion
 		//		if interest < threshold, interest increases. else, no change
 		// if !expertise & !passion, interest decreases
 		int goodExperience = 0;  //Should prob. participation inc or dec.

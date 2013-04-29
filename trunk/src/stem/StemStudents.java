@@ -529,6 +529,7 @@ public class StemStudents extends SimState
 	public void doActivitiesForDay() {
 		activities.clear();
 		
+		Collections.shuffle(students);
 		for (Student s : students) {
 			s.activities.clear();
 			Collections.shuffle(indices);
