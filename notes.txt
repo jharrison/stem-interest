@@ -59,8 +59,7 @@ Graphs:
 
 Ideas from meeting (12/16):
 [ ] Change the effect of parent participation as kids get older
-[ ] Heterogeneous student parameter for learning rate
-[ ] Some parents don't actively participate
+[ ] Heterogeneous student parameter for interest change rate
 [ ] Unrelated adults might have an emotional intelligence parameter (not sure what this means)
 [ ] Disruption caused by the changing of leaders
 [x] Vary level of adult expertise and passion
@@ -81,8 +80,9 @@ Ideas from meeting (12/16):
 [x] Randomize order of activities when scheduling to eliminate bias
 [ ] Find a way to quantify parent involvement and use it to determine if parent is an activity leader
 [ ] Add column(s) to student data file to represent parent encouragement level
+[ ] Some parents don't actively participate
 [ ] Add a column to activity type to specify activies as dynamically tailored to individual interest
-[ ] Switch the model over to use the new Rule types
+[x] Switch the model over to use the new Rule types
 
 Individual-level visualization
 [ ] Interest vectors

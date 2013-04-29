@@ -78,7 +78,7 @@ public class Student
 	}
 	
 	public void increaseInterest(int topicIndex, double topicRelevance, double weight) {
-		interest.topics[topicIndex] += model.interestChangeRate * topicRelevance;
+		interest.topics[topicIndex] += model.interestChangeRate * topicRelevance * weight;
 		if (interest.topics[topicIndex] > TopicVector.MAX_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MAX_INTEREST;
 	}
@@ -99,7 +99,7 @@ public class Student
 	}
 	
 	public void decreaseInterest(int topicIndex, double topicRelevance, double weight) {
-		interest.topics[topicIndex] -= model.interestChangeRate * topicRelevance;
+		interest.topics[topicIndex] -= model.interestChangeRate * topicRelevance * weight;
 		if (interest.topics[topicIndex] < TopicVector.MIN_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MIN_INTEREST;
 	}
