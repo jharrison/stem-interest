@@ -29,7 +29,7 @@ public class FriendRule extends Rule
 				
 		if (friendCount > 0) {
 			s.increaseInterest(a.content, weight);
-			goodExperience = 1;
+			goodExperience++;
 		}		
 		else {
 
@@ -37,7 +37,7 @@ public class FriendRule extends Rule
 			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
 				if (s.interest.topics[i] < s.model.interestThreshold) {
 					s.decreaseInterest(i, a.content.topics[i], weight);
-					goodExperience = -1;
+					goodExperience--;
 				}
 				else
 					makeFriends = true;
@@ -45,9 +45,9 @@ public class FriendRule extends Rule
 			//TODO make friends
 		}
 		//Now adjust prob. of doing activity again based on good/bad experience
-		if (goodExperience == 1)
+		if (goodExperience > 0)
 			s.increaseProbOfParticipating(a.type.id);
-		else if (goodExperience == -1)
+		else if (goodExperience < 0)
 			s.decreaseProbOfParticipating(a.type.id);
 	}
 
