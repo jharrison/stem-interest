@@ -54,26 +54,26 @@ public class UnrelatedAdultRule extends Rule
 				
 				if (expertise && passion) {
 					s.increaseInterest(i, a.content.topics[i], weight);
-					goodExperience = 1;
+					goodExperience++;
 				}
 				else if (expertise && !passion && s.interest.topics[i] > s.model.interestThreshold) {
 					s.increaseInterest(i, a.content.topics[i], weight);
-					goodExperience = 1;
+					goodExperience++;
 				}
 				else if (!expertise && passion && s.interest.topics[i] < s.model.interestThreshold) { 
 					s.increaseInterest(i, a.content.topics[i], weight);
-					goodExperience = 1;
+					goodExperience++;
 				}
 				else if (!expertise && !passion) {
 					s.decreaseInterest(i, a.content.topics[i], weight);
-					goodExperience = -1;
+					goodExperience--;
 				}
 			}
 		}
 		//Change probability of participation for the next time
-		if (goodExperience == 1)
+		if (goodExperience > 0)
 			s.increaseProbOfParticipating(a.type.id);
-		else if (goodExperience == -1)
+		else if (goodExperience < 0)
 			s.decreaseProbOfParticipating(a.type.id);
 	}
 
