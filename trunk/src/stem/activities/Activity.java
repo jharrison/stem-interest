@@ -30,12 +30,6 @@ public class Activity implements Steppable
 	public boolean isSchoolRelated = false;
 	public boolean isVoluntary = false;
 	public boolean isParentEncouraged = false;
-	/** Within this activity, how much choice does each participant have in what they do. 
-	 * 0 = low 
-	 * 1 = moderate
-	 * 2 = high 
-	 */
-	public int degreeOfChoice = 0;
 	
 	/** how often this activity is repeated */
 	public int daysBetween;	
