@@ -18,7 +18,7 @@ public class ChoiceRule extends Rule
 {
 	@Override
 	public void apply(Student s, Activity a) {
-		switch (a.degreeOfChoice) {
+		switch (a.type.degreeOfChoice) {
 		case 0: // Low: no change
 			break;
 		case 1: // Moderate: increase interest & prob. of participating

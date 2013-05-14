@@ -20,6 +20,7 @@ public class ActivityType
 	public boolean onWeekendDay;
 	public boolean onSummer;
 	public boolean withFriendsOnly;
+	public int degreeOfChoice;
 	public boolean isRepeating;
 	
 	public ActivityType() {
@@ -37,7 +38,7 @@ public class ActivityType
 				+ sep + Integer.toString(numRepeats) + sep 
 				+ Integer.toString(meetingsBetweenTopicChange) + sep + Boolean.toString(onSchoolDay)
 				+ sep + Boolean.toString(onWeekendDay) + sep + Boolean.toString(onWeekendDay) + sep +
-				Boolean.toString(withFriendsOnly) + "\n";
+				Boolean.toString(withFriendsOnly) + sep + Integer.toString(degreeOfChoice) + "\n";
 		return result;
 	}
 	
@@ -61,6 +62,16 @@ public class ActivityType
 		at.onWeekendDay = Boolean.parseBoolean(tokens[15]);
 		at.onSummer = Boolean.parseBoolean(tokens[16]);
 		at.withFriendsOnly = Boolean.parseBoolean(tokens[17]);
+		
+		String choice = tokens[18].trim();
+		if (choice.equals("LOW"))
+			at.degreeOfChoice = 0;
+		else if (choice.equals("MODERATE"))
+			at.degreeOfChoice = 1;
+		else if (choice.equals("HIGH"))
+			at.degreeOfChoice = 2;
+		else 
+			System.err.println("ActivityType degreeOfChoice is not LOW | MODERATE | HIGH\nIt was read in as " + choice + "\nline");
 		
 		return at;
 	}
