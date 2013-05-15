@@ -1,6 +1,7 @@
 package stem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import stem.activities.Activity;
 import stem.rules.Rule;
@@ -20,6 +21,7 @@ import stem.rules.Rule;
 public class Student
 {
 	public StemStudents model;
+	public boolean isFemale = true;
 	public TopicVector interest;
 	public double interestThreshold = 0.5; // TODO figure out what this should be
 	public Adult parent;
@@ -27,13 +29,22 @@ public class Student
 	/** Count of activities this student has done. */
 	public int activitesDone = 0;
 
-	public int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
+	/** List of responses the student gave to the "stuff I do" questions. */
+	private int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
+	public int [] getStuffIDo() { return stuffIDo; }
+	
+	/** Number of days that have passed since the student has done each of these activities. 
+	 * This is used to prevent activities from recurring too frequently. */
+	int [] daysSinceActivity = new int[StemStudents.NUM_ACTIVITY_TYPES];
+	public int [] getDaysSinceActivity() { return daysSinceActivity; }
+	
 	/*
 	 * Array containing the probability of participating in each of the activities.
 	 * This was moved into Students so that the probs can evolve depending upon
 	 * participation
 	 */
-	public double [] probOfParticipating = new double[StemStudents.NUM_ACTIVITY_TYPES];
+	double [] participationRates = new double[StemStudents.NUM_ACTIVITY_TYPES];
+	public double [] getParticipationRates() { return participationRates; }
 	
 	
 	public ArrayList<Student> friends = new ArrayList<Student>();
@@ -43,25 +54,40 @@ public class Student
 
 	public Student(StemStudents model) {
 		this.model = model;
+		
+		// init daysSince to a large number so they're ready to go
+		Arrays.fill(daysSinceActivity, Integer.MAX_VALUE);
 	}
 
 	public Student(StemStudents model, TopicVector interest) {
 		this.model = model;
 		this.interest = interest;
+
+		// init daysSince to a large number so they're ready to go
+		Arrays.fill(daysSinceActivity, Integer.MAX_VALUE);
+	}
+	
+	public void incrementCounters() {
+		
+		for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++)
+			if (daysSinceActivity[i] < Integer.MAX_VALUE)
+				daysSinceActivity[i]++;	
 	}
 
 	/**
 	 * The student engages in the given activity, possibly changing the
 	 * student's interest vector in the process.
-	 */
+	 */	
 	public void doActivity(Activity activity) {
 		for (Rule r : model.ruleSet.rules) {
 			if (r.isActive)
 				r.apply(this, activity);
 		}
 			
+		daysSinceActivity[activity.type.id] = 0;
 		activitesDone++;
-		model.activityCounts[activity.type.id]++;
+
+		model.studentParticipated(this, activity);
 	}
 	
 	/**
@@ -83,41 +109,46 @@ public class Student
 			interest.topics[topicIndex] = TopicVector.MAX_INTEREST;
 	}
 	
-	public void increaseInterest(TopicVector relevance, double weight) {
-		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			increaseInterest(i, relevance.topics[i], weight);
-	}
-	
-	public void increaseProbOfParticipating(int activityID)
-	{
-		//Don't change prob. of participating in school
-		if (activityID < (StemStudents.NUM_ACTIVITY_TYPES - 1))
-			this.probOfParticipating[activityID] += model.changeParticipationRate;
-		//Don't let it go over 1.0
-		if (model.changeParticipationRate > 1.0)
-			model.changeParticipationRate = 1.0;
-	}
-	
 	public void decreaseInterest(int topicIndex, double topicRelevance, double weight) {
 		interest.topics[topicIndex] -= model.interestChangeRate * topicRelevance * weight;
 		if (interest.topics[topicIndex] < TopicVector.MIN_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MIN_INTEREST;
 	}
 
+	public void increaseInterest(TopicVector relevance, double weight) {
+		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
+			increaseInterest(i, relevance.topics[i], weight);
+	}
+	
 	public void decreaseInterest(TopicVector relevance, double weight) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
 			decreaseInterest(i, relevance.topics[i], weight);
 	}
 	
-	public void decreaseProbOfParticipating(int activityID)
+	public void increaseParticipationRate(int activityID)
 	{
-		//Don't change the prob. of participating in school
-		if (activityID < (StemStudents.NUM_ACTIVITY_TYPES - 1))
-			this.probOfParticipating[activityID] -= model.changeParticipationRate;
-		//Don't let it go below 0.0
-		if (model.changeParticipationRate < 0.0)
-			model.changeParticipationRate = 0.0;
+		//Don't change prob. of participating in school
+		if (activityID == (StemStudents.NUM_ACTIVITY_TYPES - 1))
+			return;
+		
+		participationRates[activityID] += model.changeParticipationRate;
+		//Don't let it go over 1.0
+		if (participationRates[activityID] > 1.0)
+			participationRates[activityID] = 1.0;
 	}
+	
+	public void decreaseParticipationRate(int activityID)
+	{
+		//Don't change prob. of participating in school
+		if (activityID == (StemStudents.NUM_ACTIVITY_TYPES - 1))
+			return;
+
+		participationRates[activityID] -= model.changeParticipationRate;
+		//Don't let it go below 0.0
+		if (participationRates[activityID] < 0.0)
+			participationRates[activityID] = 0.0;
+	}
+	
 	public double[] getInterest() {
 		return interest.topics;
 	}
@@ -129,24 +160,38 @@ public class Student
 	public static Student parseStudent(StemStudents model, String line) {
 		Student student = new Student(model);
 
-		// HARD-CODED initial probability of participation for an event. 
+		/**
+		 * The responses to the question of "how often do you do the following...?" are mapped as follows:
+		 * All the time:			1.0
+		 * Often:					0.75
+		 * Every once in a while:	0.5			
+		 * Very rarely:				0.25
+		 * Never:					0.0
+		 * 
+		 * These represent the probabilities that the student will do the activity at any given opportunity.
+		 */
 		// It is one-based so stuff an extra zero in there
-		final double[] participationRate = new double[] {0,0,0.25,0.5,0.75,1.0};
+		final double[] participationRate = new double[] {0,0, 0.25, 0.5, 0.75, 1.0};
 		
 		String[] tokens = line.split(",");
 		student.id = Integer.parseInt(tokens[0]);
-		// skip 1: gender
+		
+		// 1st column: gender, 0 for male, 1 for female
+		if (tokens[1].equalsIgnoreCase("NA"))
+			student.isFemale = model.random.nextBoolean();
+		else
+			student.isFemale = (Integer.parseInt(tokens[1]) == 1);
 		// skip 2: school
 		// skip 3: teacher
 		// read 4-18: the 15 activities
 		for (int i = 0; i < 15; i++)
 		{
 			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
-			student.probOfParticipating[i] = participationRate[student.stuffIDo[i]];
+			student.participationRates[i] = participationRate[student.stuffIDo[i]];
 		}
 		// hard-code school for everyday
 		student.stuffIDo[15] = 5;
-		student.probOfParticipating[15] = 1.0;
+		student.participationRates[15] = 1.0;
 		// skip 19: Other_me
 		// skip 20: Name_other
 		// skip 21-43: Stuff that interests me

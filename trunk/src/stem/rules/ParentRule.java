@@ -32,12 +32,12 @@ public class ParentRule extends Rule
 				
 		if (parentPresent) {
 			s.increaseInterest(a.content, weight);
-			s.increaseProbOfParticipating(a.type.id);
+			s.increaseParticipationRate(a.type.id);
 		}
 		
 		if (a.isParentEncouraged) {
 			s.increaseInterest(a.content, weight);
-			s.increaseProbOfParticipating(a.type.id);
+			s.increaseParticipationRate(a.type.id);
 		}
 
 	}

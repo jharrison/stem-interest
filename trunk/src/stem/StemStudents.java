@@ -65,8 +65,16 @@ public class StemStudents extends SimState
 	
 	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
 	
-	public int[] activityCounts = new int[NUM_ACTIVITY_TYPES];
-	public int[] getActivityCounts() { return activityCounts; }
+//	/** Counts of how many times a student has done each activity */
+	int[] activityCounts = new int[NUM_ACTIVITY_TYPES];		
+//	public int[] getActivityCounts() { return activityCounts; }
+	
+	/** Counts of how many times a female has done each activity */
+	int[] activityGenderCounts = new int[NUM_ACTIVITY_TYPES];
+	
+//	/** Ratio of girls to boys among participants of each activity */
+	double[] activityGenderRatios = new double[NUM_ACTIVITY_TYPES];
+//	public double[] getActivityGenderRatios() { return activityGenderRatios; }
 	
     String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
     		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
@@ -74,12 +82,6 @@ public class StemStudents extends SimState
 	
 	
 	// Start getters/setters here =======================================================
-	/*
-	 * TODO
-	 * The model doesn't seem to handle trying to instantiate with more 
-	 * youth than in the input file well.  The histograms have way too 
-	 * many records in the 0 bin.
-	 */
 	public int numStudents = 127;  //# from survey that have valid values
 	public int getNumKids() { return numStudents; }
 	public void setNumKids(int val) { numStudents = val; }
@@ -96,6 +98,12 @@ public class StemStudents extends SimState
 	public double getSmallWorldRewireProbability() { return smallWorldRewireProbability; }
 	public void setSmallWorldRewireProbability(double val) { smallWorldRewireProbability = val; }
 	public Object domSmallWorldRewireProbability() { return new Interval(0.0, 1.0); }
+	
+
+	private double interGenderRewireProbability = 0.25;
+	public double getInterGenderRewireProbability() { return interGenderRewireProbability; }
+	public void setInterGenderRewireProbability(double val) { interGenderRewireProbability = val; }
+	public Object domInterGenderRewireProbability() { return new Interval(0.0, 1.0); }
 
 	public double interestThreshold = 0.75;
 	public double getInterestThreshold() { return interestThreshold; }
@@ -142,6 +150,7 @@ public class StemStudents extends SimState
 	//How much to change the participation rate in an activity if interest has
 	//been increased or decreased.
 	public double changeParticipationRate = 0.05;
+
 	public double getChangeParticipationRate() {return changeParticipationRate;}
 	public void setChangeParticipationRate(double val) {changeParticipationRate = val;}
 	public Object domChangeParticipationRate() {return new Interval(0.0,0.5);}
@@ -157,7 +166,7 @@ public class StemStudents extends SimState
 		activityTypes.clear();
 		BufferedReader initActivities = null;
 		
-		initActivities = new BufferedReader(new FileReader ("./data/initialActivityInput.csv"));
+		initActivities = new BufferedReader(new FileReader ("./data/activityTypes.csv"));
 		initActivities.readLine(); //Read in the header line of the file
 		
 		String line = null;
@@ -187,7 +196,7 @@ public class StemStudents extends SimState
 		
 		if (randomizeStuffIDo)
 			for (int i = 0; i < 15; i++)
-				s.stuffIDo[i] = random.nextInt(5) + 1;	// [1,5]
+				s.participationRates[i] = random.nextDouble();
 	}
 
 	public void initStudents() {
@@ -265,45 +274,29 @@ public class StemStudents extends SimState
 		System.out.format("ScienceClasses: %d, total students: %d\n", scienceClasses.size(), totalStudents);
 	}
 	
-	/**
-	 * Create a small-world network representing friendships between players.
-	 * Based on pseudocode from Prettejohn, Berryman, and McDonnell (2011)
-	 */
-	public void initSmallWorldNetwork() {
-		// First, create a ring network
-		int n = students.size();
-		for (int i = 0; i < n; i++) {
-			Student p1 = students.get(i);
-			for (int j = i+1; j <= i+numFriendsPerStudent/2; j++) {
-				Student p2 = students.get(j % n);
-				p1.friends.add(p2);
-				p2.friends.add(p1);
-			}
-		}
-		
-		// Second, rewire edges randomly with probability smallWorldRewireProbability
-		for (int i = 0; i < n; i++) {
-			Student p1 = students.get(i);
-			for (int j = i+1; j <= i+numFriendsPerStudent/2; j++) {
-				if (random.nextDouble() >= smallWorldRewireProbability)
-					continue;
-				Student p2 = students.get(j % n);
-				p1.friends.remove(p2);
-				p2.friends.remove(p1);
-				
-				// pick a random node that isn't i, or adjacent to i
-				Student p3;
-				do {
-					p3 = students.get(random.nextInt(n));
-				} 
-				while ((p3 == p1) || (p3.friends.contains(p1)));
-				
-				p1.friends.add(p3);
-				p3.friends.add(p1);
-			}
-		}
-		
 
+	
+	private void initStudentNetwork() {
+		ArrayList<Student> females = new ArrayList<Student>();
+		ArrayList<Student> males = new ArrayList<Student>();
+		
+		for (Student s : students)
+			if (s.isFemale)
+				females.add(s);
+			else
+				males.add(s);
+
+		NetworkGenerator.initSmallWorldNetwork(females, numFriendsPerStudent, smallWorldRewireProbability, random);
+		NetworkGenerator.initSmallWorldNetwork(males, numFriendsPerStudent, smallWorldRewireProbability, random);
+		//NetworkGenerator.initSmallWorldNetwork(students, numFriendsPerStudent, smallWorldRewireProbability, random);
+		
+		//TODO write and use a function that only cross-links between two groups
+		NetworkGenerator.rewireNetworkLinks(students, numFriendsPerStudent, interGenderRewireProbability, random);
+		
+					
+
+		
+		// Create and fill the JUNG network to use for display
 		network = new UndirectedSparseGraph<Student, SimpleEdge>();
 		for (Student p : students)
 			network.addVertex(p);
@@ -453,29 +446,29 @@ public class StemStudents extends SimState
 	 * NOTE: This function employs static, fixed-interval scheduling
 	 * 
 	 */
-	public void initStaticSchedule() {
-		int[] intervals = new int[] { 0, 0, 30, 10, 3, 1 };	// it's one-based so stuff an extra zero in there
-
-		activities.clear();
-		for (Student s : students) {
-			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
-				if (s.stuffIDo[i] == 1)	// never
-					continue;
-				int daysBetween = intervals[s.stuffIDo[i]];
-
-				Activity a = Activity.createFromType(this, activityTypes.get(i));
-				a.addParticipant(s);
-				a.daysBetween = daysBetween;
-				if (a.isParentEncouraged)
-					a.leaders.add(s.parent);
-				activities.add(a);					
-			}
-		}
-		
-		for (Activity a : activities)
-			schedule.scheduleRepeating(a.daysBetween, a);
-		
-	}
+//	public void initStaticSchedule() {
+//		int[] intervals = new int[] { 0, 0, 30, 10, 3, 1 };	// it's one-based so stuff an extra zero in there
+//
+//		activities.clear();
+//		for (Student s : students) {
+//			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
+//				if (s.stuffIDo[i] == 1)	// never
+//					continue;
+//				int daysBetween = intervals[s.stuffIDo[i]];
+//
+//				Activity a = Activity.createFromType(this, activityTypes.get(i));
+//				a.addParticipant(s);
+//				a.daysBetween = daysBetween;
+//				if (a.isParentEncouraged)
+//					a.leaders.add(s.parent);
+//				activities.add(a);					
+//			}
+//		}
+//		
+//		for (Activity a : activities)
+//			schedule.scheduleRepeating(a.daysBetween, a);
+//		
+//	}
 	
 	public void swap(int[] array, int i, int j) {
 		int temp = array[i];
@@ -494,18 +487,6 @@ public class StemStudents extends SimState
 	}
 	
 	public boolean willDoToday(Student s, ActivityType type) {
-		/**
-		 * The responses to the question of "how often do you do the following...?" are mapped as follows:
-		 * All the time:			1.0
-		 * Often:					0.75
-		 * Every once in a while:	0.5			
-		 * Very rarely:				0.25
-		 * Never:					0.0
-		 * 
-		 * These represent the probabilities that the student will do the activity at any given opportunity.
-		 */
-		//final double[] probOfParticipating = new double[] { 0, 0, 0.25, 0.5, 0.75, 1.0 };	// it's one-based so stuff an extra zero in there
-
 		boolean schoolDay = isSchoolDay(date);
 		boolean weekend = isWeekend(date);
 		boolean summer = isSummer(date);
@@ -515,9 +496,13 @@ public class StemStudents extends SimState
 			(weekend && !type.onWeekendDay) ||
 			(summer && !type.onSummer))
 			return false;
+		
+		// have we done this activity too recently?
+		if (s.daysSinceActivity[type.id] < type.daysBetween)
+			return false;
 
 		// stochastically decide whether to do this activity today or not
-		if (random.nextDouble() < s.probOfParticipating[type.id])  // Old way had probOfParticipating[s.stuffIDo[type.id]])
+		if (random.nextDouble() < s.participationRates[type.id])
 			return true;
 		
 		return false;
@@ -529,12 +514,15 @@ public class StemStudents extends SimState
 	public void doActivitiesForDay() {
 		activities.clear();
 		
+		// loop through students in random order
 		Collections.shuffle(students);
 		for (Student s : students) {
 			s.activities.clear();
-			Collections.shuffle(indices);
+			s.incrementCounters();
+			// loop through activities in random order
+			Collections.shuffle(indices);	
 			for (int i : indices) {
-				if (s.stuffIDo[i] == 1)	// student never does this one
+				if (s.participationRates[i] == 0)	// student never does this one
 					continue;
 
 				// don't overschedule
@@ -612,6 +600,26 @@ public class StemStudents extends SimState
 		s.activities.add(a);
 	}
 	
+	/** Event that is triggered when an activity is done. */
+	public void studentParticipated(Student s, Activity activity) {
+		int index = activity.type.id;
+		
+		activityCounts[index]++;
+		
+		if (s.isFemale)
+			activityGenderCounts[index]++;
+		
+		activityGenderRatios[index] = activityGenderCounts[index] / (double)activityCounts[index];
+	}
+	
+	void initStats() {
+
+		Arrays.fill(activityCounts, 0);
+		Arrays.fill(activityGenderCounts, 0);
+		Arrays.fill(activityGenderRatios, 0.0);
+		
+	}
+	
 	public void printDayInfo() {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         System.out.format("Step: %d, Date: %s, %d, %d, %d, %s, %s, %s\n", schedule.getSteps(), df.format(date.getTime()), 
@@ -636,9 +644,10 @@ public class StemStudents extends SimState
 
 		initStudents();
 		initScienceClasses();
-		initSmallWorldNetwork();
+		initStudentNetwork();
 //		initStaticSchedule();		
 		initDataLogging();
+		initStats();
 
 		//averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
 
