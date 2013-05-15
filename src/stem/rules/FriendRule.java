@@ -46,9 +46,9 @@ public class FriendRule extends Rule
 		}
 		//Now adjust prob. of doing activity again based on good/bad experience
 		if (goodExperience > 0)
-			s.increaseProbOfParticipating(a.type.id);
+			s.increaseParticipationRate(a.type.id);
 		else if (goodExperience < 0)
-			s.decreaseProbOfParticipating(a.type.id);
+			s.decreaseParticipationRate(a.type.id);
 	}
 
 }

@@ -72,9 +72,9 @@ public class UnrelatedAdultRule extends Rule
 		}
 		//Change probability of participation for the next time
 		if (goodExperience > 0)
-			s.increaseProbOfParticipating(a.type.id);
+			s.increaseParticipationRate(a.type.id);
 		else if (goodExperience < 0)
-			s.decreaseProbOfParticipating(a.type.id);
+			s.decreaseParticipationRate(a.type.id);
 	}
 
 }

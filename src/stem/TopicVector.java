@@ -56,7 +56,7 @@ public class TopicVector
 	@Override
 	public String toString() {
 		//TODO generalize this for any vector size
-		return String.format("[%.4f, %.4f, %.4f]", topics[0], topics[1], topics[2]);
+		return String.format("[%.3f, %.3f, %.3f]", topics[0], topics[1], topics[2]);
 	}
 	
 	static public TopicVector createRandom(MersenneTwisterFast random) {

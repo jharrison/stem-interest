@@ -1,10 +1,18 @@
 package stem;
 
+import java.awt.Color;
 import java.util.ArrayList;
 
 import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
@@ -43,6 +51,13 @@ public class StemStudentsWithUI extends GUIState
     HistogramGenerator activitiesDoneHist;
     HistogramGenerator[] interestHist = new HistogramGenerator[StemStudents.NUM_TOPICS];
     TimeSeriesChartGenerator aveInterestTimeSeries;
+
+    // Gender ratios
+    DefaultCategoryDataset genderRatioDataset = new DefaultCategoryDataset();
+    
+    // Activity counts
+    DefaultCategoryDataset activityCountDataset = new DefaultCategoryDataset();
+    
 
 	public StemStudentsWithUI() {
 		super(new StemStudents(System.currentTimeMillis()));
@@ -187,8 +202,64 @@ public class StemStudentsWithUI extends GUIState
         		"Average Interest Over Time", "Days", "Interest Level", c, 1);
 		aveInterestTimeSeries.getFrame().setVisible(true);
 		aveInterestTimeSeries.setYAxisRange(0, 1);
-
+		
+		// create gender ratio bar chart
+		registerBarChart(c, "Activity Gender Ratio", "Activity", "Ratio of Female Participants", genderRatioDataset, PlotOrientation.HORIZONTAL, false, true, false);
+		
+		JFreeChart chart = registerBarChart(c, "Activity Counts", "Activity", "Number of Times Activity Has Been Done", activityCountDataset, PlotOrientation.VERTICAL, false, true, false);
+		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
+		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+		
 		((Console)controller).setSize(400, 500);
+	}
+	@Override
+	public boolean step() {
+		super.step();
+		
+		String[] activityNames = new String[StemStudents.NUM_ACTIVITY_TYPES];
+		
+		for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++) {
+			activityNames[i] = model.activityTypes.get(i).name;
+			genderRatioDataset.setValue(model.activityGenderRatios[i], "Activity", activityNames[i]);
+			
+			activityCountDataset.setValue(model.activityCounts[i], "Activity", activityNames[i]);
+		}
+		
+		return true;
+	}
+	
+	public JFreeChart registerBarChart(final Controller c, String title, String categoryAxisLabel, String valueAxisLabel, 
+			CategoryDataset dataset, PlotOrientation orientation, boolean legend, boolean tooltips, boolean urls) 
+	{ 
+		JFreeChart chart = ChartFactory.createBarChart(title, categoryAxisLabel, valueAxisLabel, dataset, orientation, legend, tooltips, urls);
+        chart.setBackgroundPaint(Color.WHITE);
+        chart.getTitle().setPaint(Color.BLACK);
+
+        CategoryPlot pl = chart.getCategoryPlot();
+        pl.setBackgroundPaint(Color.WHITE);
+        pl.setRangeGridlinePaint(Color.BLUE);
+
+        // set the range axis to display integers only...  
+        NumberAxis rangeAxis = (NumberAxis) pl.getRangeAxis();
+//        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+
+        rangeAxis.setRangeWithMargins(0, 1);
+        CategoryAxis xAxis = pl.getDomainAxis();
+//        xAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+
+
+        ((BarRenderer)pl.getRenderer()).setShadowVisible(false);
+        ((BarRenderer)pl.getRenderer()).setBarPainter(new StandardBarPainter());
+        
+        
+        ChartFrame frame = new ChartFrame(title, chart);
+        frame.setVisible(true);
+        frame.setSize(200, 600);
+
+        frame.pack();
+        c.registerFrame(frame);
+        
+        return chart;
 	}
 	
 	public void studentSelected(Student s) {
