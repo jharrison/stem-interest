@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 
@@ -147,13 +148,25 @@ public class StemStudents extends SimState
 //	public boolean getRandomizeStuffIDo() { return randomizeStuffIDo; }
 //	public void setRandomizeStuffIDo(boolean val) { randomizeStuffIDo = val; }
 
-	//How much to change the participation rate in an activity if interest has
-	//been increased or decreased.
+	/** How much to change the participation rate in an activity if interest has
+	 * been increased or decreased. */
 	public double changeParticipationRate = 0.05;
+	public double getChangeParticipationRate() { return changeParticipationRate; }
+	public void setChangeParticipationRate(double val) { changeParticipationRate = val; }
+	public Object domChangeParticipationRate() { return new Interval(0.0,0.5); }
 
-	public double getChangeParticipationRate() {return changeParticipationRate;}
-	public void setChangeParticipationRate(double val) {changeParticipationRate = val;}
-	public Object domChangeParticipationRate() {return new Interval(0.0,0.5);}
+	/** Probability of making a new friend when participating in an activity. */
+	public double makeFriendProbability = 0.01;
+	public double getMakeFriendProbability() { return makeFriendProbability; }
+	public void setMakeFriendProbability(double val) { makeFriendProbability = val; }
+	public Object domMakeFriendProbability() { return new Interval(0.0,0.5);}
+
+	/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
+	public double closeTriadProbability = 0.05;
+	public double getCloseTriadProbability() { return closeTriadProbability; }
+	public void setCloseTriadProbability(double val) { closeTriadProbability = val; }
+	public Object domCloseTriadProbability() { return new Interval(0.0,0.5); }
+	
 	
 
 	public StemStudents(long seed) {
@@ -301,13 +314,49 @@ public class StemStudents extends SimState
 		for (Student p : students)
 			network.addVertex(p);
 		
-		for (Student p : students) {
-			Student p1 = (Student)p;
+		for (Student p1 : students) {
 			for (Student p2 : p1.friends) {
 				if (!network.isNeighbor(p1, p2))
 					network.addEdge(new SimpleEdge(""), p1, p2);					
 			}
 		}
+	}
+	
+	public boolean addFriends(Student a, Student b) {
+		// can't become friends if they already are friends
+		if (network.isNeighbor(a, b))
+			return false;
+		
+		a.friends.add(b);
+		b.friends.add(a);
+		network.addEdge(new SimpleEdge(""), a, b);
+		
+		return true;
+	}
+	
+	public boolean removeFriends(Student a, Student b) {
+		// can't remove them if they aren't already friends
+		SimpleEdge e = findEdge(a, b);
+		if (e == null)
+			return false;
+		
+		a.friends.remove(b);
+		b.friends.remove(a);
+		network.removeEdge(e);
+		
+		return true;
+	}
+	
+	private SimpleEdge findEdge(Student a, Student b) {
+		if (!network.isNeighbor(a, b))
+			return null;
+		
+		for (SimpleEdge e : network.getEdges()) {
+			Collection<Student> nodes = network.getIncidentVertices(e);
+			if (nodes.contains(a) && nodes.contains(b))
+				return e;
+		}
+		return null;
 	}
 
 	public void initDataLogging() {
@@ -470,7 +519,7 @@ public class StemStudents extends SimState
 //		
 //	}
 	
-	public void swap(int[] array, int i, int j) {
+	private void swap(int[] array, int i, int j) {
 		int temp = array[i];
 		array[i] = array[j];
 		array[j] = temp;
@@ -670,6 +719,11 @@ public class StemStudents extends SimState
 				
 				if (state.schedule.getSteps() > 365)
 					state.finish();
+				
+//				int totalFriendCount = 0;
+//				for (Student s : students)
+//					totalFriendCount += s.friends.size();
+//				System.out.format("Network link count: %d, totalFriendCount: %d\n", network.getEdgeCount(), totalFriendCount);
 			}
 		});
 	}

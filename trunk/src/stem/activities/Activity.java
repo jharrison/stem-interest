@@ -24,7 +24,7 @@ public class Activity implements Steppable
 	
 	/** name of the activity, e.g. Library, Scouts, etc. */
 	public TopicVector content;
-	protected ArrayList<Student> participants = new ArrayList<Student>();
+	public ArrayList<Student> participants = new ArrayList<Student>();
 	public ArrayList<Adult> leaders = new ArrayList<Adult>();
 
 	public boolean isSchoolRelated = false;

@@ -198,7 +198,7 @@ public class StemStudentsWithUI extends GUIState
 		activitiesDoneHist.getFrame().setVisible(false);
 
 		aveInterestTimeSeries = ChartUtils.attachTimeSeries(
-				new XYSeries[] {model.interest1Series.series, model.interest2Series.series, model.interest3Series.series}, 
+				new XYSeries[] {model.interest1Series.getData(), model.interest2Series.getData(), model.interest3Series.getData()}, 
         		"Average Interest Over Time", "Days", "Interest Level", c, 1);
 		aveInterestTimeSeries.getFrame().setVisible(true);
 		aveInterestTimeSeries.setYAxisRange(0, 1);
