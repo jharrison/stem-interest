@@ -12,12 +12,14 @@ public class RuleSet
 	ParentRule parentRule = new ParentRule();
 	UnrelatedAdultRule unrelatedAdultRule = new UnrelatedAdultRule();
 	ChoiceRule choiceRule = new ChoiceRule();
+	MakeFriendRule makeFriendRule = new MakeFriendRule();
 	
 	public RuleSet() {
 		rules.add(friendRule);
 		rules.add(parentRule);
 		rules.add(unrelatedAdultRule);
 		rules.add(choiceRule);
+		rules.add(makeFriendRule);
 	}
 	
 	public boolean getFriendRuleEnabled() { return friendRule.isActive; }
@@ -43,5 +45,8 @@ public class RuleSet
 	public double getChoiceRuleWeight() { return choiceRule.weight; }
 	public void setChoiceRuleWeight(double val) { choiceRule.weight = val; }
 	public Object domChoiceRuleWeight() { return new Interval(0.0, 5.0); }
+	
+
+	public boolean getMakeFriendRuleEnabled() { return makeFriendRule.isActive; }
 
 }

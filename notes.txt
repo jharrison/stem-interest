@@ -47,6 +47,21 @@ School is a place where children have regular (weekly) interactions with science
 Occasionally, children/youth venture out of this zone to pursue science-related activities (e.g., zoo, science museum).
 The spatial distance of non-school science activities from the child matter: the farther away from home, the less likely to pursue (all other things being equal).
 
+Rules for making new friends:
+During an activity, 
+0) if no friends are present, 
+	if random < makeFriendProb,
+		pick a new friend with highly similar interests
+
+1) if one friend is present,
+	if friend of friend is present,
+		if random < closeTriadProb,
+			close the triad
+	else
+		same as 0)
+
+2) if two or more friends are present,
+	do nothing
 
 TODO:
 Data logging:
@@ -83,6 +98,7 @@ Ideas from meeting (12/16):
 [ ] Some parents don't actively participate
 [ ] Add a column to activity type to specify activies as dynamically tailored to individual interest
 [x] Switch the model over to use the new Rule types
+[ ] Use different node shapes for male and female
 
 Individual-level visualization
 [ ] Interest vectors

@@ -91,6 +91,20 @@ public class Student
 	}
 	
 	/**
+	 * Calculate the distanace between two students in terms of interests.
+	 * @return the root mean square difference.
+	 */
+	public double calcDistance(Student other) {
+		double sum = 0;
+		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
+			double diff = this.interest.topics[i] - other.interest.topics[i];
+			sum += diff*diff;
+		}
+		
+		return Math.sqrt(sum/TopicVector.VECTOR_SIZE);
+	}
+		
+	/**
 	 * Check to see if the student is interested in the given content.
 	 * @param content
 	 * @return true if any topic exceeds threshold, false otherwise
