@@ -10,7 +10,7 @@ import stem.activities.Activity;
  * During an activity, 
  * 	0) if no friends are present, 
  * 		if random < makeFriendProb,
- * 			pick a new friend with highly similar interests
+ * 			pick a new friend with highly similar interests & swap for old friend if she is less similar
  * 	1) if one friend is present,
  * 		if friend of friend is present,
  * 			if random < closeTriadProb,
