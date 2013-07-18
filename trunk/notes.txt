@@ -99,6 +99,7 @@ Ideas from meeting (12/16):
 [ ] Add a column to activity type to specify activies as dynamically tailored to individual interest
 [x] Switch the model over to use the new Rule types
 [ ] Use different node shapes for male and female
+[ ] Make the organized activities (scouts, after-school, summer camp) repeat with the same participants
 
 Individual-level visualization
 [ ] Interest vectors
