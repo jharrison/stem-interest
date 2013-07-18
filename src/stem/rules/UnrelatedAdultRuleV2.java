@@ -1,0 +1,86 @@
+package stem.rules;
+
+import stem.Adult;
+import stem.Student;
+import stem.TopicVector;
+import stem.activities.Activity;
+
+/**
+ * Unrelated Adults<BR>
+ * Unrelated adults are associated with interactions in activities; each has
+ * an arbitrary level of expertise and passion in the topic of that
+ * activity. There are some arbitrary fixed number of unrelated adults
+ * available for interactions in the community. 
+ * <ul>
+ * <li>
+ * When unrelated adults are
+ * skilled at sharing their expertise and passion in a topic in an activity,
+ * the value to interest increases. 
+ * <li>
+ * When unrelated adults are skilled at
+ * sharing expertise but not passion in a topic in an activity, the value to
+ * interest decreases (unless the interest threshold has been exceeded,
+ * then it increases). 
+ * <li>
+ * When unrelated adults are skilled at sharing passion
+ * but not expertise in a topic in an activity, interest increases if interest 
+ * is already below the interest threshold. Otherwise, no change.
+ * <li> 
+ * When unrelated adults are neither skilled nor passionate, the
+ * value to interest decreases.
+ * </ul>
+ * 
+ * @author Joey Harrison
+ *
+ */
+public class UnrelatedAdultRuleV2 extends Rule
+{
+
+	@Override
+	public void apply(Student s, Activity a) {
+		// --- Unrelated Adults
+		// if expertise & passion, interest increases
+		// if expertise & !passion
+		//		if interest > threshold, interest increases. else, interest decreases
+		// if !expertise & passion
+		//		if interest < threshold, interest increases. else, no change
+		// if !expertise & !passion, interest decreases
+		int goodExperience = 0;  //Should prob. participation inc or dec.
+		
+		for (Adult adult : a.leaders) {
+			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
+				boolean expertise = adult.expertise.topics[i] > s.model.expertiseThreshold;
+				boolean passion = adult.passion.topics[i] > s.model.passionThreshold;
+				
+				if (expertise && passion) {
+					s.increaseInterest(i, a.content.topics[i], weight);
+					goodExperience++;
+				}
+				else if (expertise && !passion) {
+					if (s.interest.topics[i] > s.model.interestThreshold) {
+						s.increaseInterest(i, a.content.topics[i], weight);
+						goodExperience++;
+					}
+					else {
+						s.decreaseInterest(i, a.content.topics[i], weight);
+						goodExperience--;
+					}
+				}
+				else if (!expertise && passion && s.interest.topics[i] < s.model.interestThreshold) { 
+					s.increaseInterest(i, a.content.topics[i], weight);
+					goodExperience++;
+				}
+				else if (!expertise && !passion) {
+					s.decreaseInterest(i, a.content.topics[i], weight);
+					goodExperience--;
+				}
+			}
+		}
+		//Change probability of participation for the next time
+		if (goodExperience > 0)
+			s.increaseParticipationRate(a.type.id);
+		else if (goodExperience < 0)
+			s.decreaseParticipationRate(a.type.id);
+	}
+
+}

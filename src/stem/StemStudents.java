@@ -167,6 +167,15 @@ public class StemStudents extends SimState
 	public void setCloseTriadProbability(double val) { closeTriadProbability = val; }
 	public Object domCloseTriadProbability() { return new Interval(0.0,0.5); }
 	
+	public int[] getFriendCounts() {
+		int [] counts = new int[numStudents];
+		int index = 0;
+		for (Student s : students)
+			counts[index++] = s.friends.size();
+		
+		return counts;
+	}
+	
 	
 
 	public StemStudents(long seed) {
@@ -303,7 +312,6 @@ public class StemStudents extends SimState
 		NetworkGenerator.initSmallWorldNetwork(males, numFriendsPerStudent, smallWorldRewireProbability, random);
 		//NetworkGenerator.initSmallWorldNetwork(students, numFriendsPerStudent, smallWorldRewireProbability, random);
 		
-		//TODO write and use a function that only cross-links between two groups
 		NetworkGenerator.rewireNetworkLinks(students, numFriendsPerStudent, interGenderRewireProbability, random);
 		
 					
@@ -320,6 +328,11 @@ public class StemStudents extends SimState
 					network.addEdge(new SimpleEdge(""), p1, p2);					
 			}
 		}
+		
+	}
+	
+	public Collection<Student> getFriends(Student s) {
+		return network.getNeighbors(s);
 	}
 	
 	public boolean addFriends(Student a, Student b) {
@@ -564,6 +577,7 @@ public class StemStudents extends SimState
 		activities.clear();
 		
 		// loop through students in random order
+		//TODO use the MersenneTwisterFast to shuffle this.
 		Collections.shuffle(students);
 		for (Student s : students) {
 			s.activities.clear();
