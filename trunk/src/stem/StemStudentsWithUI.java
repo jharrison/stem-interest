@@ -69,12 +69,8 @@ public class StemStudentsWithUI extends GUIState
 		model = (StemStudents)state;
 	}
 
-	public static void main(String[] args) {
-		new StemStudentsWithUI().createController();
-	}
-
 	public static String getName() {
-		return "STEM Kids";
+		return "STEM Interest";
 	}
 
 	public Object getSimulationInspectedObject() {
@@ -271,4 +267,7 @@ public class StemStudentsWithUI extends GUIState
 		controller.setInspectors(inspectors, names);
 	}
 
+	public static void main(String[] args) {
+		new StemStudentsWithUI().createController();
+	}
 }
