@@ -9,8 +9,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
-
+import java.util.Random;
 
 import masoncsc.datawatcher.*;
 import masoncsc.util.Pair;
@@ -22,6 +23,7 @@ import sim.engine.Steppable;
 import sim.util.Interval;
 import stem.activities.Activity;
 import stem.activities.ActivityType;
+import stem.activities.RepeatingActivity;
 import stem.activities.ScienceClass;
 import stem.network.*;
 import stem.rules.RuleSet;
@@ -46,7 +48,8 @@ public class StemStudents extends SimState
 	ArrayList<ActivityType> activityTypes = new ArrayList<ActivityType>();
 
 	public ArrayList<Activity> scienceClasses = new ArrayList<Activity>();
-	public ArrayList<Activity> activities = new ArrayList<Activity>();
+//	public ArrayList<Activity> activities = new ArrayList<Activity>();
+	public ArrayList<RepeatingActivity> repeatingActivities = new ArrayList<RepeatingActivity>();
 	/** Indices of the activities, allows for shuffling to randomize the order. */
 	private ArrayList<Integer> indices = new ArrayList<Integer>();
 	
@@ -101,7 +104,7 @@ public class StemStudents extends SimState
 	public Object domSmallWorldRewireProbability() { return new Interval(0.0, 1.0); }
 	
 
-	private double interGenderRewireProbability = 0.25;
+	private double interGenderRewireProbability = 0.00;
 	public double getInterGenderRewireProbability() { return interGenderRewireProbability; }
 	public void setInterGenderRewireProbability(double val) { interGenderRewireProbability = val; }
 	public Object domInterGenderRewireProbability() { return new Interval(0.0, 1.0); }
@@ -131,7 +134,7 @@ public class StemStudents extends SimState
 	public void setInterestDecayExponent(double val) { interestDecayRate = val; }
 	public Object domInterestDecayExponent() { return new Interval(0.0, 1.0); }
 	
-	public double nodeSize = 2.5;
+	public double nodeSize = 5.0;
 	public double getNodeSize() { return nodeSize; }
 	public void setNodeSize(double val) { nodeSize = val; }
 	public Object domNodeSize() { return new Interval(0.0, 10.0); }
@@ -226,7 +229,7 @@ public class StemStudents extends SimState
 		BufferedReader initInterests = null;
 		
 		/*
-		 * Read in initial interests from data file, initialInterests.csv
+		 * Read in initial student info and interests from data file
 		 */
 		try {
 			initInterests = new BufferedReader(new FileReader("./data/initialStudentInput.csv"));
@@ -549,6 +552,10 @@ public class StemStudents extends SimState
 	}
 	
 	public boolean willDoToday(Student s, ActivityType type) {
+		// if the student never does this activity, don't bother doing more expensive checks
+		if (s.participationRates[type.id] == 0)
+			return false;
+		
 		boolean schoolDay = isSchoolDay(date);
 		boolean weekend = isWeekend(date);
 		boolean summer = isSummer(date);
@@ -569,40 +576,129 @@ public class StemStudents extends SimState
 		
 		return false;
 	}
+
+	/**
+	 * Is today a day when this repeating activity will occur?
+	 * @param activity
+	 * @return
+	 */
+	private boolean willOccurToday(RepeatingActivity activity) {
+
+		boolean schoolDay = isSchoolDay(date);
+		boolean weekend = isWeekend(date);
+		boolean summer = isSummer(date);
+
+		// is this a valid day for this activity?
+		if ((schoolDay && !activity.type.onSchoolDay) ||
+			(weekend && !activity.type.onWeekendDay) ||
+			(summer && !activity.type.onSummer))
+			return false;
+		
+		// have this activity occured too recently?
+		if ((activity.lastOccurence != -1) && 
+				((schedule.getSteps() - activity.lastOccurence) < activity.type.daysBetween))
+			return false;
+		
+		if (activity.timesRepeated >= activity.type.numRepeats)
+			return false;
+		
+		return true;
+	}
+	
+	
+	/**
+	 * Match participants to activities such that friends are kept together
+	 * as much as possible.
+	 */
+	public void matchParticipantsToActivities(ArrayList<Student> participants, ArrayList<Activity> activities) {
+		ArrayList<Activity> nonFullActivities = new ArrayList<Activity>(activities);
+		for (Student s : participants) {
+			Activity a = nonFullActivities.get(random.nextInt(nonFullActivities.size()));
+			a.addParticipant(s);
+			if (a.isFull())
+				nonFullActivities.remove(a);
+		}
+	}
+	
+	
+	/** Create a new set of repeating activities and assign participants. */
+	public void organizeRepeatingActivities() {
+
+		ArrayList<Student> allParticipants = new ArrayList<Student>();
+		
+		// loop through activities in random order
+		Collections.shuffle(indices);	
+		for (int i : indices) {
+			ActivityType type = activityTypes.get(i);
+			if (!type.isRepeating)
+				continue;
+			
+			// make a list of everyone who'll be doing this activity
+			allParticipants.clear();
+			for (Student s : students)
+				if (s.participationRates[i] > 0)
+					allParticipants.add(s);
+			
+			// assign participants to activities
+			int numActivities = (int)Math.ceil(allParticipants.size() / (double)type.maxParticipants);
+			ArrayList<Activity> activities = new ArrayList<Activity>();
+			for (int j = 0; j < numActivities; j++)
+				activities.add(RepeatingActivity.createFromType(this, type));
+			
+			matchParticipantsToActivities(allParticipants, activities);
+			
+			// schedule the activities
+			for (Activity a : activities)
+				repeatingActivities.add((RepeatingActivity)a);
+		}
+	}
 	
 	/**
 	 * Schedule one day's worth of activities.
 	 */
 	public void doActivitiesForDay() {
-		activities.clear();
+		ArrayList<Activity> activities = new ArrayList<Activity>();
+
+		for (Student s : students)
+			s.activities.clear();
+		
+		//TODO use ec.util.MersenneTwister for shuffling
+		Collections.shuffle(repeatingActivities, new Random(random.nextLong()));
+		Collections.sort(repeatingActivities, new Comparator<RepeatingActivity>() {
+			public int compare(RepeatingActivity arg0, RepeatingActivity arg1) {
+				return arg0.type.priority - arg1.type.priority;
+			}
+		});
+		for (RepeatingActivity ra : repeatingActivities) {
+			if (willOccurToday((RepeatingActivity)ra))
+				ra.step(this);
+		}
 		
 		// loop through students in random order
-		//TODO use the MersenneTwisterFast to shuffle this.
-		Collections.shuffle(students);
+		//TODO use the MersenneTwister to shuffle this.
+		Collections.shuffle(students, new Random(random.nextLong()));
 		for (Student s : students) {
-			s.activities.clear();
 			s.incrementCounters();
 			// loop through activities in random order
 			Collections.shuffle(indices);	
 			for (int i : indices) {
-				if (s.participationRates[i] == 0)	// student never does this one
-					continue;
-
 				// don't overschedule
 				if (s.activities.size() >= maxActivitiesPerDay)
 					break;
 
 				ActivityType type = activityTypes.get(i);
 				
+				if (type.isRepeating)
+					continue;	// repeating activities are handled above
+				
 				if (willDoToday(s, type))
-					createOrJoinActivity(s, type);				
+					createOrJoinActivity(s, activities, type);				
 			}
 		}
 		
 		// Now do them
 		for (Activity a : activities) {
 			a.step(this);
-//			activityCounts[a.type.id]++;
 		}
 	}
 	
@@ -612,10 +708,11 @@ public class StemStudents extends SimState
 	 * friend is participating, join that one. Otherwise, pick a random matching
 	 * activity.
 	 * @param s Student that wants to join an activity.
-	 * @param type Type of the activity.
+	 * @param activities List of available activities.
+	 * @param type Type of the activity to join.
 	 * @return The matching activity or null if none exists
 	 */
-	public Activity findActivityToJoin(Student s, ActivityType type) {
+	public Activity findActivityToJoin(Student s, ArrayList<Activity> activities, ActivityType type) {
 		ArrayList<Activity> matches = new ArrayList<Activity>();
 		for (Activity a : activities)
 			if ((a.type == type) && !a.isFull())
@@ -642,8 +739,8 @@ public class StemStudents extends SimState
 	 * @param s Student that will be participating in the activity.
 	 * @param type Type of the activity.
 	 */
-	public void createOrJoinActivity(Student s, ActivityType type) {
-		Activity a = findActivityToJoin(s, type);
+	public void createOrJoinActivity(Student s, ArrayList<Activity> activities, ActivityType type) {
+		Activity a = findActivityToJoin(s, activities, type);
 		
 		if (a == null) {	
 			a = Activity.createFromType(this, type);
@@ -713,6 +810,14 @@ public class StemStudents extends SimState
 		initStats();
 
 		//averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
+		
+		// Once per year, organize the repeating activities
+		schedule.scheduleRepeating(0.0, new Steppable() {
+			@Override
+			public void step(SimState arg0) {
+				organizeRepeatingActivities();
+			}
+		}, 365);
 
 		
 		System.out.format("scienceClasses.size(): %d\n", scienceClasses.size());
@@ -731,7 +836,7 @@ public class StemStudents extends SimState
 				
 				date.add(Calendar.DATE, 1);
 				
-				if (state.schedule.getSteps() > 365)
+				if (state.schedule.getSteps() > 1461)	// 4 years (including one leap day)
 					state.finish();
 				
 //				int totalFriendCount = 0;

@@ -11,8 +11,8 @@ import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,6 @@ import javax.swing.JPanel;
 
 import org.apache.commons.collections15.Transformer;
 import org.freehep.util.export.ExportDialog;
-import org.jfree.util.ShapeUtilities;
 
 import sim.display.Display2D;
 import sim.engine.SimState;
@@ -152,7 +151,6 @@ public class NetworkDisplay implements Steppable {
 		final BasicStroke width3Stroke = new BasicStroke(3);
 		final SimpleColorMap colorMap = new SimpleColorMap();
 
-
 		Transformer<Student, Paint> vertexPainter = new Transformer<Student, Paint>() {						
 			public Paint transform(Student s) {
 				return colorMap.getColor(s.getAverageInterest());
@@ -170,9 +168,12 @@ public class NetworkDisplay implements Steppable {
 		
 		Transformer<Student, Shape> vertexShapeTransformer = new Transformer<Student, Shape>() {
 			public Shape transform(Student v) {
-				double radius = v.friends.size() * model.nodeSize;
-//                return new Ellipse2D.Double(-5, -5, 10, 10);
-                return new Ellipse2D.Double(-radius, -radius, 2*radius, 2*radius);
+//				double radius = v.friends.size() * model.nodeSize;
+				double radius = model.nodeSize;
+				if (v.isFemale)
+					return new Ellipse2D.Double(-radius, -radius, 2*radius, 2*radius);
+				else
+					return new Rectangle2D.Double(-radius, -radius, 2*radius, 2*radius);
 			}			
 		};
 

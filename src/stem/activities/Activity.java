@@ -85,7 +85,7 @@ public class Activity implements Steppable
 
 	@Override
 	public void step(SimState state) {
-		System.out.format("Step: %d, activity: %s, content: %s\n", state.schedule.getSteps(), type.name, content.toString());
+//		System.out.format("Step: %d, activity: %s, content: %s\n", state.schedule.getSteps(), type.name, content.toString());
 		for (Student s : participants)
 			s.doActivity(this);		
 				

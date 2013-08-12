@@ -22,6 +22,7 @@ public class ActivityType
 	public boolean withFriendsOnly;
 	public int degreeOfChoice;
 	public boolean isRepeating;
+	public int priority;
 	
 	public ActivityType() {
 		
@@ -29,17 +30,29 @@ public class ActivityType
 	
 	public String toString()
 	{
-		String sep = ", ";
-		String result = Integer.toString(id) + sep + name + sep + content.toString() + sep 
-				+ Integer.toString(numLeaders) + sep + Integer.toString(numParents) + sep 
-				+ Integer.toString(maxParticipants) + sep + Float.toString(probSchoolRelated) 
-				+ sep + Float.toString(probVoluntary) + sep 
-				+ Float.toString(probParentEncouraged) + sep + Integer.toString(daysBetween) 
-				+ sep + Integer.toString(numRepeats) + sep 
-				+ Integer.toString(meetingsBetweenTopicChange) + sep + Boolean.toString(onSchoolDay)
-				+ sep + Boolean.toString(onWeekendDay) + sep + Boolean.toString(onWeekendDay) + sep +
-				Boolean.toString(withFriendsOnly) + sep + Integer.toString(degreeOfChoice) + "\n";
-		return result;
+		StringBuilder result = new StringBuilder();
+		
+		result.append(id).append(", ");
+		result.append(name).append(", ");
+		result.append(content.toString()).append(", ");
+		result.append(numLeaders).append(", ");
+		result.append(numParents).append(", ");
+		result.append(maxParticipants).append(", ");
+		result.append(probSchoolRelated).append(", ");
+		result.append(probVoluntary).append(", ");
+		result.append(probParentEncouraged).append(", ");
+		result.append(daysBetween).append(", ");
+		result.append(numRepeats).append(", ");
+		result.append(meetingsBetweenTopicChange).append(", ");
+		result.append(onSchoolDay).append(", ");
+		result.append(onWeekendDay).append(", ");
+		result.append(onSummer).append(", ");
+		result.append(withFriendsOnly).append(", ");
+		result.append(degreeOfChoice).append(", ");
+		result.append(isRepeating).append(", ");
+		result.append(priority);
+
+		return result.toString();
 	}
 	
 	static public ActivityType parseActivityType(String line) {
@@ -72,6 +85,9 @@ public class ActivityType
 			at.degreeOfChoice = 2;
 		else 
 			System.err.println("ActivityType degreeOfChoice is not LOW | MODERATE | HIGH\nIt was read in as " + choice + "\nline");
+
+		at.isRepeating = Boolean.parseBoolean(tokens[19]);
+		at.priority = Integer.parseInt(tokens[20]);
 		
 		return at;
 	}

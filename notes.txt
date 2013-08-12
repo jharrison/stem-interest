@@ -90,16 +90,20 @@ Ideas from meeting (12/16):
 [x] Make NetworkDisplay hide on close
 [ ] Do multiple runs with random interests and stuffIDo to get average and error bars (make script)
 [ ] Add a mechanism for consensus formation ("balance seeking")
-[ ] Use daysBetween (or something) to reduce frequency of activities
+[x] Use daysBetween (or something) to reduce frequency of activities
 [/] Use Nancy's correlation data to populate activity topic vectors
 [x] Randomize order of activities when scheduling to eliminate bias
 [ ] Find a way to quantify parent involvement and use it to determine if parent is an activity leader
 [ ] Add column(s) to student data file to represent parent encouragement level
-[ ] Some parents don't actively participate
 [ ] Add a column to activity type to specify activies as dynamically tailored to individual interest
 [x] Switch the model over to use the new Rule types
-[ ] Use different node shapes for male and female
-[ ] Make the organized activities (scouts, after-school, summer camp) repeat with the same participants
+[x] Use different node shapes for male (square) and female (round)
+[x] Make the organized activities (scouts, after-school, summer camp) repeat with the same participants
+[x] Add a column to activityTypes.csv for scheduling priority (i.e. school and other activities are higher than ad hoc ones)
+[ ] Create a new spreadsheet for adults who'll lead different activities
+[ ] Design an algorithm for matching students to activity instances (of a given type) that keep friends together
+[x] Change everything in the model to run for 4 years instead of 3. (including csv files)
+[ ] Bring MersenneTwister into the project and use it for shuffling.
 
 Individual-level visualization
 [ ] Interest vectors
@@ -134,3 +138,6 @@ Last day of schoolyear: Friday, June 7th 2013 (jday: 158)
 
 Potential Experiments:
 - Would higher teacher expertise yield different results?
+
+ 
+
