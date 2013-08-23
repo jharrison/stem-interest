@@ -648,6 +648,7 @@ public class StemStudents extends SimState
 			matchParticipantsToActivities(allParticipants, activities);
 			
 			// schedule the activities
+			repeatingActivities.clear();
 			for (Activity a : activities)
 				repeatingActivities.add((RepeatingActivity)a);
 		}
