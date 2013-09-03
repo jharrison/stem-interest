@@ -19,6 +19,8 @@ import org.jfree.data.xy.XYSeries;
 
 import masoncsc.util.ChartUtils;
 
+import sim.display.ChartUtilities;
+import sim.display.ChartUtilities.ProvidesDoubles;
 import sim.display.Console;
 import sim.display.Controller;
 import sim.display.GUIState;
@@ -80,8 +82,6 @@ public class StemStudentsWithUI extends GUIState
     @Override
     public Inspector getInspector()
     {
-//        super.getInspector();
-
         TabbedInspector i = new TabbedInspector();
 
         i.setVolatile(true);
@@ -206,8 +206,26 @@ public class StemStudentsWithUI extends GUIState
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		
+
+		HistogramGenerator test = ChartUtilities.buildHistogramGenerator(this, "Participation Histograms", "Number of Students");
+		for (int j = 0; j < StemStudents.NUM_ACTIVITY_TYPES; j++) {
+			final int activityIndex = j;
+//			HistogramGenerator test = ChartUtilities.buildHistogramGenerator(this, model.activityTypes.get(j).name + " Participation", "Number of Students");
+
+			ChartUtilities.addSeries(this, test, model.activityTypes.get(j).name, new ProvidesDoubles() {
+				public double[] provide() {
+					double[] counts = new double[model.students.size()];
+					for (int i = 0; i < model.students.size(); i++)
+						//counts[i] = model.students.get(i).activityCounts[activityIndex];
+						counts[i] = model.activityTypes.get(activityIndex).mapActivityCountToLikert(model.students.get(i).activityCounts[activityIndex]);
+					return counts;
+				}
+			}, 5);
+		}
+		
 		((Console)controller).setSize(400, 500);
 	}
+	
 	@Override
 	public boolean step() {
 		super.step();
@@ -259,15 +277,20 @@ public class StemStudentsWithUI extends GUIState
 	}
 	
 	public void studentSelected(Student s) {
-		System.out.println("Kid clicked.");
+		System.out.println("Youth clicked.");
 		Bag inspectors = new Bag();
 		Bag names = new Bag();
 		inspectors.add(new SimpleInspector(s, this));
-		names.add("Student");
+		names.add("Youth");
 		controller.setInspectors(inspectors, names);
 	}
 
 	public static void main(String[] args) {
 		new StemStudentsWithUI().createController();
+	}
+	
+	public class ModelStats
+	{
+//		public int[] classCounts
 	}
 }

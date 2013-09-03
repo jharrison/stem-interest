@@ -38,6 +38,9 @@ public class Student
 	int [] daysSinceActivity = new int[StemStudents.NUM_ACTIVITY_TYPES];
 	public int [] getDaysSinceActivity() { return daysSinceActivity; }
 	
+
+	public int[] activityCounts = new int[StemStudents.NUM_ACTIVITY_TYPES];		
+	
 	/*
 	 * Array containing the probability of participating in each of the activities.
 	 * This was moved into Students so that the probs can evolve depending upon
@@ -57,6 +60,7 @@ public class Student
 		
 		// init daysSince to a large number so they're ready to go
 		Arrays.fill(daysSinceActivity, Integer.MAX_VALUE);
+		Arrays.fill(activityCounts, 0);
 	}
 
 	public Student(StemStudents model, TopicVector interest) {
@@ -85,6 +89,7 @@ public class Student
 		}
 			
 		daysSinceActivity[activity.type.id] = 0;
+		activityCounts[activity.type.id]++;
 		activitesDone++;
 
 		model.studentParticipated(this, activity);
@@ -185,7 +190,7 @@ public class Student
 		 * These represent the probabilities that the student will do the activity at any given opportunity.
 		 */
 		// It is one-based so stuff an extra zero in there
-		final double[] participationRate = new double[] {0,0, 0.25, 0.5, 0.75, 1.0};
+		final double[] participationRate = new double[] {0, 0, 0.25, 0.5, 0.75, 1.0};
 		
 		String[] tokens = line.split(",");
 		student.id = Integer.parseInt(tokens[0]);
@@ -201,7 +206,8 @@ public class Student
 		for (int i = 0; i < 15; i++)
 		{
 			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
-			student.participationRates[i] = participationRate[student.stuffIDo[i]];
+//			student.participationRates[i] = participationRate[student.stuffIDo[i]];
+			student.participationRates[i] = model.activityTypes.get(i).mapLikertToParticpationRate(student.stuffIDo[i]);
 		}
 		// hard-code school for everyday
 		student.stuffIDo[15] = 5;
