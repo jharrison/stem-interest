@@ -62,6 +62,29 @@ During an activity,
 
 2) if two or more friends are present,
 	do nothing
+	
+-------
+
+
+Info about Prescott Elementary
+First day of schoolyear: Tuesday, Sept 4th 2012 (jday: 247)
+Winter break Dec 24 - Jan 4
+Last day of schoolyear: Friday, June 7th 2013 (jday: 158)
+
+In 2013:
+
+199 school days (ignoring holidays/breaks)
+
+104 weekend days
+	78 during the school year
+	26 during summer
+
+88 summer days
+	62 during the week
+	26 during the weekend
+
+
+-------
 
 TODO:
 Data logging:
@@ -104,6 +127,10 @@ Ideas from meeting (12/16):
 [ ] Design an algorithm for matching students to activity instances (of a given type) that keep friends together
 [x] Change everything in the model to run for 4 years instead of 3. (including csv files)
 [ ] Bring MersenneTwister into the project and use it for shuffling.
+[ ] MakeFriendRule needs to consider inter-gender friend probability
+[x] Verify that the correct number of repeating activities are being created
+[ ] Create a mechanism to allow for schedule adjustment (synergy)
+		Three scenarios: no coordination, some coordination, lots of coordination
 
 Individual-level visualization
 [ ] Interest vectors
@@ -113,6 +140,7 @@ Individual-level visualization
 Idea for visualization:
 GIS of area showing house locations for each student, draw links connecting friends. 
 Links will change over time to be based less on geography and more on interests.
+[x] Histogram for each activity showing number of times each student has done that activity
 
 See:
 Add Health Survey for a dataset of adolescents
@@ -122,7 +150,7 @@ epsilon = N(0,sigma^2)
 
 Issues with the rules:
 Solo activities always result in a decrease in interest
-	- Make rules only have effect when they are relevant, e.g. with solo activities, lack of friends isn't relevant
+	[ ] Make rules only have effect when they are relevant, e.g. with solo activities, lack of friends isn't relevant
 
 	
 Problems with data:
@@ -131,13 +159,27 @@ Problems with data:
 - Teacher
 
 
-Info about Prescott Elementary
-First day of schoolyear: Tuesday, Sept 4th 2012 (jday: 247)
-Winter break Dec 24 - Jan 4
-Last day of schoolyear: Friday, June 7th 2013 (jday: 158)
-
 Potential Experiments:
 - Would higher teacher expertise yield different results?
 
- 
+-----------------------
+
+Evolving the mapping from stuffIDo responses to participation rates. Initially, we used
+a naive mapping where:
+Never: 				0
+Very Rarely:		0.25
+Once in a while:	0.5
+Often:				0.75
+All the time:		1.0
+
+In the second round of surveys, they changed the wording of the question to be more precise.
+Thus, the mapping becomes:
+Never: 					0
+Few times a year:		0.25
+1-2 a month:			0.5
+1-2 a week:				0.75
+Almost every day:		1.0
+
+These values are almost certainly wrong, and should probably be different for each activity.
+Thus, we have 
 

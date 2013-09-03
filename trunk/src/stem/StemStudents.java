@@ -185,21 +185,42 @@ public class StemStudents extends SimState
 		super(seed);
 		for (int i = 0; i < NUM_ACTIVITY_TYPES-1; i++)	// don't add an index for science class
 			indices.add(i);
+		readActivityTypes();
+		testActivityTypes();
 	}
 	
-	public void readInActivityTypes() throws IOException {
-		activityTypes.clear();
-		BufferedReader initActivities = null;
-		
-		initActivities = new BufferedReader(new FileReader ("./data/activityTypes.csv"));
-		initActivities.readLine(); //Read in the header line of the file
-		
-		String line = null;
-		while ((line = initActivities.readLine()) != null)
-		{
-			ActivityType a = ActivityType.parseActivityType(line);
-			activityTypes.add(a);
-		}	
+	private void testActivityTypes() {
+
+		for (ActivityType at : activityTypes) {
+			System.out.format("%-18s", at.name + ":");
+			for (int i = 1; i <= 5; i++) {
+				System.out.format("%.3f, ", at.mapLikertToParticpationRate(i));
+			}
+			System.out.println();
+		}
+	}
+	
+	public void readActivityTypes() {
+		try {
+			activityTypes.clear();
+			BufferedReader initActivities = null;
+			
+			initActivities = new BufferedReader(new FileReader ("./data/activityTypes.csv"));
+			initActivities.readLine(); //Read in the header line of the file
+			
+			String line = null;
+			while ((line = initActivities.readLine()) != null)
+			{
+				ActivityType a = ActivityType.parseActivityType(line);
+				activityTypes.add(a);
+			}	
+			
+			if (activityTypes.size() != NUM_ACTIVITY_TYPES)
+				System.err.format("Error: %d activity types read from file, should be %d.\n", activityTypes.size(), NUM_ACTIVITY_TYPES);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err.println("Problem Reading in Activities");
+		}
 	}
 	
 	public double clamp(double val, double min, double max) {
@@ -794,14 +815,7 @@ public class StemStudents extends SimState
 		date = new GregorianCalendar(2012, 8, 4);	// Sept 4th. Month is zero-based for some strange reason
 		
 		// Read in the characteristics of each activity
-		try {
-			readInActivityTypes();
-			if (activityTypes.size() != NUM_ACTIVITY_TYPES)
-				System.err.format("Error: %d activity types read from file, should be %d.\n", activityTypes.size(), NUM_ACTIVITY_TYPES);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Problem Reading in Activities");
-		}
+		readActivityTypes();
 
 		initStudents();
 		initScienceClasses();

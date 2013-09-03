@@ -55,6 +55,59 @@ public class ActivityType
 		return result.toString();
 	}
 	
+	/**
+	 * Maps the survey response to the question "How often do you do ...",
+	 * which is given in a 5-point likert scale, to participation rates
+	 * which are the probably of participating in any given opportunity.
+	 * 
+	 * @param response 
+	 * @return
+	 */
+	public double mapLikertToParticpationRate(int response) {
+		// calculate the number of opportunities in a year
+		int opportunities = 0;
+		if (onSchoolDay)
+			opportunities += 199;
+		if (onWeekendDay)
+			opportunities += 104;
+		if (onSummer)
+			opportunities += 62;
+		
+		// The survey response is a likert scale for which the answers are:
+		// 0: Never
+		// 1: Very rarely / Few times per year
+		// 2: Once in a while / 1-2 per month
+		// 3: Often / 1-2 per week
+		// 4: All the time / Almost every day
+		int timesDone = 0;
+		switch (response) {
+		case 1: timesDone = 0; break;		// Never
+		case 2: timesDone = 3; break;		// few times per year
+		case 3: timesDone = 18; break;		// 1-2 times per month
+		case 4: timesDone = 78; break;		// 1-2 per week
+		case 5: timesDone = 200; break;		// almost every day
+		}
+		
+		return Math.min(1, timesDone / (double)opportunities);
+	}
+	
+	public int mapParticipationRateToLikert(double rate) {
+		return 0;
+	}
+	
+	public int mapActivityCountToLikert(int count) {
+		if (count == 0)
+			return 1;
+		if (count <= 3)
+			return 2;
+		if (count <= 18)
+			return 3;
+		if (count <= 78)
+			return 4;
+		
+		return 5;
+	}
+	
 	static public ActivityType parseActivityType(String line) {
 		String[] tokens = line.split(",");
 
