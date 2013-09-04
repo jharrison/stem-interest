@@ -645,6 +645,7 @@ public class StemStudents extends SimState
 	/** Create a new set of repeating activities and assign participants. */
 	public void organizeRepeatingActivities() {
 
+		repeatingActivities.clear();
 		ArrayList<Student> allParticipants = new ArrayList<Student>();
 		
 		// loop through activities in random order
@@ -669,7 +670,6 @@ public class StemStudents extends SimState
 			matchParticipantsToActivities(allParticipants, activities);
 			
 			// schedule the activities
-			repeatingActivities.clear();
 			for (Activity a : activities)
 				repeatingActivities.add((RepeatingActivity)a);
 		}
