@@ -166,11 +166,11 @@ Potential Experiments:
 
 Evolving the mapping from stuffIDo responses to participation rates. Initially, we used
 a naive mapping where:
-Never: 				0
-Very Rarely:		0.25
-Once in a while:	0.5
-Often:				0.75
-All the time:		1.0
+Never: 					0
+Very Rarely:			0.25
+Every once in a while:	0.5
+Often:					0.75
+All the time:			1.0
 
 In the second round of surveys, they changed the wording of the question to be more precise.
 Thus, the mapping becomes:
@@ -181,5 +181,5 @@ Few times a year:		0.25
 Almost every day:		1.0
 
 These values are almost certainly wrong, and should probably be different for each activity.
-Thus, we have 
+
 

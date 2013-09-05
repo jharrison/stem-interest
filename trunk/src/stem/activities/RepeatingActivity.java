@@ -14,6 +14,7 @@ public class RepeatingActivity extends Activity
 	public long lastOccurence = -1;
 	
 	public ArrayList<Student> potentialParticipants = new ArrayList<Student>();
+	public TopicVector originalTopic;
 	
 	public RepeatingActivity() {
 		super();
@@ -21,16 +22,23 @@ public class RepeatingActivity extends Activity
 	
 	public RepeatingActivity(TopicVector content) {
 		super(content);
+		originalTopic = new TopicVector(content);
 	}
 	
 	@Override
 	public void addParticipant(Student s) {
 		potentialParticipants.add(s);
 	}
+	
+	protected void coordinateContent(StemStudents model) {
+		content = TopicVector.weightedCombination(model.coordinatedTopic, originalTopic, model.coordinationLevel);
+	}
 
 	@Override
 	public void step(SimState state) {
 		StemStudents model = (StemStudents)state;
+		
+		coordinateContent(model);
 
 		participants.clear();
 		for (Student s : potentialParticipants)

@@ -54,31 +54,14 @@ public class StemStudents extends SimState
 	private ArrayList<Integer> indices = new ArrayList<Integer>();
 	
 	public RuleSet ruleSet = new RuleSet();
+	
+	/** This is the topic to which coordinateable activities will be coordinated.
+	 * @see coordinationLevel */
+	public TopicVector coordinatedTopic = new TopicVector();
 
 	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
 
-	
-	ScreenDataWriter averageInterestScreenWriter;
-	DoubleArrayWatcher averageInterestWatcher;
-	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[NUM_TOPICS];
-	DoubleArrayWatcher activitiesDoneWatcher;
-
-	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Exploration Index");
-	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Science Index");
-	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human Index");
-	
-	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
-	
-//	/** Counts of how many times a student has done each activity */
-	int[] activityCounts = new int[NUM_ACTIVITY_TYPES];		
-//	public int[] getActivityCounts() { return activityCounts; }
-	
-	/** Counts of how many times a female has done each activity */
-	int[] activityGenderCounts = new int[NUM_ACTIVITY_TYPES];
-	
-//	/** Ratio of girls to boys among participants of each activity */
-	double[] activityGenderRatios = new double[NUM_ACTIVITY_TYPES];
-//	public double[] getActivityGenderRatios() { return activityGenderRatios; }
+	DataLogger dataLogger;
 	
     String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
     		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
@@ -129,7 +112,7 @@ public class StemStudents extends SimState
 	public void setInterestChangeRate(double val) { interestChangeRate = val; }
 	public Object domInterestChangeRate() { return new Interval(0.0, 1.0); }
 
-	public double interestDecayRate = 1.0;
+	public double interestDecayRate = 0.993;
 	public double getInterestDecayExponent() { return interestDecayRate; }
 	public void setInterestDecayExponent(double val) { interestDecayRate = val; }
 	public Object domInterestDecayExponent() { return new Interval(0.0, 1.0); }
@@ -170,21 +153,32 @@ public class StemStudents extends SimState
 	public void setCloseTriadProbability(double val) { closeTriadProbability = val; }
 	public Object domCloseTriadProbability() { return new Interval(0.0,0.5); }
 	
-	public int[] getFriendCounts() {
-		int [] counts = new int[numStudents];
-		int index = 0;
-		for (Student s : students)
-			counts[index++] = s.friends.size();
-		
-		return counts;
-	}
+
+	/** Extent to which activities are coordinated with current school topic. */
+	public double coordinationLevel = 0.0;
+	public double getCoordinationLevel() { return coordinationLevel; }
+	public void setCoordinationLevel(double val) { coordinationLevel = val; }
+	public Object domCoordinationLevel() { return new Interval(0.0,1.0); }
+	
+//	public int[] getFriendCounts() {
+//		int [] counts = new int[numStudents];
+//		int index = 0;
+//		for (Student s : students)
+//			counts[index++] = s.friends.size();
+//		
+//		return counts;
+//	}
 	
 	
 
 	public StemStudents(long seed) {
 		super(seed);
+		
+		dataLogger = new DataLogger(this);
+		
 		for (int i = 0; i < NUM_ACTIVITY_TYPES-1; i++)	// don't add an index for science class
 			indices.add(i);
+		
 		readActivityTypes();
 		testActivityTypes();
 	}
@@ -334,12 +328,8 @@ public class StemStudents extends SimState
 
 		NetworkGenerator.initSmallWorldNetwork(females, numFriendsPerStudent, smallWorldRewireProbability, random);
 		NetworkGenerator.initSmallWorldNetwork(males, numFriendsPerStudent, smallWorldRewireProbability, random);
-		//NetworkGenerator.initSmallWorldNetwork(students, numFriendsPerStudent, smallWorldRewireProbability, random);
 		
 		NetworkGenerator.rewireNetworkLinks(students, numFriendsPerStudent, interGenderRewireProbability, random);
-		
-					
-
 		
 		// Create and fill the JUNG network to use for display
 		network = new UndirectedSparseGraph<Student, SimpleEdge>();
@@ -395,166 +385,6 @@ public class StemStudents extends SimState
 		}
 		return null;
 	}
-
-	public void initDataLogging() {
-		Arrays.fill(activityCounts, 0);
-		dataWatchers.clear();
-		
-		averageInterestWatcher = new DoubleArrayWatcher() {
-			// anonymous constructor
-			{
-				data = new double[numStudents];
-			}
-
-			@Override
-			protected void updateDataPoint() {
-				for (int i = 0; i < students.size(); i++)
-					data[i] = students.get(i).getAverageInterest();				
-			}
-			
-			@Override
-			public String getCSVHeader() {
-				return null;
-			}
-		};
-		dataWatchers.add(averageInterestWatcher);
-
-		for (int i = 0; i < NUM_TOPICS; i++) {
-			final int topic = i;
-			interestWatcher[i] = new DoubleArrayWatcher() {
-				// anonymous constructor
-				{
-					data = new double[numStudents];
-				}
-
-				@Override
-				protected void updateDataPoint() {
-					for (int j = 0; j < students.size(); j++)
-						data[j] = students.get(j).interest.topics[topic];				
-				}
-				
-				@Override
-				public String getCSVHeader() {
-					return null;
-				}
-			};
-			dataWatchers.add(interestWatcher[i]);
-		}
-		
-		interest1Series.clear();
-        dataWatchers.add(new PairDataWatcher<Long, Double>() {
-            { addListener(interest1Series); }
-
-            @Override
-            protected void updateDataPoint() {
-                final long currentStep = schedule.getSteps();
-                double total = 0;
-                for (Student s : students)
-                	total += s.interest.topics[0];
-                dataPoint = new Pair<Long, Double>(currentStep, (total / students.size()));
-            }
-
-            @Override
-            public String getCSVHeader() {
-                return "Step, " + interest1Series.getDescription();
-            }
-        });
-
-        interest2Series.clear();
-        dataWatchers.add(new PairDataWatcher<Long, Double>() {
-            { addListener(interest2Series); }
-
-            @Override
-            protected void updateDataPoint() {
-                final long currentStep = schedule.getSteps();
-                double total = 0;
-                for (Student s : students)
-                	total += s.interest.topics[1];
-                dataPoint = new Pair<Long, Double>(currentStep, (total / students.size()));
-            }
-
-            @Override
-            public String getCSVHeader() {
-                return "Step, " + interest2Series.getDescription();
-            }
-        });
-
-        interest3Series.clear();
-        dataWatchers.add(new PairDataWatcher<Long, Double>() {
-            { addListener(interest3Series); }
-
-            @Override
-            protected void updateDataPoint() {
-                final long currentStep = schedule.getSteps();
-                double total = 0;
-                for (Student s : students)
-                	total += s.interest.topics[2];
-                dataPoint = new Pair<Long, Double>(currentStep, (total / students.size()));
-            }
-
-            @Override
-            public String getCSVHeader() {
-                return "Step, " + interest3Series.getDescription();
-            }
-        });
-        
-		activitiesDoneWatcher = new DoubleArrayWatcher() {
-			// anonymous constructor
-			{
-				data = new double[numStudents];
-			}
-
-			@Override
-			protected void updateDataPoint() {
-				for (int i = 0; i < students.size(); i++)
-					data[i] = students.get(i).activitesDone / Math.max(schedule.getSteps(), 1.0);				
-			}
-			
-			@Override
-			public String getCSVHeader() {
-				return null;
-			}
-		};
-		dataWatchers.add(activitiesDoneWatcher);
-		
-	}
-	
-	/**
-	 * Initialize the activity schedule based on survey data. Students were asked
-	 * how often, from 1-5, they did certain activites outside of school. For now,
-	 * we are interpretting these values to mean:
-	 * 1: never
-	 * 2: once every 30 days
-	 * 3: once every 10 days
-	 * 4: once every 3 days
-	 * 5: every day
-	 * 
-	 * NOTE: This function employs static, fixed-interval scheduling
-	 * 
-	 */
-//	public void initStaticSchedule() {
-//		int[] intervals = new int[] { 0, 0, 30, 10, 3, 1 };	// it's one-based so stuff an extra zero in there
-//
-//		activities.clear();
-//		for (Student s : students) {
-//			for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
-//				if (s.stuffIDo[i] == 1)	// never
-//					continue;
-//				int daysBetween = intervals[s.stuffIDo[i]];
-//
-//				Activity a = Activity.createFromType(this, activityTypes.get(i));
-//				a.addParticipant(s);
-//				a.daysBetween = daysBetween;
-//				if (a.isParentEncouraged)
-//					a.leaders.add(s.parent);
-//				activities.add(a);					
-//			}
-//		}
-//		
-//		for (Activity a : activities)
-//			schedule.scheduleRepeating(a.daysBetween, a);
-//		
-//	}
 	
 	private void swap(int[] array, int i, int j) {
 		int temp = array[i];
@@ -784,23 +614,9 @@ public class StemStudents extends SimState
 	
 	/** Event that is triggered when an activity is done. */
 	public void studentParticipated(Student s, Activity activity) {
-		int index = activity.type.id;
-		
-		activityCounts[index]++;
-		
-		if (s.isFemale)
-			activityGenderCounts[index]++;
-		
-		activityGenderRatios[index] = activityGenderCounts[index] / (double)activityCounts[index];
+		dataLogger.studentParticipated(s, activity);
 	}
 	
-	void initStats() {
-
-		Arrays.fill(activityCounts, 0);
-		Arrays.fill(activityGenderCounts, 0);
-		Arrays.fill(activityGenderRatios, 0.0);
-		
-	}
 	
 	public void printDayInfo() {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
@@ -820,46 +636,52 @@ public class StemStudents extends SimState
 		initStudents();
 		initScienceClasses();
 		initStudentNetwork();
-//		initStaticSchedule();		
-		initDataLogging();
-		initStats();
+		dataLogger.init();
 
-		//averageInterestScreenWriter = new ScreenDataWriter(averageInterestWatcher);
+		final int ORGANIZE_ORDER = 0;
+		final int SCIENCE_CLASS_ORDER = 1;
+		final int ACTIVITIES_ORDER = 2;
+		final int DATA_LOGGER_ORDER = 3;
+		final int CALENDAR_ORDER = 4;
 		
 		// Once per year, organize the repeating activities
-		schedule.scheduleRepeating(0.0, new Steppable() {
+		schedule.scheduleRepeating(0.0, ORGANIZE_ORDER, new Steppable() {
 			@Override
 			public void step(SimState arg0) {
 				organizeRepeatingActivities();
 			}
 		}, 365);
-
 		
-		System.out.format("scienceClasses.size(): %d\n", scienceClasses.size());
+//		System.out.format("scienceClasses.size(): %d\n", scienceClasses.size());
 		for (Activity a : scienceClasses)
-			schedule.scheduleRepeating(a);
+			schedule.scheduleRepeating(a, SCIENCE_CLASS_ORDER, 1.0);
 		
 		schedule.scheduleRepeating(new Steppable() {
 			@Override
 			public void step(SimState state) {
 //				printDayInfo();
+				coordinatedTopic = scienceClasses.get(0).content;
 				doActivitiesForDay();
 				decayInterests();
-						
-				for (DataWatcher<?> dw : dataWatchers)
-					dw.update();
-				
-				date.add(Calendar.DATE, 1);
-				
-				if (state.schedule.getSteps() > 1461)	// 4 years (including one leap day)
-					state.finish();
 				
 //				int totalFriendCount = 0;
 //				for (Student s : students)
 //					totalFriendCount += s.friends.size();
 //				System.out.format("Network link count: %d, totalFriendCount: %d\n", network.getEdgeCount(), totalFriendCount);
 			}
-		});
+		}, ACTIVITIES_ORDER, 1.0);
+		
+
+		
+		schedule.scheduleRepeating(dataLogger, DATA_LOGGER_ORDER, 1.0);
+		
+		schedule.scheduleRepeating(new Steppable() {
+			public void step(SimState state) {
+				date.add(Calendar.DATE, 1);
+				if (state.schedule.getSteps() > 1461)	// 4 years (including one leap day)
+					state.finish();
+			}
+		}, CALENDAR_ORDER, 1.0);
 	}
 	
 	/**
