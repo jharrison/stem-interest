@@ -58,6 +58,13 @@ public class Activity implements Steppable
 		this.isParentEncouraged = isParentEncouraged;
 	}
 	
+
+	
+	@Override
+	public String toString() {
+		return String.format("%s [%s]", type.name, content.toString());
+	}
+
 	public void addParticipant(Student s) {
 		participants.add(s);
 	}

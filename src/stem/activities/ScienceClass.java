@@ -3,6 +3,7 @@ package stem.activities;
 import java.util.ArrayList;
 
 import sim.engine.SimState;
+import stem.StemStudents;
 import stem.TopicVector;
 
 public class ScienceClass extends RepeatingActivity
@@ -38,6 +39,11 @@ public class ScienceClass extends RepeatingActivity
 		topics.add(new TopicVector(1.0, 0.0, 0.0));
 		topics.add(new TopicVector(0.0, 1.0, 0.0));
 		topics.add(new TopicVector(0.0, 0.0, 1.0));
+	}
+
+	@Override
+	protected void coordinateContent(StemStudents model) {
+		// Do nothing. Science class is the source of coordination
 	}
 
 	@Override

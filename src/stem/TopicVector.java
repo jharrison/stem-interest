@@ -25,6 +25,13 @@ public class TopicVector
 	
 	public TopicVector() {
 	}
+
+	/** Copy constructor. */
+	public TopicVector(TopicVector other) {
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			this.topics[i] = other.topics[i];
+	}
+	
 	/*
 	 * Constructor that takes in specific values
 	 * @param a1 This is the first element of TopicVector
@@ -51,6 +58,27 @@ public class TopicVector
 	public void scale(double scale) {
 		for (int i = 0; i < VECTOR_SIZE; i++)
 			topics[i] *= scale;
+	}
+	
+	public TopicVector plus(TopicVector other) {
+		return new TopicVector(
+				topics[0] + other.topics[0], 
+				topics[1] + other.topics[1], 
+				topics[2] + other.topics[2]);
+	}
+	
+	public TopicVector weightedCombination(TopicVector other, double weight) {
+		return new TopicVector(
+				weight * topics[0] + (1 - weight) * other.topics[0], 
+				weight * topics[1] + (1 - weight) * other.topics[1], 
+				weight * topics[2] + (1 - weight) * other.topics[2]);
+	}	
+	
+	static public TopicVector weightedCombination(TopicVector v1, TopicVector v2, double weight) {
+		return new TopicVector(
+				weight * v1.topics[0] + (1 - weight) * v2.topics[0], 
+				weight * v1.topics[1] + (1 - weight) * v2.topics[1], 
+				weight * v1.topics[2] + (1 - weight) * v2.topics[2]);
 	}
 	
 	@Override

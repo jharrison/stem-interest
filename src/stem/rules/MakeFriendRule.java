@@ -31,7 +31,6 @@ public class MakeFriendRule extends Rule
 		
 		if (friendCount == 0) {
 			if (s.model.random.nextDouble() < s.model.makeFriendProbability) {
-
 				Student potentialNewFriend = findClosestMatch(s, a.participants);
 				Student potentialFormerFriend = findWorstMatch(s, s.friends);
 				if ((potentialNewFriend != null) && (potentialFormerFriend != null))
@@ -52,10 +51,8 @@ public class MakeFriendRule extends Rule
 						s.model.removeFriends(s, potentialFormerFriend);
 					}
 				}
-					
 			}
 		}
-
 	}
 	
 	private Student findClosestMatch(Student s, ArrayList<Student> others) {

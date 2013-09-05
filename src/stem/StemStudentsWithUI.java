@@ -159,14 +159,14 @@ public class StemStudentsWithUI extends GUIState
 	
 	public void updateCharts() {
 
-		aveInterestHist.updateSeries(0, model.averageInterestWatcher.getDataPoint());
+		aveInterestHist.updateSeries(0, model.dataLogger.averageInterestWatcher.getDataPoint());
 		aveInterestHist.update(ChartGenerator.FORCE_KEY, true);
 		
 		for (int i = 0; i < StemStudents.NUM_TOPICS; i++) {
-			interestHist[i].updateSeries(0, model.interestWatcher[i].getDataPoint());
+			interestHist[i].updateSeries(0, model.dataLogger.interestWatcher[i].getDataPoint());
 			interestHist[i].update(ChartGenerator.FORCE_KEY, true);
 		}
-		activitiesDoneHist.updateSeries(0, model.activitiesDoneWatcher.getDataPoint());
+		activitiesDoneHist.updateSeries(0, model.dataLogger.activitiesDoneWatcher.getDataPoint());
 		activitiesDoneHist.update(ChartGenerator.FORCE_KEY, true);
 	}
 
@@ -194,7 +194,7 @@ public class StemStudentsWithUI extends GUIState
 		activitiesDoneHist.getFrame().setVisible(false);
 
 		aveInterestTimeSeries = ChartUtils.attachTimeSeries(
-				new XYSeries[] {model.interest1Series.getData(), model.interest2Series.getData(), model.interest3Series.getData()}, 
+				new XYSeries[] {model.dataLogger.interest1Series.getData(), model.dataLogger.interest2Series.getData(), model.dataLogger.interest3Series.getData()}, 
         		"Average Interest Over Time", "Days", "Interest Level", c, 1);
 		aveInterestTimeSeries.getFrame().setVisible(true);
 		aveInterestTimeSeries.setYAxisRange(0, 1);
@@ -234,9 +234,9 @@ public class StemStudentsWithUI extends GUIState
 		
 		for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++) {
 			activityNames[i] = model.activityTypes.get(i).name;
-			genderRatioDataset.setValue(model.activityGenderRatios[i], "Activity", activityNames[i]);
+			genderRatioDataset.setValue(model.dataLogger.activityGenderRatios[i], "Activity", activityNames[i]);
 			
-			activityCountDataset.setValue(model.activityCounts[i], "Activity", activityNames[i]);
+			activityCountDataset.setValue(model.dataLogger.activityCounts[i], "Activity", activityNames[i]);
 		}
 		
 		return true;
@@ -283,6 +283,10 @@ public class StemStudentsWithUI extends GUIState
 		inspectors.add(new SimpleInspector(s, this));
 		names.add("Youth");
 		controller.setInspectors(inspectors, names);
+	}
+	
+	public class NetworkProperties {
+		
 	}
 
 	public static void main(String[] args) {
