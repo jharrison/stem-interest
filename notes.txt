@@ -129,8 +129,12 @@ Ideas from meeting (12/16):
 [ ] Bring MersenneTwister into the project and use it for shuffling.
 [ ] MakeFriendRule needs to consider inter-gender friend probability
 [x] Verify that the correct number of repeating activities are being created
-[ ] Create a mechanism to allow for schedule adjustment (synergy)
+[x] Create a mechanism to allow for schedule adjustment (synergy)
 		Three scenarios: no coordination, some coordination, lots of coordination
+[ ] Create a chart that shows the cumulative effect of each activity
+[ ] Create a chart that shows the cumulative effect of each rule
+[ ] isSchoolRelated isn't used. Should it be?
+[x] Add adult leaders to organized activities
 
 Individual-level visualization
 [ ] Interest vectors

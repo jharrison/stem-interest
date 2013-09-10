@@ -49,6 +49,7 @@ public class ScienceClass extends RepeatingActivity
 	@Override
 	public void step(SimState state) {
 		content = topics.get(topicIndex);
+		((StemStudents)state).coordinatedTopic = content;
 		super.step(state);
 		meetingsSinceTopicChange++;
 		if (meetingsSinceTopicChange == type.meetingsBetweenTopicChange) {

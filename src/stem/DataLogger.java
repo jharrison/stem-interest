@@ -38,13 +38,25 @@ public class DataLogger implements Steppable
 	double[] activityGenderRatios = new double[StemStudents.NUM_ACTIVITY_TYPES];
 //	public double[] getActivityGenderRatios() { return activityGenderRatios; }
 	
-	FileDataWriter averageInterestWriter;
+	DataWatcher interestTrendWatcher;
+	FileDataWriter interestTrendFileWriter;
 	
 
 
 	public DataLogger(StemStudents model) {
 		super();
 		this.model = model;
+	}
+	
+	private double calcAverageInterest(int topicIndex) {
+		if (model.students.size() == 0)
+			return 0;
+		
+        double total = 0;
+        for (Student s : model.students)
+        	total += s.interest.topics[topicIndex];
+        
+        return total / model.students.size();
 	}
 
 	public void init() {
@@ -101,10 +113,7 @@ public class DataLogger implements Steppable
             @Override
             protected void updateDataPoint() {
                 final long currentStep = model.schedule.getSteps();
-                double total = 0;
-                for (Student s : model.students)
-                	total += s.interest.topics[0];
-                dataPoint = new Pair<Long, Double>(currentStep, (total / model.students.size()));
+                dataPoint = new Pair<Long, Double>(currentStep, calcAverageInterest(0));
             }
 
             @Override
@@ -120,10 +129,7 @@ public class DataLogger implements Steppable
             @Override
             protected void updateDataPoint() {
                 final long currentStep = model.schedule.getSteps();
-                double total = 0;
-                for (Student s : model.students)
-                	total += s.interest.topics[1];
-                dataPoint = new Pair<Long, Double>(currentStep, (total / model.students.size()));
+                dataPoint = new Pair<Long, Double>(currentStep, calcAverageInterest(1));
             }
 
             @Override
@@ -139,10 +145,7 @@ public class DataLogger implements Steppable
             @Override
             protected void updateDataPoint() {
                 final long currentStep = model.schedule.getSteps();
-                double total = 0;
-                for (Student s : model.students)
-                	total += s.interest.topics[2];
-                dataPoint = new Pair<Long, Double>(currentStep, (total / model.students.size()));
+                dataPoint = new Pair<Long, Double>(currentStep, calcAverageInterest(2));
             }
 
             @Override
@@ -170,6 +173,36 @@ public class DataLogger implements Steppable
 		};
 		dataWatchers.add(activitiesDoneWatcher);
 		
+		if (!model.outputFilename.isEmpty()) {
+			interestTrendFileWriter = new FileDataWriter();
+			interestTrendWatcher = new ListDataWatcher<String>() {
+				{ addListener(interestTrendFileWriter); }
+	
+	            @Override
+	            protected void updateDataPoint() {
+	                dataList.clear();
+	                dataList.add(String.valueOf(model.params.run));
+	                dataList.add(String.valueOf(model.schedule.getSteps()));
+	                dataList.add(String.valueOf(calcAverageInterest(0)));
+	                dataList.add(String.valueOf(calcAverageInterest(1)));
+	                dataList.add(String.valueOf(calcAverageInterest(2)));
+	                dataList.add(String.valueOf(model.coordinationLevel));
+	            }
+	
+	            @Override
+	            public String getCSVHeader() {
+	                String header = "Run, Step, AveIntr1, AveIntr2, AveIntr3, Coordination";
+	                return header + "\n";
+	            }
+			};
+			dataWatchers.add(interestTrendWatcher);
+		}
+		
+	}
+	
+	public void start() {
+		if (!model.outputFilename.isEmpty())
+			interestTrendFileWriter.InitFileDataWriter(model.outputFilename, interestTrendWatcher);
 	}
 	
 	/** Event that is triggered when an activity is done. */
@@ -188,6 +221,11 @@ public class DataLogger implements Steppable
 	public void step(SimState arg0) {
 		for (DataWatcher<?> dw : dataWatchers)
 			dw.update();
+	}
+	
+	public void close() {
+		if (interestTrendFileWriter != null)
+			interestTrendFileWriter.close();
 	}
 
 }

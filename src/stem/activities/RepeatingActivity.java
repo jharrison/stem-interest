@@ -46,9 +46,6 @@ public class RepeatingActivity extends Activity
 				participants.add(s);
 				s.activities.add(this);
 	 		}
-
-		if (!(this instanceof ScienceClass))
-			System.out.format("Step: %d, activity: %s, content: %s\n", state.schedule.getSteps(), type.name, content.toString());
 		
 		super.step(state);
 		
@@ -57,6 +54,10 @@ public class RepeatingActivity extends Activity
 	}
 	
 	static public RepeatingActivity createFromType(StemStudents model, ActivityType type) {
+		// This is a hack and I'm not proud of it
+		if (type.name.equals("Class"))
+			return new ScienceClass();
+		
 		RepeatingActivity a = new RepeatingActivity(type.content);
 		a.type = type;
 
