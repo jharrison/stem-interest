@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,18 +12,15 @@ import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
-import masoncsc.datawatcher.*;
-import masoncsc.util.Pair;
-
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
+import sim.engine.MakesSimState;
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.util.Interval;
 import stem.activities.Activity;
 import stem.activities.ActivityType;
 import stem.activities.RepeatingActivity;
-import stem.activities.ScienceClass;
 import stem.network.*;
 import stem.rules.RuleSet;
 
@@ -38,6 +34,8 @@ import stem.rules.RuleSet;
 public class StemStudents extends SimState
 {
 	private static final long serialVersionUID = 1L;
+	
+	Parameters params;
 
 	public static final int NUM_ACTIVITY_TYPES = 16;
 	public static final int NUM_TOPICS = 3;	
@@ -47,7 +45,6 @@ public class StemStudents extends SimState
 	ArrayList<Student> students = new ArrayList<Student>();
 	ArrayList<ActivityType> activityTypes = new ArrayList<ActivityType>();
 
-	public ArrayList<Activity> scienceClasses = new ArrayList<Activity>();
 //	public ArrayList<Activity> activities = new ArrayList<Activity>();
 	public ArrayList<RepeatingActivity> repeatingActivities = new ArrayList<RepeatingActivity>();
 	/** Indices of the activities, allows for shuffling to randomize the order. */
@@ -62,6 +59,7 @@ public class StemStudents extends SimState
 	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
 
 	DataLogger dataLogger;
+	public String outputFilename = "";
 	
     String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
     		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
@@ -171,16 +169,17 @@ public class StemStudents extends SimState
 	
 	
 
-	public StemStudents(long seed) {
+	public StemStudents(long seed, String[] args) {
 		super(seed);
+		params = new Parameters(this, args);
 		
 		dataLogger = new DataLogger(this);
 		
-		for (int i = 0; i < NUM_ACTIVITY_TYPES-1; i++)	// don't add an index for science class
+		for (int i = 0; i < NUM_ACTIVITY_TYPES; i++)
 			indices.add(i);
 		
 		readActivityTypes();
-		testActivityTypes();
+//		testActivityTypes();
 	}
 	
 	private void testActivityTypes() {
@@ -285,36 +284,6 @@ public class StemStudents extends SimState
 		}
 		
 	}
-	
-	public void initScienceClasses() {
-		// init classes
-		scienceClasses.clear();
-		int numClasses = (int)Math.ceil(numStudents / (double)classSize);
-		int studentIndex = 0;
-		int totalStudents = 0;
-		
-		for (int i = 0; i < numClasses; i++) {
-			// create activity for science class
-			ScienceClass scienceClass = new ScienceClass();
-			
-			// add students
-			for (int j = 0; (j < classSize) && (studentIndex < students.size()); j++)
-				scienceClass.addParticipant(students.get(studentIndex++));
-			
-			// add teacher
-			scienceClass.leaders.add(new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random)));
-			
-			scienceClasses.add(scienceClass);
-			totalStudents += scienceClass.potentialParticipants.size();
-
-//			System.out.format("Science class: %s\n", scienceClass.content);
-//			System.out.format("Teacher %s\n", scienceClass.leaders.get(0));
-		}
-		
-		System.out.format("ScienceClasses: %d, total students: %d\n", scienceClasses.size(), totalStudents);
-	}
-	
-
 	
 	private void initStudentNetwork() {
 		ArrayList<Student> females = new ArrayList<Student>();
@@ -494,12 +463,17 @@ public class StemStudents extends SimState
 			// assign participants to activities
 			int numActivities = (int)Math.ceil(allParticipants.size() / (double)type.maxParticipants);
 			ArrayList<Activity> activities = new ArrayList<Activity>();
-			for (int j = 0; j < numActivities; j++)
-				activities.add(RepeatingActivity.createFromType(this, type));
-			
+			for (int j = 0; j < numActivities; j++) {
+				RepeatingActivity a = RepeatingActivity.createFromType(this, type);
+				// assign leaders to activiy
+				while (a.leaders.size() < type.numLeaders)
+					a.leaders.add(new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random)));
+				activities.add(a);
+			}
+						
 			matchParticipantsToActivities(allParticipants, activities);
 			
-			// schedule the activities
+			// add this repeating activity to the list
 			for (Activity a : activities)
 				repeatingActivities.add((RepeatingActivity)a);
 		}
@@ -522,7 +496,7 @@ public class StemStudents extends SimState
 			}
 		});
 		for (RepeatingActivity ra : repeatingActivities) {
-			if (willOccurToday((RepeatingActivity)ra))
+			if (willOccurToday(ra))
 				ra.step(this);
 		}
 		
@@ -634,15 +608,14 @@ public class StemStudents extends SimState
 		readActivityTypes();
 
 		initStudents();
-		initScienceClasses();
 		initStudentNetwork();
 		dataLogger.init();
+		dataLogger.start();
 
 		final int ORGANIZE_ORDER = 0;
-		final int SCIENCE_CLASS_ORDER = 1;
-		final int ACTIVITIES_ORDER = 2;
-		final int DATA_LOGGER_ORDER = 3;
-		final int CALENDAR_ORDER = 4;
+		final int ACTIVITIES_ORDER = 1;
+		final int DATA_LOGGER_ORDER = 2;
+		final int CALENDAR_ORDER = 3;
 		
 		// Once per year, organize the repeating activities
 		schedule.scheduleRepeating(0.0, ORGANIZE_ORDER, new Steppable() {
@@ -651,16 +624,13 @@ public class StemStudents extends SimState
 				organizeRepeatingActivities();
 			}
 		}, 365);
-		
-//		System.out.format("scienceClasses.size(): %d\n", scienceClasses.size());
-		for (Activity a : scienceClasses)
-			schedule.scheduleRepeating(a, SCIENCE_CLASS_ORDER, 1.0);
-		
+				
 		schedule.scheduleRepeating(new Steppable() {
 			@Override
 			public void step(SimState state) {
 //				printDayInfo();
-				coordinatedTopic = scienceClasses.get(0).content;
+//				coordinatedTopic = scienceClasses.get(0).content;
+//				System.out.format("Step: %d, CoordinatedTopic: %s\n", schedule.getSteps(), coordinatedTopic);
 				doActivitiesForDay();
 				decayInterests();
 				
@@ -716,8 +686,27 @@ public class StemStudents extends SimState
 	}
 	
 
+	@Override
+	public void finish() {
+		super.finish();
+		dataLogger.close();
+	}
+	
 	public static void main(String[] args) {
-		doLoop(StemStudents.class, args);
+        doLoop(new MakesSimState()
+        {
+            @Override
+            public SimState newInstance(long seed, String[] args)
+            {
+                return new StemStudents(seed, args);
+            }
+
+            @Override
+            public Class simulationClass()
+            {
+                return StemStudents.class;
+            }
+        }, args);
 		System.exit(0);
 	}
 

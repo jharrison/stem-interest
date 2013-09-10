@@ -61,8 +61,8 @@ public class StemStudentsWithUI extends GUIState
     DefaultCategoryDataset activityCountDataset = new DefaultCategoryDataset();
     
 
-	public StemStudentsWithUI() {
-		super(new StemStudents(System.currentTimeMillis()));
+	public StemStudentsWithUI(String[] args) {
+		super(new StemStudents(System.currentTimeMillis(), args));
 		model = (StemStudents)state;
 	}
 
@@ -176,7 +176,7 @@ public class StemStudentsWithUI extends GUIState
 		networkDisplay = new NetworkDisplay(this);
 		NetworkDisplay.frame.setTitle("Friend Network");
 		c.registerFrame(NetworkDisplay.frame);
-		NetworkDisplay.frame.setVisible(true);
+		NetworkDisplay.frame.setVisible(false);
 
 		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
 		aveInterestHist.getFrame().setVisible(false);
@@ -188,6 +188,7 @@ public class StemStudentsWithUI extends GUIState
 		for (int i = 0; i < 3; i++) {
 			interestHist[i].setScale(0.5);
 			interestHist[i].getFrame().setSize(373, 294);
+			interestHist[i].getFrame().setVisible(false);
 		}
 
 		activitiesDoneHist = ChartUtils.attachHistogram(null, 7, "Activities Done per Day", "Number of Activities per Day", "Count", controller);
@@ -200,23 +201,21 @@ public class StemStudentsWithUI extends GUIState
 		aveInterestTimeSeries.setYAxisRange(0, 1);
 		
 		// create gender ratio bar chart
-		registerBarChart(c, "Activity Gender Ratio", "Activity", "Ratio of Female Participants", genderRatioDataset, PlotOrientation.HORIZONTAL, false, true, false);
+		registerBarChart(c, "Activity Gender Ratio", "Activity", "Ratio of Female Participants", genderRatioDataset, PlotOrientation.HORIZONTAL, false, true, false, false);
 		
-		JFreeChart chart = registerBarChart(c, "Activity Counts", "Activity", "Number of Times Activity Has Been Done", activityCountDataset, PlotOrientation.VERTICAL, false, true, false);
+		JFreeChart chart = registerBarChart(c, "Activity Counts", "Activity", "Number of Times Activity Has Been Done", activityCountDataset, PlotOrientation.VERTICAL, false, true, false, false);
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		
 
 		HistogramGenerator test = ChartUtilities.buildHistogramGenerator(this, "Participation Histograms", "Number of Students");
+		test.getFrame().setVisible(false);
 		for (int j = 0; j < StemStudents.NUM_ACTIVITY_TYPES; j++) {
 			final int activityIndex = j;
-//			HistogramGenerator test = ChartUtilities.buildHistogramGenerator(this, model.activityTypes.get(j).name + " Participation", "Number of Students");
-
 			ChartUtilities.addSeries(this, test, model.activityTypes.get(j).name, new ProvidesDoubles() {
 				public double[] provide() {
 					double[] counts = new double[model.students.size()];
 					for (int i = 0; i < model.students.size(); i++)
-						//counts[i] = model.students.get(i).activityCounts[activityIndex];
 						counts[i] = model.activityTypes.get(activityIndex).mapActivityCountToLikert(model.students.get(i).activityCounts[activityIndex]);
 					return counts;
 				}
@@ -243,7 +242,7 @@ public class StemStudentsWithUI extends GUIState
 	}
 	
 	public JFreeChart registerBarChart(final Controller c, String title, String categoryAxisLabel, String valueAxisLabel, 
-			CategoryDataset dataset, PlotOrientation orientation, boolean legend, boolean tooltips, boolean urls) 
+			CategoryDataset dataset, PlotOrientation orientation, boolean legend, boolean tooltips, boolean urls, boolean visible) 
 	{ 
 		JFreeChart chart = ChartFactory.createBarChart(title, categoryAxisLabel, valueAxisLabel, dataset, orientation, legend, tooltips, urls);
         chart.setBackgroundPaint(Color.WHITE);
@@ -259,15 +258,13 @@ public class StemStudentsWithUI extends GUIState
 
         rangeAxis.setRangeWithMargins(0, 1);
         CategoryAxis xAxis = pl.getDomainAxis();
-//        xAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
-
 
         ((BarRenderer)pl.getRenderer()).setShadowVisible(false);
         ((BarRenderer)pl.getRenderer()).setBarPainter(new StandardBarPainter());
         
         
         ChartFrame frame = new ChartFrame(title, chart);
-        frame.setVisible(true);
+        frame.setVisible(visible);
         frame.setSize(200, 600);
 
         frame.pack();
@@ -290,7 +287,7 @@ public class StemStudentsWithUI extends GUIState
 	}
 
 	public static void main(String[] args) {
-		new StemStudentsWithUI().createController();
+		new StemStudentsWithUI(args).createController();
 	}
 	
 	public class ModelStats

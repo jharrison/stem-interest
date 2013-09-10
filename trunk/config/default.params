@@ -1,0 +1,5 @@
+# Parameter file for the STEM Interest model
+print-params = true
+
+
+CoordinationLevel = 0.0
