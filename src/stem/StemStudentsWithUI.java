@@ -31,6 +31,7 @@ import sim.portrayal.Inspector;
 import sim.portrayal.SimpleInspector;
 import sim.portrayal.inspector.TabbedInspector;
 import sim.util.Bag;
+import sim.util.Interval;
 import sim.util.media.chart.ChartGenerator;
 import sim.util.media.chart.HistogramGenerator;
 import sim.util.media.chart.TimeSeriesChartGenerator;
@@ -48,6 +49,10 @@ public class StemStudentsWithUI extends GUIState
 
 	public NetworkDisplay networkDisplay;
 	StemStudents model;
+	
+	/** Controls the size at which nodes in the network are drawn */
+	public double nodeSize = 5.0;
+	
     private ArrayList<ChartGenerator> chartGenerators = new ArrayList<ChartGenerator>();
     HistogramGenerator aveInterestHist;
     HistogramGenerator activitiesDoneHist;
@@ -86,6 +91,7 @@ public class StemStudentsWithUI extends GUIState
 
         i.setVolatile(true);
         i.addInspector(new SimpleInspector(model, this), "System");
+        i.addInspector(new SimpleInspector(new NetworkProperties(this), this), "Network");
         i.addInspector(new SimpleInspector(model.ruleSet, this), "Rules");
 
         return i;
@@ -93,15 +99,13 @@ public class StemStudentsWithUI extends GUIState
     
 	public void start() {
 		super.start();
-		// set up our portrayals
 		setupPortrayals();
 	}
 
 	public void load(SimState state) {
 		super.load(state);
 		setupPortrayals();
-	}
-	
+	}	
 	
 
 	@SuppressWarnings("serial")
@@ -134,28 +138,6 @@ public class StemStudentsWithUI extends GUIState
 		
 		return chart;
 	}
-    private CategoryDataset createDataset() {
-        
-        // row keys...
-        final String series1 = "Activity";
-
-        // column keys...
-        final String category1 = "Category 1";
-        final String category2 = "Category 2";
-        final String category3 = "Category 3";
-        final String category4 = "Category 4";
-        final String category5 = "Category 5";
-
-        // create the dataset...
-        final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        
-        for (int i = 0; i < model.activityNames.length; i++) {
-        	dataset.addValue(i, series1, model.activityNames[i]);
-        }
-        
-        return dataset;
-        
-    }
 	
 	public void updateCharts() {
 
@@ -222,7 +204,7 @@ public class StemStudentsWithUI extends GUIState
 			}, 5);
 		}
 		
-		((Console)controller).setSize(400, 500);
+		((Console)controller).setSize(400, 550);
 	}
 	
 	@Override
@@ -283,7 +265,40 @@ public class StemStudentsWithUI extends GUIState
 	}
 	
 	public class NetworkProperties {
+		StemStudents model;
+		StemStudentsWithUI modelUI;
 		
+		public NetworkProperties(StemStudentsWithUI modelUI) {
+			this.modelUI = modelUI;
+			this.model = modelUI.model;
+		}
+		
+		public int getNumFriendsPerYouth() { return model.numFriendsPerStudent; }
+		public void setNumFriendsPerYouth(int val) { model.numFriendsPerStudent = val; }
+
+		public double getSmallWorldRewireProbability() { return model.smallWorldRewireProbability; }
+		public void setSmallWorldRewireProbability(double val) { model.smallWorldRewireProbability = val; }
+		public Object domSmallWorldRewireProbability() { return new Interval(0.0, 1.0); }
+		
+
+		public double getInterGenderRewireProbability() { return model.interGenderRewireProbability; }
+		public void setInterGenderRewireProbability(double val) { model.interGenderRewireProbability = val; }
+		public Object domInterGenderRewireProbability() { return new Interval(0.0, 1.0); }
+	
+		public double getNodeSize() { return modelUI.nodeSize; }
+		public void setNodeSize(double val) { modelUI.nodeSize = val; }
+		public Object domNodeSize() { return new Interval(0.0, 10.0); }
+
+		/** Probability of making a new friend when participating in an activity. */
+		public double getMakeFriendProbability() { return model.makeFriendProbability; }
+		public void setMakeFriendProbability(double val) { model.makeFriendProbability = val; }
+		public Object domMakeFriendProbability() { return new Interval(0.0,0.5);}
+
+		/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
+		public double getCloseTriadProbability() { return model.closeTriadProbability; }
+		public void setCloseTriadProbability(double val) { model.closeTriadProbability = val; }
+		public Object domCloseTriadProbability() { return new Interval(0.0,0.5); }
+
 	}
 
 	public static void main(String[] args) {
@@ -294,4 +309,5 @@ public class StemStudentsWithUI extends GUIState
 	{
 //		public int[] classCounts
 	}
+	
 }

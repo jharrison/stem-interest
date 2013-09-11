@@ -150,7 +150,7 @@ public class Student
 		if (activityID == (StemStudents.NUM_ACTIVITY_TYPES - 1))
 			return;
 		
-		participationRates[activityID] += model.changeParticipationRate;
+		participationRates[activityID] += model.participationChangeRate;
 		//Don't let it go over 1.0
 		if (participationRates[activityID] > 1.0)
 			participationRates[activityID] = 1.0;
@@ -162,7 +162,7 @@ public class Student
 		if (activityID == (StemStudents.NUM_ACTIVITY_TYPES - 1))
 			return;
 
-		participationRates[activityID] -= model.changeParticipationRate;
+		participationRates[activityID] -= model.participationChangeRate;
 		//Don't let it go below 0.0
 		if (participationRates[activityID] < 0.0)
 			participationRates[activityID] = 0.0;

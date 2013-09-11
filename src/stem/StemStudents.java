@@ -10,7 +10,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
-import java.util.Random;
+
+import masoncsc.util.MTFUtilities;
 
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
@@ -67,29 +68,35 @@ public class StemStudents extends SimState
 	
 	
 	// Start getters/setters here =======================================================
+	
+    // Network properties are handled by the NetworkProperties class inside StemStudentsWithUI 
+    /** Number of friends each student is given during initialization of the friend network */
+    public int numFriendsPerStudent = 3;
+    
+    /** Probability of rewiring links during the network generation algorithm. */
+	public double smallWorldRewireProbability = 0.5;	
+	
+	/** Probability of rewiring links between boys and girls in the network. */
+	public double interGenderRewireProbability = 0.00;
+	
+	/** Probability of making a new friend when participating in an activity. */
+	public double makeFriendProbability = 0.01;
+
+	/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
+	public double closeTriadProbability = 0.05;	
+	
 	public int numStudents = 127;  //# from survey that have valid values
-	public int getNumKids() { return numStudents; }
-	public void setNumKids(int val) { numStudents = val; }
+	public int getNumYouth() { return numStudents; }
+	public void setNumYouth(int val) { numStudents = val; }
 
 	public int classSize = 17; //Approx. # from data.  Adjusted slightly to get same number in each class.
 	public int getClassSize() { return classSize; }
 	public void setClassSize(int val) { classSize = val; }
+
+	public int maxActivitiesPerDay = 3;	
+	public int getMaxActivitiesPerDay() { return maxActivitiesPerDay; }
+	public void setMaxActivitiesPerDay(int val) { maxActivitiesPerDay = val; }
 	
-	public int numFriendsPerStudent = 3;	
-	public int getNumFriendsPerKid() { return numFriendsPerStudent; }
-	public void setNumFriendsPerKid(int val) { numFriendsPerStudent = val; }
-
-	public double smallWorldRewireProbability = 0.5;
-	public double getSmallWorldRewireProbability() { return smallWorldRewireProbability; }
-	public void setSmallWorldRewireProbability(double val) { smallWorldRewireProbability = val; }
-	public Object domSmallWorldRewireProbability() { return new Interval(0.0, 1.0); }
-	
-
-	private double interGenderRewireProbability = 0.00;
-	public double getInterGenderRewireProbability() { return interGenderRewireProbability; }
-	public void setInterGenderRewireProbability(double val) { interGenderRewireProbability = val; }
-	public Object domInterGenderRewireProbability() { return new Interval(0.0, 1.0); }
-
 	public double interestThreshold = 0.75;
 	public double getInterestThreshold() { return interestThreshold; }
 	public void setInterestThreshold(double val) { interestThreshold = val; }
@@ -115,15 +122,6 @@ public class StemStudents extends SimState
 	public void setInterestDecayExponent(double val) { interestDecayRate = val; }
 	public Object domInterestDecayExponent() { return new Interval(0.0, 1.0); }
 	
-	public double nodeSize = 5.0;
-	public double getNodeSize() { return nodeSize; }
-	public void setNodeSize(double val) { nodeSize = val; }
-	public Object domNodeSize() { return new Interval(0.0, 10.0); }
-
-	public int maxActivitiesPerDay = 3;	
-	public int getMaxActivitiesPerDay() { return maxActivitiesPerDay; }
-	public void setMaxActivitiesPerDay(int val) { maxActivitiesPerDay = val; }
-	
 	public boolean randomizeInterests = false;
 //	public boolean getRandomizeInterests() { return randomizeInterests; }
 //	public void setRandomizeInterests(boolean val) { randomizeInterests = val; }
@@ -134,23 +132,11 @@ public class StemStudents extends SimState
 
 	/** How much to change the participation rate in an activity if interest has
 	 * been increased or decreased. */
-	public double changeParticipationRate = 0.05;
-	public double getChangeParticipationRate() { return changeParticipationRate; }
-	public void setChangeParticipationRate(double val) { changeParticipationRate = val; }
-	public Object domChangeParticipationRate() { return new Interval(0.0,0.5); }
+	public double participationChangeRate = 0.05;
+	public double getParticipationChangeRate() { return participationChangeRate; }
+	public void setParticipationChangeRate(double val) { participationChangeRate = val; }
+	public Object domParticipationChangeRate() { return new Interval(0.0,0.5); }
 
-	/** Probability of making a new friend when participating in an activity. */
-	public double makeFriendProbability = 0.01;
-	public double getMakeFriendProbability() { return makeFriendProbability; }
-	public void setMakeFriendProbability(double val) { makeFriendProbability = val; }
-	public Object domMakeFriendProbability() { return new Interval(0.0,0.5);}
-
-	/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
-	public double closeTriadProbability = 0.05;
-	public double getCloseTriadProbability() { return closeTriadProbability; }
-	public void setCloseTriadProbability(double val) { closeTriadProbability = val; }
-	public Object domCloseTriadProbability() { return new Interval(0.0,0.5); }
-	
 
 	/** Extent to which activities are coordinated with current school topic. */
 	public double coordinationLevel = 0.0;
@@ -214,14 +200,6 @@ public class StemStudents extends SimState
 			e.printStackTrace();
 			System.err.println("Problem Reading in Activities");
 		}
-	}
-	
-	public double clamp(double val, double min, double max) {
-		if (val < min)
-			return min;
-		if (val > max)
-			return max;
-		return val;
 	}
 	
 	/**
@@ -355,22 +333,6 @@ public class StemStudents extends SimState
 		return null;
 	}
 	
-	private void swap(int[] array, int i, int j) {
-		int temp = array[i];
-		array[i] = array[j];
-		array[j] = temp;
-	}
-	
-	public void temp() {
-		int[] indices = new int[NUM_ACTIVITY_TYPES];
-		for (int i = 0; i < NUM_ACTIVITY_TYPES; i++)
-			indices[i] = i;
-
-		for (int i = NUM_ACTIVITY_TYPES - 1; i > 0; i--)
-			swap(indices, i, random.nextInt(i+1));
-		
-	}
-	
 	public boolean willDoToday(Student s, ActivityType type) {
 		// if the student never does this activity, don't bother doing more expensive checks
 		if (s.participationRates[type.id] == 0)
@@ -448,7 +410,7 @@ public class StemStudents extends SimState
 		ArrayList<Student> allParticipants = new ArrayList<Student>();
 		
 		// loop through activities in random order
-		Collections.shuffle(indices);	
+		MTFUtilities.shuffle(indices, random);
 		for (int i : indices) {
 			ActivityType type = activityTypes.get(i);
 			if (!type.isRepeating)
@@ -488,8 +450,7 @@ public class StemStudents extends SimState
 		for (Student s : students)
 			s.activities.clear();
 		
-		//TODO use ec.util.MersenneTwister for shuffling
-		Collections.shuffle(repeatingActivities, new Random(random.nextLong()));
+		MTFUtilities.shuffle(repeatingActivities, random);
 		Collections.sort(repeatingActivities, new Comparator<RepeatingActivity>() {
 			public int compare(RepeatingActivity arg0, RepeatingActivity arg1) {
 				return arg0.type.priority - arg1.type.priority;
@@ -501,12 +462,11 @@ public class StemStudents extends SimState
 		}
 		
 		// loop through students in random order
-		//TODO use the MersenneTwister to shuffle this.
-		Collections.shuffle(students, new Random(random.nextLong()));
+		MTFUtilities.shuffle(students, random);
 		for (Student s : students) {
 			s.incrementCounters();
 			// loop through activities in random order
-			Collections.shuffle(indices);	
+			MTFUtilities.shuffle(indices, random);
 			for (int i : indices) {
 				// don't overschedule
 				if (s.activities.size() >= maxActivitiesPerDay)
