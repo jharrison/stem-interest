@@ -169,7 +169,7 @@ public class NetworkDisplay implements Steppable {
 		Transformer<Student, Shape> vertexShapeTransformer = new Transformer<Student, Shape>() {
 			public Shape transform(Student v) {
 //				double radius = v.friends.size() * model.nodeSize;
-				double radius = model.nodeSize;
+				double radius = modelWithUI.nodeSize;
 				if (v.isFemale)
 					return new Ellipse2D.Double(-radius, -radius, 2*radius, 2*radius);
 				else
