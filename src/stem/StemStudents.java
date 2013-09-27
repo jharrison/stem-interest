@@ -23,6 +23,7 @@ import stem.activities.Activity;
 import stem.activities.ActivityType;
 import stem.activities.RepeatingActivity;
 import stem.network.*;
+import stem.rules.Rule;
 import stem.rules.RuleSet;
 
 /**
@@ -264,6 +265,14 @@ public class StemStudents extends SimState
 	}
 	
 	private void initStudentNetwork() {
+		
+		// Sort students by elementary school teacher to promote links between students who are close geographically
+		Collections.sort(students, new Comparator<Student>() {
+			public int compare(Student s1, Student s2) {
+				return s1.teacher.compareToIgnoreCase(s2.teacher);
+			}
+		});
+		
 		ArrayList<Student> females = new ArrayList<Student>();
 		ArrayList<Student> males = new ArrayList<Student>();
 		
@@ -547,8 +556,13 @@ public class StemStudents extends SimState
 	}
 	
 	/** Event that is triggered when an activity is done. */
-	public void studentParticipated(Student s, Activity activity) {
-		dataLogger.studentParticipated(s, activity);
+	public void studentParticipated(Student s, Activity a) {
+		dataLogger.studentParticipated(s, a);
+	}
+	
+	/** Event that is triggered when a student's interest levels are changed. */
+	public void studentInterestChanged(Student s, Activity a, int topicIndex, double delta, Rule r) {
+		dataLogger.studentInterestChanged(s, a, topicIndex, delta, r);
 	}
 	
 	
