@@ -6,39 +6,36 @@ import stem.TopicVector;
 import stem.activities.Activity;
 
 /**
- * Unrelated Adults<BR>
- * Unrelated adults are associated with interactions in activities; each has
+ * Leaders (previously Unrelated Adults)<BR>
+ * Leaders are associated with interactions in activities; each has
  * an arbitrary level of expertise and passion in the topic of that
- * activity. There are some arbitrary fixed number of unrelated adults
+ * activity. There are some arbitrary fixed number of leaders
  * available for interactions in the community. 
  * <ul>
  * <li>
- * When unrelated adults are
- * skilled at sharing their expertise and passion in a topic in an activity,
- * the value to interest increases. 
+ * When leaders are skilled at sharing their expertise and passion in the topic
+ * of an activity, interest increases. 
  * <li>
- * When unrelated adults are skilled at
- * sharing expertise but not passion in a topic in an activity, the value to
- * interest decreases (unless the interest threshold has been exceeded,
- * then it increases). 
+ * When leaders are skilled at sharing expertise but not passion in the topic 
+ * of an activity, interest decreases (unless the interest threshold has been 
+ * exceeded, then it increases). 
  * <li>
- * When unrelated adults are skilled at sharing passion
- * but not expertise in a topic in an activity, interest increases if interest 
- * is already below the interest threshold. Otherwise, no change.
+ * When leaders are skilled at sharing passion but not expertise in the topic of 
+ * an activity, interest increases if interest is already below the interest 
+ * threshold. Otherwise, no change.
  * <li> 
- * When unrelated adults are neither skilled nor passionate, the
- * value to interest decreases.
+ * When leaders are neither skilled nor passionate, interest decreases.
  * </ul>
  * 
  * @author Joey Harrison
  *
  */
-public class UnrelatedAdultRuleV2 extends Rule
+public class LeaderRuleV2 extends Rule
 {
 
 	@Override
 	public void apply(Student s, Activity a) {
-		// --- Unrelated Adults
+		// --- Leaders
 		// if expertise & passion, interest increases
 		// if expertise & !passion
 		//		if interest > threshold, interest increases. else, interest decreases
@@ -53,25 +50,25 @@ public class UnrelatedAdultRuleV2 extends Rule
 				boolean passion = adult.passion.topics[i] > s.model.passionThreshold;
 				
 				if (expertise && passion) {
-					s.increaseInterest(i, a.content.topics[i], weight);
+					s.increaseInterest(a, i, weight, this);
 					goodExperience++;
 				}
 				else if (expertise && !passion) {
 					if (s.interest.topics[i] > s.model.interestThreshold) {
-						s.increaseInterest(i, a.content.topics[i], weight);
+						s.increaseInterest(a, i, weight, this);
 						goodExperience++;
 					}
 					else {
-						s.decreaseInterest(i, a.content.topics[i], weight);
+						s.decreaseInterest(a, i, weight, this);
 						goodExperience--;
 					}
 				}
 				else if (!expertise && passion && s.interest.topics[i] < s.model.interestThreshold) { 
-					s.increaseInterest(i, a.content.topics[i], weight);
+					s.increaseInterest(a, i, weight, this);
 					goodExperience++;
 				}
 				else if (!expertise && !passion) {
-					s.decreaseInterest(i, a.content.topics[i], weight);
+					s.decreaseInterest(a, i, weight, this);
 					goodExperience--;
 				}
 			}

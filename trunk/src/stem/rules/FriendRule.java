@@ -28,13 +28,13 @@ public class FriendRule extends Rule
 		int goodExperience = 0;
 				
 		if (friendCount > 0) {
-			s.increaseInterest(a.content, weight);
+			s.increaseInterest(a, weight, this);
 			goodExperience++;
 		}		
 		else {
 			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
 				if (s.interest.topics[i] < s.model.interestThreshold) {
-					s.decreaseInterest(i, a.content.topics[i], weight);
+					s.decreaseInterest(a, i, weight, this);
 					goodExperience--;
 				}
 		}

@@ -22,11 +22,11 @@ public class ChoiceRule extends Rule
 		case 0: // Low: no change
 			break;
 		case 1: // Moderate: increase interest & prob. of participating
-			s.increaseInterest(a.content, weight);
+			s.increaseInterest(a, weight, this);
 			s.increaseParticipationRate(a.type.id);
 			break;
 		case 2: // High: increase interest more
-			s.increaseInterest(a.content, weight*2);
+			s.increaseInterest(a, weight*2, this);
 			s.increaseParticipationRate(a.type.id);
 			break;
 		}

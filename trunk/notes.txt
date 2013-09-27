@@ -131,10 +131,12 @@ Ideas from meeting (12/16):
 [x] Verify that the correct number of repeating activities are being created
 [x] Create a mechanism to allow for schedule adjustment (synergy)
 		Three scenarios: no coordination, some coordination, lots of coordination
-[ ] Create a chart that shows the cumulative effect of each activity
-[ ] Create a chart that shows the cumulative effect of each rule
+[x] Create a chart that shows the cumulative effect of each activity
+[x] Create a chart that shows the cumulative effect of each rule
 [ ] isSchoolRelated isn't used. Should it be?
 [x] Add adult leaders to organized activities
+[x] Rename UnrelatedAdultRule to LeaderRule
+[x] Sort Students by 5th grade teacher before grouping them into ScienceClasses.
 
 Individual-level visualization
 [ ] Interest vectors

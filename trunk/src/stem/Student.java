@@ -26,6 +26,7 @@ public class Student
 	public double interestThreshold = 0.5; // TODO figure out what this should be
 	public Adult parent;
 	public int id;
+	public String teacher;
 	/** Count of activities this student has done. */
 	public int activitesDone = 0;
 
@@ -122,26 +123,32 @@ public class Student
 		return false;		
 	}
 	
-	public void increaseInterest(int topicIndex, double topicRelevance, double weight) {
-		interest.topics[topicIndex] += model.interestChangeRate * topicRelevance * weight;
+	public void increaseInterest(Activity a, int topicIndex, double weight, Rule r) {
+		double prevInterest = interest.topics[topicIndex];
+		interest.topics[topicIndex] += model.interestChangeRate * a.content.topics[topicIndex] * weight;
 		if (interest.topics[topicIndex] > TopicVector.MAX_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MAX_INTEREST;
+		
+		model.studentInterestChanged(this, a, topicIndex, interest.topics[topicIndex] - prevInterest, r);
 	}
 	
-	public void decreaseInterest(int topicIndex, double topicRelevance, double weight) {
-		interest.topics[topicIndex] -= model.interestChangeRate * topicRelevance * weight;
+	public void decreaseInterest(Activity a, int topicIndex, double weight, Rule r) {
+		double prevInterest = interest.topics[topicIndex];
+		interest.topics[topicIndex] -= model.interestChangeRate * a.content.topics[topicIndex] * weight;
 		if (interest.topics[topicIndex] < TopicVector.MIN_INTEREST)
 			interest.topics[topicIndex] = TopicVector.MIN_INTEREST;
+
+		model.studentInterestChanged(this, a, topicIndex, interest.topics[topicIndex] - prevInterest, r);
 	}
 
-	public void increaseInterest(TopicVector relevance, double weight) {
+	public void increaseInterest(Activity a, double weight, Rule r) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			increaseInterest(i, relevance.topics[i], weight);
+			increaseInterest(a, i, weight, r);
 	}
 	
-	public void decreaseInterest(TopicVector relevance, double weight) {
+	public void decreaseInterest(Activity a, double weight, Rule r) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			decreaseInterest(i, relevance.topics[i], weight);
+			decreaseInterest(a, i, weight, r);
 	}
 	
 	public void increaseParticipationRate(int activityID)
@@ -201,7 +208,7 @@ public class Student
 		else
 			student.isFemale = (Integer.parseInt(tokens[1]) == 1);
 		// skip 2: school
-		// skip 3: teacher
+		student.teacher = tokens[3].trim();
 		// read 4-18: the 15 activities
 		for (int i = 0; i < 15; i++)
 		{

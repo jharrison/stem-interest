@@ -64,6 +64,8 @@ public class StemStudentsWithUI extends GUIState
     
     // Activity counts
     DefaultCategoryDataset activityCountDataset = new DefaultCategoryDataset();
+    DefaultCategoryDataset netEffectOfActivities = new DefaultCategoryDataset();
+    DefaultCategoryDataset netEffectOfRules = new DefaultCategoryDataset();
     
 
 	public StemStudentsWithUI(String[] args) {
@@ -133,11 +135,6 @@ public class StemStudentsWithUI extends GUIState
 		});
 	}
 	
-	public JFreeChart createBarChart(final CategoryDataset dataset) {
-		final JFreeChart chart = ChartFactory.createBarChart("Activity Counts", "Activity", "Count", dataset, PlotOrientation.VERTICAL, true, true, false);
-		
-		return chart;
-	}
 	
 	public void updateCharts() {
 
@@ -188,6 +185,14 @@ public class StemStudentsWithUI extends GUIState
 		JFreeChart chart = registerBarChart(c, "Activity Counts", "Activity", "Number of Times Activity Has Been Done", activityCountDataset, PlotOrientation.VERTICAL, false, true, false, false);
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+
+		chart = registerBarChart(c, "Effect of Activies on Interest", "Activity", "Change in Interest Level", netEffectOfActivities, PlotOrientation.VERTICAL, false, true, false, false);
+		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
+		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+		
+		chart = registerBarChart(c, "Effect of Rules on Interest", "Activity", "Change in Interest Level", netEffectOfRules, PlotOrientation.VERTICAL, false, true, false, false);
+		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
+		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		
 
 		HistogramGenerator test = ChartUtilities.buildHistogramGenerator(this, "Participation Histograms", "Number of Students");
@@ -212,13 +217,21 @@ public class StemStudentsWithUI extends GUIState
 		super.step();
 		
 		String[] activityNames = new String[StemStudents.NUM_ACTIVITY_TYPES];
+		String[] topicNames = new String[] { "Exploration", "Science", "Human/Bio" };
 		
 		for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++) {
 			activityNames[i] = model.activityTypes.get(i).name;
 			genderRatioDataset.setValue(model.dataLogger.activityGenderRatios[i], "Activity", activityNames[i]);
 			
 			activityCountDataset.setValue(model.dataLogger.activityCounts[i], "Activity", activityNames[i]);
+			
+			for (int j = 0; j < StemStudents.NUM_TOPICS; j++)
+				netEffectOfActivities.setValue(model.dataLogger.netEffectOfActivities[i][j], topicNames[j], activityNames[i]);
 		}
+		
+		for (int i = 0; i < model.ruleSet.rules.size(); i++)
+			for (int j = 0; j < StemStudents.NUM_TOPICS; j++)
+				netEffectOfRules.setValue(model.dataLogger.netEffectOfRules[i][j], topicNames[j], model.ruleSet.rules.get(i).getClass().getSimpleName());
 		
 		return true;
 	}

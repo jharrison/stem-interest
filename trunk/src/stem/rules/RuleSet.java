@@ -10,8 +10,8 @@ public class RuleSet
 	
 	FriendRule friendRule = new FriendRule();
 	ParentRule parentRule = new ParentRule();
-	UnrelatedAdultRule unrelatedAdultRule = new UnrelatedAdultRule();
-	UnrelatedAdultRuleV2 unrelatedAdultRuleV2 = new UnrelatedAdultRuleV2();
+	LeaderRule leaderRule = new LeaderRule();
+	LeaderRuleV2 leaderRuleV2 = new LeaderRuleV2();
 	ChoiceRule choiceRule = new ChoiceRule();
 	ChoiceRuleV2 choiceRuleV2 = new ChoiceRuleV2();
 	MakeFriendRule makeFriendRule = new MakeFriendRule();
@@ -19,13 +19,13 @@ public class RuleSet
 	public RuleSet() {
 		rules.add(friendRule);
 		rules.add(parentRule);
-		rules.add(unrelatedAdultRule);
-		rules.add(unrelatedAdultRuleV2);
+		rules.add(leaderRule);
+		rules.add(leaderRuleV2);
 		rules.add(choiceRule);
 		rules.add(choiceRuleV2);
 		rules.add(makeFriendRule);
 		
-		unrelatedAdultRule.isActive = false;
+		leaderRule.isActive = false;
 		choiceRule.isActive = false;
 	}
 	
@@ -41,16 +41,16 @@ public class RuleSet
 	public void setParentRuleWeight(double val) { parentRule.weight = val; }
 	public Object domParentRuleWeight() { return new Interval(0.0, 5.0); }
 	
-	public boolean getUnrelatedAdultRuleEnabled() { return unrelatedAdultRule.isActive; }
-	public void setUnrelatedAdultRuleEnabled(boolean val) { unrelatedAdultRule.isActive = val; }	
-	public double getUnrelatedAdultRuleWeight() { return unrelatedAdultRule.weight; }
-	public void setUnrelatedAdultRuleWeight(double val) { unrelatedAdultRule.weight = val; }
+	public boolean getUnrelatedAdultRuleEnabled() { return leaderRule.isActive; }
+	public void setUnrelatedAdultRuleEnabled(boolean val) { leaderRule.isActive = val; }	
+	public double getUnrelatedAdultRuleWeight() { return leaderRule.weight; }
+	public void setUnrelatedAdultRuleWeight(double val) { leaderRule.weight = val; }
 	public Object domUnrelatedAdultRuleWeight() { return new Interval(0.0, 5.0); }
 	
-	public boolean getUnrelatedAdultRuleV2Enabled() { return unrelatedAdultRuleV2.isActive; }
-	public void setUnrelatedAdultRuleV2Enabled(boolean val) { unrelatedAdultRuleV2.isActive = val; }	
-	public double getUnrelatedAdultRuleV2Weight() { return unrelatedAdultRuleV2.weight; }
-	public void setUnrelatedAdultRuleV2Weight(double val) { unrelatedAdultRuleV2.weight = val; }
+	public boolean getUnrelatedAdultRuleV2Enabled() { return leaderRuleV2.isActive; }
+	public void setUnrelatedAdultRuleV2Enabled(boolean val) { leaderRuleV2.isActive = val; }	
+	public double getUnrelatedAdultRuleV2Weight() { return leaderRuleV2.weight; }
+	public void setUnrelatedAdultRuleV2Weight(double val) { leaderRuleV2.weight = val; }
 	public Object domUnrelatedAdultRuleV2Weight() { return new Interval(0.0, 5.0); }
 	
 	public boolean getChoiceRuleEnabled() { return choiceRule.isActive; }

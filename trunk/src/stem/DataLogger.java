@@ -8,6 +8,7 @@ import masoncsc.util.Pair;
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import stem.activities.Activity;
+import stem.rules.Rule;
 
 public class DataLogger implements Steppable
 {
@@ -40,6 +41,9 @@ public class DataLogger implements Steppable
 	
 	DataWatcher interestTrendWatcher;
 	FileDataWriter interestTrendFileWriter;
+
+	public double[][] netEffectOfActivities = new double[StemStudents.NUM_ACTIVITY_TYPES][StemStudents.NUM_TOPICS];
+	public double[][] netEffectOfRules;	// to be initialize in the constructor
 	
 
 
@@ -63,6 +67,10 @@ public class DataLogger implements Steppable
 		Arrays.fill(activityCounts, 0);
 		Arrays.fill(activityGenderCounts, 0);
 		Arrays.fill(activityGenderRatios, 0.0);
+		for (double[] row : netEffectOfActivities)
+			Arrays.fill(row, 0.0);
+		netEffectOfRules = new double[model.ruleSet.rules.size()][StemStudents.NUM_TOPICS];
+		
 		dataWatchers.clear();
 		
 		averageInterestWatcher = new DoubleArrayWatcher() {
@@ -215,6 +223,14 @@ public class DataLogger implements Steppable
 			activityGenderCounts[index]++;
 		
 		activityGenderRatios[index] = activityGenderCounts[index] / (double)activityCounts[index];
+	}
+
+	/** Event that is triggered when a student's interest levels are changed. */
+	public void studentInterestChanged(Student s, Activity a, int topicIndex, double delta, Rule r) {
+		netEffectOfActivities[a.type.id][topicIndex] += delta;
+		
+		int ruleIndex = model.ruleSet.rules.indexOf(r);
+		netEffectOfRules[ruleIndex][topicIndex] += delta;
 	}
 
 	@Override
