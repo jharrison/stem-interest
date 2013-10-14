@@ -33,7 +33,7 @@ public class FriendRule extends Rule
 		}		
 		else {
 			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-				if (s.interest.topics[i] < s.model.interestThreshold) {
+				if (s.interest.topics[i] < s.interestThreshold) {
 					s.decreaseInterest(a, i, weight, this);
 					goodExperience--;
 				}

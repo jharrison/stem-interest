@@ -27,6 +27,7 @@ public class RuleSet
 		
 		leaderRule.isActive = false;
 		choiceRule.isActive = false;
+		makeFriendRule.isActive = false;
 	}
 	
 	public boolean getFriendRuleEnabled() { return friendRule.isActive; }

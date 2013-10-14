@@ -137,6 +137,7 @@ Ideas from meeting (12/16):
 [x] Add adult leaders to organized activities
 [x] Rename UnrelatedAdultRule to LeaderRule
 [x] Sort Students by 5th grade teacher before grouping them into ScienceClasses.
+[ ] Make sure priority sorting is working properly (0 is highest priority)
 
 Individual-level visualization
 [ ] Interest vectors

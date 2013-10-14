@@ -23,7 +23,9 @@ public class Student
 	public StemStudents model;
 	public boolean isFemale = true;
 	public TopicVector interest;
-	public double interestThreshold = 0.5; // TODO figure out what this should be
+	public double interestThreshold;
+	public double passionThreshold;
+	public double expertiseThreshold;
 	public Adult parent;
 	public int id;
 	public String teacher;
@@ -58,18 +60,14 @@ public class Student
 
 	public Student(StemStudents model) {
 		this.model = model;
+
+		interestThreshold = model.interestThresholdNoise * model.random.nextGaussian() + model.interestThreshold;
+		passionThreshold = model.passionThresholdNoise * model.random.nextGaussian() + model.passionThreshold;
+		expertiseThreshold = model.expertiseThresholdNoise * model.random.nextGaussian() + model.expertiseThreshold;
 		
 		// init daysSince to a large number so they're ready to go
 		Arrays.fill(daysSinceActivity, Integer.MAX_VALUE);
 		Arrays.fill(activityCounts, 0);
-	}
-
-	public Student(StemStudents model, TopicVector interest) {
-		this.model = model;
-		this.interest = interest;
-
-		// init daysSince to a large number so they're ready to go
-		Arrays.fill(daysSinceActivity, Integer.MAX_VALUE);
 	}
 	
 	public void incrementCounters() {
@@ -117,7 +115,7 @@ public class Student
 	 */
 	public boolean isInterestedInContent(TopicVector content) {
 		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
-			if (content.topics[i] > model.interestThreshold)
+			if (content.topics[i] > interestThreshold)
 				return true;
 		
 		return false;		

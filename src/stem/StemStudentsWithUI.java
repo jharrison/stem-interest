@@ -94,6 +94,7 @@ public class StemStudentsWithUI extends GUIState
         i.setVolatile(true);
         i.addInspector(new SimpleInspector(model, this), "System");
         i.addInspector(new SimpleInspector(new NetworkProperties(this), this), "Network");
+        i.addInspector(new SimpleInspector(new LeaderProperties(this), this), "Leaders");
         i.addInspector(new SimpleInspector(model.ruleSet, this), "Rules");
 
         return i;
@@ -186,7 +187,7 @@ public class StemStudentsWithUI extends GUIState
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 
-		chart = registerBarChart(c, "Effect of Activies on Interest", "Activity", "Change in Interest Level", netEffectOfActivities, PlotOrientation.VERTICAL, false, true, false, false);
+		chart = registerBarChart(c, "Effect of Activities on Interest", "Activity", "Change in Interest Level", netEffectOfActivities, PlotOrientation.VERTICAL, false, true, false, false);
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		((BarRenderer)chart.getCategoryPlot().getRenderer()).setItemMargin(0);
@@ -314,6 +315,62 @@ public class StemStudentsWithUI extends GUIState
 		public void setCloseTriadProbability(double val) { model.closeTriadProbability = val; }
 		public Object domCloseTriadProbability() { return new Interval(0.0,0.5); }
 
+	}
+	
+	public class LeaderProperties {
+
+		StemStudents model;
+		StemStudentsWithUI modelUI;
+		
+		public LeaderProperties(StemStudentsWithUI modelUI) {
+			this.modelUI = modelUI;
+			this.model = modelUI.model;
+		}
+
+		public double getLeaderExpertise() { return model.leaderExpertise; }
+		public void setLeaderExpertise(double val) { model.leaderExpertise = val; }
+		public Object domLeaderExpertise() { return new Interval(0.0, 1.0); }
+		
+		public double getLeaderExpertiseNoise() { return model.leaderExpertiseNoise; }
+		public void setLeaderExpertiseNoise(double val) { model.leaderExpertiseNoise = val; }
+		public Object domLeaderExpertiseNoise() { return new Interval(0.0, 1.0); }
+		
+		public double getLeaderPassion() { return model.leaderPassion; }
+		public void setLeaderPassion(double val) { model.leaderPassion = val; }
+		public Object domLeaderPassion() { return new Interval(0.0, 1.0); }
+		
+		public double getLeaderPassionNoise() { return model.leaderPassionNoise; }
+		public void setLeaderPassionNoise(double val) { model.leaderPassionNoise = val; }
+		public Object domLeaderPassionNoise() { return new Interval(0.0, 1.0); }
+
+		public double getExpertiseThreshold() { return model.expertiseThreshold; }
+		public void setExpertiseThreshold(double val) { model.expertiseThreshold = val; }
+		public Object domExpertiseThreshold() { return new Interval(0.0, 1.0); }
+
+		public double getExpertiseThresholdNoise() { return model.expertiseThresholdNoise; }
+		public void setExpertiseThresholdNoise(double val) { model.expertiseThresholdNoise = val; }
+		public Object domExpertiseThresholdNoise() { return new Interval(0.0, 1.0); }
+
+		public double getPassionThreshold() { return model.passionThreshold; }
+		public void setPassionThreshold(double val) { model.passionThreshold = val; }
+		public Object domPassionThreshold() { return new Interval(0.0, 1.0); }
+
+		public double getPassionThresholdNoise() { return model.passionThresholdNoise; }
+		public void setPassionThresholdNoise(double val) { model.passionThresholdNoise = val; }
+		public Object domPassionThresholdNoise() { return new Interval(0.0, 1.0); }
+		
+
+//		int n = 1000;
+//		double[] samples = new double[n];
+//		public double[] getExpertiseSample() {
+//			for (int i = 0; i < n; i++) {
+//				do {
+//				samples[i] = model.leaderExpertise + model.leaderExpertiseNoise * model.random.nextGaussian();
+//				} while(samples[i] < 0 || samples[i] > 1);
+//			}
+//			
+//			return samples;
+//		}
 	}
 
 	public static void main(String[] args) {
