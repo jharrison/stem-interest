@@ -8,7 +8,7 @@ import stem.activities.Activity;
  * <ul>
  * <li>If the student has a low degree of choice, interest and participation decrease.</li>
  * <li>If the student has a moderate degree of choice, no change.</li>
- * <li>If the student has a high degree of choice, interest and participation increases.</li>
+ * <li>If the student has a high degree of choice, interest and participation increase.</li>
  * </ul>
  * 
  * @author Joey Harrison

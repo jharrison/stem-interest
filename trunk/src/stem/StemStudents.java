@@ -102,16 +102,23 @@ public class StemStudents extends SimState
 	public double getInterestThreshold() { return interestThreshold; }
 	public void setInterestThreshold(double val) { interestThreshold = val; }
 	public Object domInterestThreshold() { return new Interval(0.0, 1.0); }
+	
+	public double interestThresholdNoise = 0.0;
+	public double getInterestThresholdNoise() { return interestThresholdNoise; }
+	public void setInterestThresholdNoise(double val) { interestThresholdNoise = val; }
+	public Object domInterestThresholdNoise() { return new Interval(0.0, 1.0); }
 
+	public double leaderExpertise = 0.5;
+	public double leaderExpertiseNoise = 0.0;
+	
+	public double leaderPassion = 0.5;
+	public double leaderPassionNoise = 0.0;
+	
 	public double expertiseThreshold = 0.5;
-	public double getExpertiseThreshold() { return expertiseThreshold; }
-	public void setExpertiseThreshold(double val) { expertiseThreshold = val; }
-	public Object domExpertiseThreshold() { return new Interval(0.0, 1.0); }
+	public double expertiseThresholdNoise = 0.0;
 
 	public double passionThreshold = 0.5;
-	public double getPassionThreshold() { return passionThreshold; }
-	public void setPassionThreshold(double val) { passionThreshold = val; }
-	public Object domPassionThreshold() { return new Interval(0.0, 1.0); }
+	public double passionThresholdNoise = 0.0;
 	
 	public double interestChangeRate = 0.01;
 	public double getInterestChangeRate() { return interestChangeRate; }
@@ -203,6 +210,12 @@ public class StemStudents extends SimState
 		}
 	}
 	
+	private Adult createRandomAdult() {
+//		return new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random));
+		return new Adult(TopicVector.createRandom(random, leaderExpertise, leaderExpertiseNoise), 
+				TopicVector.createRandom(random, leaderPassion, leaderPassionNoise));
+	}
+	
 	/**
 	 * Checks the model parameters and possibly randomize the given student's
 	 * interests and stuffIDo.
@@ -252,7 +265,7 @@ public class StemStudents extends SimState
 			
 			Student s = Student.parseStudent(this, line);
 			possiblyRandomize(s);
-			s.parent = new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random));
+			s.parent = createRandomAdult();
 			students.add(s);
 		}
 		// Close the buffered reader
@@ -438,7 +451,7 @@ public class StemStudents extends SimState
 				RepeatingActivity a = RepeatingActivity.createFromType(this, type);
 				// assign leaders to activiy
 				while (a.leaders.size() < type.numLeaders)
-					a.leaders.add(new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random)));
+					a.leaders.add(createRandomAdult());
 				activities.add(a);
 			}
 						
@@ -546,7 +559,7 @@ public class StemStudents extends SimState
 			
 			// add leaders
 			while (a.leaders.size() < type.numLeaders)
-				a.leaders.add(new Adult(TopicVector.createRandom(random), TopicVector.createRandom(random)));
+				a.leaders.add(createRandomAdult());
 			
 			activities.add(a);			
 		}

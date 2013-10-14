@@ -195,11 +195,22 @@ public class DataLogger implements Steppable
 	                dataList.add(String.valueOf(calcAverageInterest(1)));
 	                dataList.add(String.valueOf(calcAverageInterest(2)));
 	                dataList.add(String.valueOf(model.coordinationLevel));
+	                dataList.add(String.valueOf(model.interestThreshold));
+	                dataList.add(String.valueOf(model.interestThresholdNoise));
+	                dataList.add(String.valueOf(model.leaderExpertise));
+	                dataList.add(String.valueOf(model.leaderExpertiseNoise));
+	                dataList.add(String.valueOf(model.leaderPassion));
+	                dataList.add(String.valueOf(model.leaderPassionNoise));
+	                dataList.add(String.valueOf(model.expertiseThreshold));
+	                dataList.add(String.valueOf(model.expertiseThresholdNoise));
+	                dataList.add(String.valueOf(model.passionThreshold));
+	                dataList.add(String.valueOf(model.passionThresholdNoise));
+	                
 	            }
 	
 	            @Override
 	            public String getCSVHeader() {
-	                String header = "Run, Step, AveIntr1, AveIntr2, AveIntr3, Coordination";
+	                String header = "Run, Step, AveIntr1, AveIntr2, AveIntr3, Coordination, IntrThresh, IntrThreshNs, ldrExp, ldrExpNs, ldrPsn, ldrPsnNs, expThr, expThrNs, psnThr, psnThrNs";
 	                return header + "\n";
 	            }
 			};

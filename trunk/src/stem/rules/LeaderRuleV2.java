@@ -46,15 +46,15 @@ public class LeaderRuleV2 extends Rule
 		
 		for (Adult adult : a.leaders) {
 			for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
-				boolean expertise = adult.expertise.topics[i] > s.model.expertiseThreshold;
-				boolean passion = adult.passion.topics[i] > s.model.passionThreshold;
+				boolean expertise = adult.expertise.topics[i] > s.expertiseThreshold;
+				boolean passion = adult.passion.topics[i] > s.passionThreshold;
 				
 				if (expertise && passion) {
 					s.increaseInterest(a, i, weight, this);
 					goodExperience++;
 				}
 				else if (expertise && !passion) {
-					if (s.interest.topics[i] > s.model.interestThreshold) {
+					if (s.interest.topics[i] > s.interestThreshold) {
 						s.increaseInterest(a, i, weight, this);
 						goodExperience++;
 					}
@@ -63,7 +63,7 @@ public class LeaderRuleV2 extends Rule
 						goodExperience--;
 					}
 				}
-				else if (!expertise && passion && s.interest.topics[i] < s.model.interestThreshold) { 
+				else if (!expertise && passion && s.interest.topics[i] < s.interestThreshold) { 
 					s.increaseInterest(a, i, weight, this);
 					goodExperience++;
 				}

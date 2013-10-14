@@ -93,5 +93,14 @@ public class TopicVector
 			tv.topics[i] = random.nextDouble();
 		return tv;
 	}
+	
+	static public TopicVector createRandom(MersenneTwisterFast random, double ave, double stdev) {
+		TopicVector tv = new TopicVector();
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			do
+				tv.topics[i] = ave + stdev * random.nextGaussian();
+			while (tv.topics[i] < MIN_INTEREST || tv.topics[i] > MAX_INTEREST);
+		return tv;
+	}
 
 }
