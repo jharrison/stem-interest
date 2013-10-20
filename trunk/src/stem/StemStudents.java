@@ -109,16 +109,16 @@ public class StemStudents extends SimState
 	public Object domInterestThresholdNoise() { return new Interval(0.0, 1.0); }
 
 	public double leaderExpertise = 0.5;
-	public double leaderExpertiseNoise = 0.0;
+	public double leaderExpertiseNoise = 0.05;
 	
 	public double leaderPassion = 0.5;
-	public double leaderPassionNoise = 0.0;
+	public double leaderPassionNoise = 0.05;
 	
 	public double expertiseThreshold = 0.5;
-	public double expertiseThresholdNoise = 0.0;
+	public double expertiseThresholdNoise = 0.05;
 
 	public double passionThreshold = 0.5;
-	public double passionThresholdNoise = 0.0;
+	public double passionThresholdNoise = 0.05;
 	
 	public double interestChangeRate = 0.01;
 	public double getInterestChangeRate() { return interestChangeRate; }

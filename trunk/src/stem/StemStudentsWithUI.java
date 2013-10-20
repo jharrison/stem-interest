@@ -187,12 +187,12 @@ public class StemStudentsWithUI extends GUIState
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 
-		chart = registerBarChart(c, "Effect of Activities on Interest", "Activity", "Change in Interest Level", netEffectOfActivities, PlotOrientation.VERTICAL, false, true, false, false);
+		chart = registerBarChart(c, "Effect of Activities on Interest", "Activity", "Change in Interest Level", netEffectOfActivities, PlotOrientation.VERTICAL, false, true, false, true);
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		((BarRenderer)chart.getCategoryPlot().getRenderer()).setItemMargin(0);
 		
-		chart = registerBarChart(c, "Effect of Rules on Interest", "Rule", "Change in Interest Level", netEffectOfRules, PlotOrientation.VERTICAL, false, true, false, false);
+		chart = registerBarChart(c, "Effect of Rules on Interest", "Rule", "Change in Interest Level", netEffectOfRules, PlotOrientation.VERTICAL, false, true, false, true);
 		chart.getCategoryPlot().getRangeAxis().setAutoRange(true);
 		chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		((BarRenderer)chart.getCategoryPlot().getRenderer()).setItemMargin(0);
