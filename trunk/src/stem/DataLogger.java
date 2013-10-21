@@ -44,7 +44,9 @@ public class DataLogger implements Steppable
 
 	public double[][] netEffectOfActivities = new double[StemStudents.NUM_ACTIVITY_TYPES][StemStudents.NUM_TOPICS];
 	public double[][] netEffectOfRules;	// to be initialize in the constructor
-	
+
+	public long activitiesDone = 0;
+	public long activitiesDoneWithFriends = 0;
 
 
 	public DataLogger(StemStudents model) {
@@ -64,6 +66,8 @@ public class DataLogger implements Steppable
 	}
 
 	public void init() {
+		activitiesDone = 0;
+		activitiesDoneWithFriends = 0;
 		Arrays.fill(activityCounts, 0);
 		Arrays.fill(activityGenderCounts, 0);
 		Arrays.fill(activityGenderRatios, 0.0);
@@ -242,6 +246,12 @@ public class DataLogger implements Steppable
 		
 		int ruleIndex = model.ruleSet.rules.indexOf(r);
 		netEffectOfRules[ruleIndex][topicIndex] += delta;
+	}
+	
+	public void friendRuleFired(Activity a, boolean friendPresent) {
+		activitiesDone++;
+		if (friendPresent)
+			activitiesDoneWithFriends++;
 	}
 
 	@Override

@@ -22,7 +22,10 @@ public class FriendRule extends Rule
 {
 
 	@Override
-	public void apply(Student s, Activity a) {		
+	public void apply(Student s, Activity a) {
+		// Don't even fire this rule if this is a solo activity
+		if (a.type.maxParticipants == 1)
+			return;
 		// count friends
 		int friendCount = a.countParticipants(s.friends);
 		int goodExperience = 0;
@@ -44,6 +47,8 @@ public class FriendRule extends Rule
 			s.increaseParticipationRate(a.type.id);
 		else if (goodExperience < 0)
 			s.decreaseParticipationRate(a.type.id);
+		
+		s.model.dataLogger.friendRuleFired(a, (goodExperience > 0));
 	}
 
 }
