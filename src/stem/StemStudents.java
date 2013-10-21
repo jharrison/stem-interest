@@ -60,7 +60,7 @@ public class StemStudents extends SimState
 
 	public UndirectedSparseGraph<Student, SimpleEdge> network = new UndirectedSparseGraph<Student, SimpleEdge>();
 
-	DataLogger dataLogger;
+	public DataLogger dataLogger;
 	public String outputFilename = "";
 	
     String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
@@ -160,6 +160,12 @@ public class StemStudents extends SimState
 //		
 //		return counts;
 //	}
+	
+	public double getActivitiesWithFriends() {
+		if ((dataLogger == null) || (dataLogger.activitiesDone == 0))
+			return 0;
+		return dataLogger.activitiesDoneWithFriends / (double)dataLogger.activitiesDone;
+	}
 	
 	
 
@@ -414,7 +420,7 @@ public class StemStudents extends SimState
 	 * Match participants to activities such that friends are kept together
 	 * as much as possible.
 	 */
-	public void matchParticipantsToActivities(ArrayList<Student> participants, ArrayList<Activity> activities) {
+	private void matchParticipantsToActivities_Random(ArrayList<Student> participants, ArrayList<Activity> activities) {
 		ArrayList<Activity> nonFullActivities = new ArrayList<Activity>(activities);
 		for (Student s : participants) {
 			Activity a = nonFullActivities.get(random.nextInt(nonFullActivities.size()));
@@ -425,8 +431,65 @@ public class StemStudents extends SimState
 	}
 	
 	
+	/**
+	 * Match participants to activities such that friends are kept together
+	 * as much as possible.
+	 */
+	private void matchParticipantsToActivities_InOrder(ArrayList<Student> participants, ArrayList<Activity> activities) {
+		
+		int pIndex = 0;
+		for (Activity a : activities) {
+			for ( ; pIndex < participants.size() && !a.isFull(); pIndex++)
+				a.addParticipant(participants.get(pIndex));
+			
+			if (pIndex >= participants.size())
+				break;
+		}
+		
+		int total = 0;
+		for (Activity a : activities)
+			total += ((RepeatingActivity)a).potentialParticipants.size();
+		if (total != participants.size())
+			System.err.format("Error in matchParticipantsToActivities: %d participants != %d assigned.\n", total, participants.size());
+	}
+	
+	
+	/**
+	 * Match participants to activities such that friends are kept together
+	 * as much as possible.
+	 */
+	private void matchParticipantsToActivities(ArrayList<Student> participants, ArrayList<Activity> activities) {
+		ArrayList<Student> participantsCopy = new ArrayList<Student>(participants);
+		
+		for (Activity a : activities) {
+			while (!a.isFull() && !participantsCopy.isEmpty())
+				addFriendChain(participantsCopy.get(0), a, participantsCopy);
+
+			if (participantsCopy.isEmpty())
+				break;
+		}
+		
+		int total = 0;
+		for (Activity a : activities)
+			total += ((RepeatingActivity)a).potentialParticipants.size();
+		if (total != participants.size())
+			System.err.format("Error in matchParticipantsToActivities: %d participants != %d assigned.\n", total, participants.size());
+	}
+	
+	private void addFriendChain(Student s, Activity a, ArrayList<Student> participants) {
+		if (a.isFull())
+			return;
+		
+		a.addParticipant(s);
+		participants.remove(s);
+		for (Student f : s.friends)
+			if (participants.contains(f))
+				addFriendChain(f, a, participants);
+	}
+	
+	
 	/** Create a new set of repeating activities and assign participants. */
-	public void organizeRepeatingActivities() {
+	private void organizeRepeatingActivities() {
 
 		repeatingActivities.clear();
 		ArrayList<Student> allParticipants = new ArrayList<Student>();
@@ -466,7 +529,7 @@ public class StemStudents extends SimState
 	/**
 	 * Schedule one day's worth of activities.
 	 */
-	public void doActivitiesForDay() {
+	private void doActivitiesForDay() {
 		ArrayList<Activity> activities = new ArrayList<Activity>();
 
 		for (Student s : students)
@@ -520,7 +583,7 @@ public class StemStudents extends SimState
 	 * @param type Type of the activity to join.
 	 * @return The matching activity or null if none exists
 	 */
-	public Activity findActivityToJoin(Student s, ArrayList<Activity> activities, ActivityType type) {
+	private Activity findActivityToJoin(Student s, ArrayList<Activity> activities, ActivityType type) {
 		ArrayList<Activity> matches = new ArrayList<Activity>();
 		for (Activity a : activities)
 			if ((a.type == type) && !a.isFull())
@@ -547,7 +610,7 @@ public class StemStudents extends SimState
 	 * @param s Student that will be participating in the activity.
 	 * @param type Type of the activity.
 	 */
-	public void createOrJoinActivity(Student s, ArrayList<Activity> activities, ActivityType type) {
+	private void createOrJoinActivity(Student s, ArrayList<Activity> activities, ActivityType type) {
 		Activity a = findActivityToJoin(s, activities, type);
 		
 		if (a == null) {	
@@ -579,7 +642,7 @@ public class StemStudents extends SimState
 	}
 	
 	
-	public void printDayInfo() {
+	private void printDayInfo() {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         System.out.format("Step: %d, Date: %s, %d, %d, %d, %s, %s, %s\n", schedule.getSteps(), df.format(date.getTime()), 
         	date.get(Calendar.DAY_OF_WEEK), date.get(Calendar.DAY_OF_MONTH), date.get(Calendar.DAY_OF_YEAR),
@@ -636,7 +699,7 @@ public class StemStudents extends SimState
 			public void step(SimState state) {
 				date.add(Calendar.DATE, 1);
 				if (state.schedule.getSteps() > 1461)	// 4 years (including one leap day)
-					state.finish();
+					state.kill();
 			}
 		}, CALENDAR_ORDER, 1.0);
 	}
@@ -677,6 +740,7 @@ public class StemStudents extends SimState
 	public void finish() {
 		super.finish();
 		dataLogger.close();
+		System.out.println(getActivitiesWithFriends());
 	}
 	
 	public static void main(String[] args) {
