@@ -186,16 +186,16 @@ public class Student
 
 		/**
 		 * The responses to the question of "how often do you do the following...?" are mapped as follows:
-		 * All the time:			1.0
-		 * Often:					0.75
-		 * Every once in a while:	0.5			
-		 * Very rarely:				0.25
-		 * Never:					0.0
+		 * All the time (5):			1.0
+		 * Often (4):					0.75
+		 * Every once in a while (3):	0.5			
+		 * Very rarely (2):				0.25
+		 * Never (1):					0.0
 		 * 
 		 * These represent the probabilities that the student will do the activity at any given opportunity.
 		 */
 		// It is one-based so stuff an extra zero in there
-		final double[] participationRate = new double[] {0, 0, 0.25, 0.5, 0.75, 1.0};
+//		final double[] participationRate = new double[] {0, 0, 0.25, 0.5, 0.75, 1.0};
 		
 		String[] tokens = line.split(",");
 		student.id = Integer.parseInt(tokens[0]);
@@ -217,14 +217,12 @@ public class Student
 		// hard-code school for everyday
 		student.stuffIDo[15] = 5;
 		student.participationRates[15] = 1.0;
-		// skip 19: Other_me
-		// skip 20: Name_other
-		// skip 21-43: Stuff that interests me
-		// read 44, 45, 46: interest levels for the three aggregate categories
+		// skip 19-41: Stuff that interests me
+		// read 42, 43, 44: interest levels for the three aggregate categories
+		double earthInterest 	= Double.parseDouble(tokens[42]);
+		double humanInterest 	= Double.parseDouble(tokens[43]);
 		double techInterest 	= Double.parseDouble(tokens[44]);
-		double earthInterest 	= Double.parseDouble(tokens[45]);
-		double humanInterest 	= Double.parseDouble(tokens[46]);
-		
+
 		student.interest = new TopicVector(techInterest, earthInterest, humanInterest);
 		
 		return student;

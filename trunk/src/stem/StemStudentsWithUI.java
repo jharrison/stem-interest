@@ -161,9 +161,9 @@ public class StemStudentsWithUI extends GUIState
 		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
 		aveInterestHist.getFrame().setVisible(false);
 		
-		interestHist[0] = ChartUtils.attachHistogram(null, 7, "Exploration Index", "Interest Level", "Count", controller);
-		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Science Index", "Interest Level", "Count", controller);
-		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human Index", "Interest Level", "Count", controller);
+		interestHist[0] = ChartUtils.attachHistogram(null, 7, "Tech/Eng Index", "Interest Level", "Count", controller);
+		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Earth/Space Index", "Interest Level", "Count", controller);
+		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human/Bio Index", "Interest Level", "Count", controller);
 		// Make the histograms small
 		for (int i = 0; i < 3; i++) {
 			interestHist[i].setScale(0.5);
@@ -220,7 +220,7 @@ public class StemStudentsWithUI extends GUIState
 		super.step();
 		
 		String[] activityNames = new String[StemStudents.NUM_ACTIVITY_TYPES];
-		String[] topicNames = new String[] { "Exploration", "Science", "Human/Bio" };
+		String[] topicNames = new String[] { "Tech/Eng", "Earth/Space", "Human/Bio" };
 		
 		for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++) {
 			activityNames[i] = model.activityTypes.get(i).name;

@@ -22,9 +22,9 @@ public class DataLogger implements Steppable
 	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[StemStudents.NUM_TOPICS];
 	DoubleArrayWatcher activitiesDoneWatcher;
 
-	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Exploration Index");
-	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Science Index");
-	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human Index");
+	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Tech/Eng Index");
+	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Earth/Space Index");
+	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human/Bio Index");
 	
 	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
 	
