@@ -86,7 +86,7 @@ public class StemStudents extends SimState
 	/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
 	public double closeTriadProbability = 0.05;	
 	
-	public int numStudents = 127;  //# from survey that have valid values
+	public int numStudents = 174;  //# from survey that have valid values
 	public int getNumYouth() { return numStudents; }
 	public void setNumYouth(int val) { numStudents = val; }
 
