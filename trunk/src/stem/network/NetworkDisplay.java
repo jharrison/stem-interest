@@ -26,6 +26,8 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 
+import misc.layout.GEMLayout;
+
 import org.apache.commons.collections15.Transformer;
 import org.freehep.util.export.ExportDialog;
 
@@ -38,6 +40,7 @@ import stem.StemStudentsWithUI;
 import stem.Student;
 import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.FRLayout;
+import edu.uci.ics.jung.algorithms.layout.FRLayout2;
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
@@ -281,10 +284,12 @@ public class NetworkDisplay implements Steppable {
 		List<Class <?>> layouts = new ArrayList<Class <?>>();
 		layouts.add(KKLayout.class);
 		layouts.add(FRLayout.class);
+		layouts.add(FRLayout2.class);
 		layouts.add(CircleLayout.class);
 		layouts.add(SpringLayout.class);
 		layouts.add(SpringLayout2.class);
 		layouts.add(ISOMLayout.class);
+		layouts.add(GEMLayout.class);
 		return (Class[]) layouts.toArray(new Class[0]);
 	}
 	

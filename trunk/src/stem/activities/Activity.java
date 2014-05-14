@@ -22,7 +22,11 @@ public class Activity implements Steppable
 	
 	public ActivityType type;
 	
-	/** name of the activity, e.g. Library, Scouts, etc. */
+	/* Max number of participants in the this activity. This can be altered to
+	 * be different from the number specified in the ActivityType.
+	 */
+	public int maxParticipants;
+	
 	public TopicVector content;
 	public ArrayList<Student> participants = new ArrayList<Student>();
 	public ArrayList<Adult> leaders = new ArrayList<Adult>();
@@ -43,22 +47,20 @@ public class Activity implements Steppable
 		this.content = content;
 	}
 
-	public Activity(TopicVector content, ArrayList<Student> participants) {
-		this.content = content;
-		this.participants = participants;
-	}
-	
-	public Activity(TopicVector content, ArrayList<Student> participants, ArrayList<Adult> leaders, 
-			boolean isSchoolRelated, boolean isVoluntary, boolean isParentEncouraged) {
-		this.content = content;
-		this.participants = participants;
-		this.leaders = leaders;
-		this.isSchoolRelated = isSchoolRelated;
-		this.isVoluntary = isVoluntary;
-		this.isParentEncouraged = isParentEncouraged;
-	}
-	
-
+//	public Activity(TopicVector content, ArrayList<Student> participants) {
+//		this.content = content;
+//		this.participants = participants;
+//	}
+//	
+//	public Activity(TopicVector content, ArrayList<Student> participants, ArrayList<Adult> leaders, 
+//			boolean isSchoolRelated, boolean isVoluntary, boolean isParentEncouraged) {
+//		this.content = content;
+//		this.participants = participants;
+//		this.leaders = leaders;
+//		this.isSchoolRelated = isSchoolRelated;
+//		this.isVoluntary = isVoluntary;
+//		this.isParentEncouraged = isParentEncouraged;
+//	}
 	
 	@Override
 	public String toString() {
@@ -70,7 +72,7 @@ public class Activity implements Steppable
 	}
 	
 	public boolean isFull() {
-		return participants.size() >= type.maxParticipants;
+		return participants.size() >= maxParticipants;
 	}
 	
 	public boolean contains(Student s) {
@@ -78,7 +80,10 @@ public class Activity implements Steppable
 	}
 	
 	public boolean contains(ArrayList<Student> students) {
-		return participants.contains(students);
+		for (Student s : students)
+			if (participants.contains(s))
+				return true;
+		return false;
 	}
 	
 	/** Count how many students in the given list are participating in this activity. */ 
@@ -92,17 +97,16 @@ public class Activity implements Steppable
 
 	@Override
 	public void step(SimState state) {
-//		System.out.format("Step: %d, activity: %s, content: %s\n", state.schedule.getSteps(), type.name, content.toString());
+		//System.out.format("Step: %d, activity: %s, content: %s\n", state.schedule.getSteps(), type.name, content.toString());
+		
 		for (Student s : participants)
 			s.doActivity(this);		
-				
-				
-//		((StemStudents)state).activityCounts[this.type.id]++;
 	}
 	
 	static public Activity createFromType(StemStudents model, ActivityType type) {
 		Activity a = new Activity(type.content);
 		a.type = type;
+		a.maxParticipants = type.maxParticipants;
 
 		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
 		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
@@ -110,5 +114,16 @@ public class Activity implements Steppable
 		
 		return a;
 	}
+	
+	static public Activity createFromType(StemStudents model, ActivityType type, TopicVector content) {
+		Activity a = new Activity(content);
+		a.type = type;
+		a.maxParticipants = type.maxParticipants;
 
+		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
+		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
+		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
+		
+		return a;
+	}
 }

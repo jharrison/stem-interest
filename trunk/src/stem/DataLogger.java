@@ -29,7 +29,7 @@ public class DataLogger implements Steppable
 	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
 	
 //	/** Counts of how many times a student has done each activity */
-	int[] activityCounts = new int[StemStudents.NUM_ACTIVITY_TYPES];		
+	public int[] activityCounts = new int[StemStudents.NUM_ACTIVITY_TYPES];		
 //	public int[] getActivityCounts() { return activityCounts; }
 	
 	/** Counts of how many times a female has done each activity */
@@ -47,6 +47,7 @@ public class DataLogger implements Steppable
 
 	public long activitiesDone = 0;
 	public long activitiesDoneWithFriends = 0;
+	public long[] activitiesDoneWithFriendsAll = new long[StemStudents.NUM_ACTIVITY_TYPES];		
 
 
 	public DataLogger(StemStudents model) {
@@ -68,6 +69,7 @@ public class DataLogger implements Steppable
 	public void init() {
 		activitiesDone = 0;
 		activitiesDoneWithFriends = 0;
+		Arrays.fill(activitiesDoneWithFriendsAll, 0);
 		Arrays.fill(activityCounts, 0);
 		Arrays.fill(activityGenderCounts, 0);
 		Arrays.fill(activityGenderRatios, 0.0);
@@ -175,7 +177,9 @@ public class DataLogger implements Steppable
 			@Override
 			protected void updateDataPoint() {
 				for (int i = 0; i < model.students.size(); i++)
-					data[i] = model.students.get(i).activitesDone / Math.max(model.schedule.getSteps(), 1.0);				
+					data[i] = model.students.get(i).activitiesDone / Math.max(model.schedule.getSteps(), 1.0);	// all activities
+//					data[i] = model.students.get(i).organizedActivitiesDone / Math.max(model.schedule.getSteps(), 1.0);	// organized
+//					data[i] = (model.students.get(i).activitiesDone - model.students.get(i).organizedActivitiesDone) / Math.max(model.schedule.getSteps(), 1.0);	// ad hoc
 			}
 			
 			@Override
@@ -250,8 +254,10 @@ public class DataLogger implements Steppable
 	
 	public void friendRuleFired(Activity a, boolean friendPresent) {
 		activitiesDone++;
-		if (friendPresent)
+		if (friendPresent) {
 			activitiesDoneWithFriends++;
+			activitiesDoneWithFriendsAll[a.type.id]++;
+		}
 	}
 
 	@Override

@@ -53,6 +53,25 @@ public class TopicVector
 	}
 	
 	/**
+	 * Create a TopicVector that is focused on the largest topic in this one.
+	 * @return a new TopicVector with all zeroes except for the focus topic which
+	 * will be 1.
+	 */
+	public TopicVector createFocusedVector() {
+		TopicVector fv = new TopicVector(0, 0, 0);
+		double largestValue = Double.NEGATIVE_INFINITY;
+		int largestIndex = 0;
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			if (topics[i] > largestValue) {
+				largestValue = topics[i];
+				largestIndex = i;
+			}
+		
+		fv.topics[largestIndex] = 1.0;
+		return fv;
+	}
+	
+	/**
 	 * Multiply all values of the topic vector by the given scale.
 	 */
 	public void scale(double scale) {

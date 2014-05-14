@@ -30,6 +30,11 @@ public class RepeatingActivity extends Activity
 		potentialParticipants.add(s);
 	}
 	
+	@Override
+	public boolean isFull() {
+		return potentialParticipants.size() >= maxParticipants;
+	}
+
 	protected void coordinateContent(StemStudents model) {
 		content = TopicVector.weightedCombination(model.coordinatedTopic, originalTopic, model.coordinationLevel);
 	}
@@ -60,6 +65,7 @@ public class RepeatingActivity extends Activity
 		
 		RepeatingActivity a = new RepeatingActivity(type.content);
 		a.type = type;
+		a.maxParticipants = type.maxParticipants;
 
 		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
 		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;

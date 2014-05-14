@@ -32,13 +32,16 @@ public class ScienceClass extends RepeatingActivity
 		type.onSummer = false;
 		type.withFriendsOnly = false;
 		
+		maxParticipants = type.maxParticipants;
+		
 		isSchoolRelated = true;
 		isVoluntary = false;
 		isParentEncouraged = false;
 
-		topics.add(new TopicVector(1.0, 0.0, 0.0));
-		topics.add(new TopicVector(0.0, 1.0, 0.0));
-		topics.add(new TopicVector(0.0, 0.0, 1.0));
+//		topics.add(new TopicVector(1.0, 0.0, 0.0));
+//		topics.add(new TopicVector(0.0, 1.0, 0.0));
+//		topics.add(new TopicVector(0.0, 0.0, 1.0));
+		topics.add(new TopicVector(0.5, 0.5, 0.5));
 	}
 
 	@Override

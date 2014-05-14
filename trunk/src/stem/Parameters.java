@@ -34,5 +34,8 @@ public class Parameters
     	model.passionThreshold = ParamUtils.getDouble(paramDB, "PassionThreshold", model.passionThreshold);
     	model.passionThresholdNoise = ParamUtils.getDouble(paramDB, "PassionThresholNoise", model.passionThresholdNoise);
     	
+    	model.activityMatchingMethod = ParamUtils.getInt(paramDB, "ActivityMatchingMethod", model.activityMatchingMethod);
+    	
+    	model.mentorProbability = ParamUtils.getDouble(paramDB, "MentorProbability", model.mentorProbability);
     }
 }
