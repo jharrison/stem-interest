@@ -55,6 +55,18 @@ public class ActivityType
 		return result.toString();
 	}
 	
+	public int calcOpportunitiesPerYear() {
+		int opportunities = 0;
+		if (onSchoolDay)
+			opportunities += 199;
+		if (onWeekendDay)
+			opportunities += 104;
+		if (onSummer)
+			opportunities += 62;
+		
+		return opportunities;
+	}
+	
 	/**
 	 * Maps the survey response to the question "How often do you do ...",
 	 * which is given in a 5-point likert scale, to participation rates
@@ -65,20 +77,14 @@ public class ActivityType
 	 */
 	public double mapLikertToParticpationRate(int response) {
 		// calculate the number of opportunities in a year
-		int opportunities = 0;
-		if (onSchoolDay)
-			opportunities += 199;
-		if (onWeekendDay)
-			opportunities += 104;
-		if (onSummer)
-			opportunities += 62;
+		int opportunities = calcOpportunitiesPerYear();
 		
 		// The survey response is a likert scale for which the answers are:
-		// 0: Never
-		// 1: Very rarely / Few times per year
-		// 2: Once in a while / 1-2 per month
-		// 3: Often / 1-2 per week
-		// 4: All the time / Almost every day
+		// 1: Never
+		// 2: Very rarely / Few times per year
+		// 3: Once in a while / 1-2 per month
+		// 4: Often / 1-2 per week
+		// 5: All the time / Almost every day
 		int timesDone = 0;
 		switch (response) {
 		case 1: timesDone = 0; break;		// Never

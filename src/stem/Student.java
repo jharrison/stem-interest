@@ -30,7 +30,8 @@ public class Student
 	public int id;
 	public String teacher;
 	/** Count of activities this student has done. */
-	public int activitesDone = 0;
+	public int activitiesDone = 0;
+	public int organizedActivitiesDone = 0;
 
 	/** List of responses the student gave to the "stuff I do" questions. */
 	private int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
@@ -89,7 +90,9 @@ public class Student
 			
 		daysSinceActivity[activity.type.id] = 0;
 		activityCounts[activity.type.id]++;
-		activitesDone++;
+		activitiesDone++;
+		if (activity.type.isRepeating)
+			organizedActivitiesDone++;
 
 		model.studentParticipated(this, activity);
 	}
@@ -186,11 +189,11 @@ public class Student
 
 		/**
 		 * The responses to the question of "how often do you do the following...?" are mapped as follows:
-		 * All the time (5):			1.0
-		 * Often (4):					0.75
-		 * Every once in a while (3):	0.5			
-		 * Very rarely (2):				0.25
-		 * Never (1):					0.0
+		 * 5) All the time:				1.0
+		 * 4) Often:					0.75
+		 * 3) Every once in a while:	0.5			
+		 * 2) Very rarely:				0.25
+		 * 1) Never:					0.0
 		 * 
 		 * These represent the probabilities that the student will do the activity at any given opportunity.
 		 */
@@ -213,6 +216,10 @@ public class Student
 			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
 //			student.participationRates[i] = participationRate[student.stuffIDo[i]];
 			student.participationRates[i] = model.activityTypes.get(i).mapLikertToParticpationRate(student.stuffIDo[i]);
+			
+			// scale the participation rates (except school) to bring the rates down to the level we expect
+			if (!model.activityTypes.get(i).name.equals("Class"))
+				student.participationRates[i] *= model.participationMultiplier;
 		}
 		// hard-code school for everyday
 		student.stuffIDo[15] = 5;

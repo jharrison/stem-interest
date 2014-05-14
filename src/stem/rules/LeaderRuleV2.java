@@ -63,9 +63,12 @@ public class LeaderRuleV2 extends Rule
 						goodExperience--;
 					}
 				}
-				else if (!expertise && passion && s.interest.topics[i] < s.interestThreshold) { 
-					s.increaseInterest(a, i, weight, this);
-					goodExperience++;
+				else if (!expertise && passion) {
+					if (s.interest.topics[i] < s.interestThreshold) {
+						s.increaseInterest(a, i, weight, this);
+						goodExperience++;
+					}
+					else {} // do nothing
 				}
 				else if (!expertise && !passion) {
 					s.decreaseInterest(a, i, weight, this);

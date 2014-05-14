@@ -2,6 +2,7 @@ package stem;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
@@ -16,6 +17,9 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
+
+import edu.uci.ics.jung.algorithms.metrics.Metrics;
+import edu.uci.ics.jung.algorithms.shortestpath.DistanceStatistics;
 
 import masoncsc.util.ChartUtils;
 
@@ -34,6 +38,7 @@ import sim.util.Bag;
 import sim.util.Interval;
 import sim.util.media.chart.ChartGenerator;
 import sim.util.media.chart.HistogramGenerator;
+import sim.util.media.chart.HistogramSeriesAttributes;
 import sim.util.media.chart.TimeSeriesChartGenerator;
 import stem.network.NetworkDisplay;
 
@@ -153,32 +158,46 @@ public class StemStudentsWithUI extends GUIState
 	public void init(final Controller c) {
 		super.init(c);
 		
-		networkDisplay = new NetworkDisplay(this);
-		NetworkDisplay.frame.setTitle("Friend Network");
-		c.registerFrame(NetworkDisplay.frame);
-		NetworkDisplay.frame.setVisible(false);
-
-		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
-		aveInterestHist.getFrame().setVisible(false);
-		
+		aveInterestTimeSeries = ChartUtils.attachTimeSeries(
+				new XYSeries[] {model.dataLogger.interest1Series.getData(), model.dataLogger.interest2Series.getData(), model.dataLogger.interest3Series.getData()}, 
+        		"Average Interest Over Time", "Days", "Interest Level", c, 1);
+		aveInterestTimeSeries.getFrame().setVisible(true);
+		aveInterestTimeSeries.setYAxisRange(0, 1);
+				
 		interestHist[0] = ChartUtils.attachHistogram(null, 7, "Tech/Eng Index", "Interest Level", "Count", controller);
 		interestHist[1] = ChartUtils.attachHistogram(null, 7, "Earth/Space Index", "Interest Level", "Count", controller);
 		interestHist[2] = ChartUtils.attachHistogram(null, 7, "Human/Bio Index", "Interest Level", "Count", controller);
 		// Make the histograms small
 		for (int i = 0; i < 3; i++) {
 			interestHist[i].setScale(0.5);
-			interestHist[i].getFrame().setSize(373, 294);
+			interestHist[i].getFrame().setSize(373, 284);
 			interestHist[i].getFrame().setVisible(false);
+			interestHist[i].setXAxisRange(0, 1);
+			interestHist[i].setYAxisRange(0, 100);
 		}
+		// set colors to match the colors used (by default) in the other plots
+		interestHist[0].getChart().getXYPlot().getRenderer().setSeriesPaint(0, new Color(255,85,85));	// red
+		interestHist[1].getChart().getXYPlot().getRenderer().setSeriesPaint(0, new Color(85,85,255));	// blue
+		interestHist[2].getChart().getXYPlot().getRenderer().setSeriesPaint(0, new Color(85,255,85));	// green
+		
+		// place them underneath aveInterestTimeSeries
+		int width = interestHist[0].getFrame().getWidth();
+		int yLoc = aveInterestTimeSeries.getFrame().getHeight() + aveInterestTimeSeries.getFrame().getInsets().top + aveInterestTimeSeries.getFrame().getInsets().bottom;
+		interestHist[0].getFrame().setLocation(0, yLoc);
+		interestHist[1].getFrame().setLocation(width, yLoc);
+		interestHist[2].getFrame().setLocation(width*2, yLoc);
+		
+		aveInterestHist = ChartUtils.attachHistogram(null, 7, "Average Interest", "Interest Level", "Count", controller);
+		aveInterestHist.getFrame().setVisible(false);
+
+		networkDisplay = new NetworkDisplay(this);
+		NetworkDisplay.frame.setTitle("Friend Network");
+		c.registerFrame(NetworkDisplay.frame);
+		NetworkDisplay.frame.setVisible(false);
 
 		activitiesDoneHist = ChartUtils.attachHistogram(null, 7, "Activities Done per Day", "Number of Activities per Day", "Count", controller);
 		activitiesDoneHist.getFrame().setVisible(false);
 
-		aveInterestTimeSeries = ChartUtils.attachTimeSeries(
-				new XYSeries[] {model.dataLogger.interest1Series.getData(), model.dataLogger.interest2Series.getData(), model.dataLogger.interest3Series.getData()}, 
-        		"Average Interest Over Time", "Days", "Interest Level", c, 1);
-		aveInterestTimeSeries.getFrame().setVisible(true);
-		aveInterestTimeSeries.setYAxisRange(0, 1);
 		
 		// create gender ratio bar chart
 		registerBarChart(c, "Activity Gender Ratio", "Activity", "Ratio of Female Participants", genderRatioDataset, PlotOrientation.HORIZONTAL, false, true, false, false);
@@ -198,21 +217,32 @@ public class StemStudentsWithUI extends GUIState
 		((BarRenderer)chart.getCategoryPlot().getRenderer()).setItemMargin(0);
 		
 
-		HistogramGenerator test = ChartUtilities.buildHistogramGenerator(this, "Participation Histograms", "Number of Students");
-		test.getFrame().setVisible(false);
+		HistogramGenerator histGen = ChartUtilities.buildHistogramGenerator(this, "Participation Histograms", "Number of Students");
+		HistogramSeriesAttributes histAttr = new HistogramSeriesAttributes(histGen, "Participation Histograms", 0, new double[StemStudents.NUM_ACTIVITY_TYPES], 5, null);
+		histGen.getFrame().setVisible(false);
 		for (int j = 0; j < StemStudents.NUM_ACTIVITY_TYPES; j++) {
 			final int activityIndex = j;
-			ChartUtilities.addSeries(this, test, model.activityTypes.get(j).name, new ProvidesDoubles() {
+			ChartUtilities.addSeries(histGen, model.activityTypes.get(j).name, 5);
+			ChartUtilities.scheduleSeries(this, histAttr, new ProvidesDoubles() {
 				public double[] provide() {
 					double[] counts = new double[model.students.size()];
 					for (int i = 0; i < model.students.size(); i++)
 						counts[i] = model.activityTypes.get(activityIndex).mapActivityCountToLikert(model.students.get(i).activityCounts[activityIndex]);
+					System.out.println("provide: " + counts[0]);
 					return counts;
-				}
-			}, 5);
+				}});
+			
+//			ChartUtilities.addSeries(this, histGen, model.activityTypes.get(j).name, new ProvidesDoubles() {
+//				public double[] provide() {
+//					double[] counts = new double[model.students.size()];
+//					for (int i = 0; i < model.students.size(); i++)
+//						counts[i] = model.activityTypes.get(activityIndex).mapActivityCountToLikert(model.students.get(i).activityCounts[activityIndex]);
+//					return counts;
+//				}
+//			}, 5);
 		}
 		
-		((Console)controller).setSize(400, 550);
+		((Console)controller).setSize(400, 534);
 	}
 	
 	@Override
@@ -314,6 +344,27 @@ public class StemStudentsWithUI extends GUIState
 		public double getCloseTriadProbability() { return model.closeTriadProbability; }
 		public void setCloseTriadProbability(double val) { model.closeTriadProbability = val; }
 		public Object domCloseTriadProbability() { return new Interval(0.0,0.5); }
+		
+		public double getClusteringCoefficient() {
+			Map<Student, Double> map = Metrics.clusteringCoefficients(model.network);
+
+			double total = 0;
+			for (Double d : map.values())
+				total += d.doubleValue();
+			return total / map.size();
+		}
+		
+		public double getDiameter() {
+			return DistanceStatistics.diameter(model.network);
+		}
+		
+		int[] degrees = new int[StemStudents.numStudents];
+		public int[] getDegreeHistogram() {
+			for (int i = 0; i < model.students.size(); i++)
+				degrees[i] = model.network.degree(model.students.get(i));
+			
+			return degrees;
+		}
 
 	}
 	
@@ -360,17 +411,17 @@ public class StemStudentsWithUI extends GUIState
 		public Object domPassionThresholdNoise() { return new Interval(0.0, 1.0); }
 		
 
-//		int n = 1000;
-//		double[] samples = new double[n];
-//		public double[] getExpertiseSample() {
-//			for (int i = 0; i < n; i++) {
-//				do {
-//				samples[i] = model.leaderExpertise + model.leaderExpertiseNoise * model.random.nextGaussian();
-//				} while(samples[i] < 0 || samples[i] > 1);
-//			}
-//			
-//			return samples;
-//		}
+		int n = 1000;
+		double[] samples = new double[n];
+		public double[] getExpertiseSample() {
+			for (int i = 0; i < n; i++) {
+				do {
+				samples[i] = model.leaderExpertise + model.leaderExpertiseNoise * model.random.nextGaussian();
+				} while(samples[i] < 0 || samples[i] > 1);
+			}
+			
+			return samples;
+		}
 	}
 
 	public static void main(String[] args) {

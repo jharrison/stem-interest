@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,6 +47,7 @@ public class StemStudents extends SimState
 	
 	ArrayList<Student> students = new ArrayList<Student>();
 	ArrayList<ActivityType> activityTypes = new ArrayList<ActivityType>();
+	ActivityType internet = null;	// mentoring will focus on this activity type
 
 //	public ArrayList<Activity> activities = new ArrayList<Activity>();
 	public ArrayList<RepeatingActivity> repeatingActivities = new ArrayList<RepeatingActivity>();
@@ -86,7 +88,7 @@ public class StemStudents extends SimState
 	/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
 	public double closeTriadProbability = 0.05;	
 	
-	public int numStudents = 174;  //# from survey that have valid values
+	static public int numStudents = 174;  //# from survey that have valid values
 	public int getNumYouth() { return numStudents; }
 	public void setNumYouth(int val) { numStudents = val; }
 
@@ -109,16 +111,16 @@ public class StemStudents extends SimState
 	public Object domInterestThresholdNoise() { return new Interval(0.0, 1.0); }
 
 	public double leaderExpertise = 0.5;
-	public double leaderExpertiseNoise = 0.05;
+	public double leaderExpertiseNoise = 0.0;
 	
 	public double leaderPassion = 0.5;
-	public double leaderPassionNoise = 0.05;
+	public double leaderPassionNoise = 0.0;
 	
 	public double expertiseThreshold = 0.5;
-	public double expertiseThresholdNoise = 0.05;
+	public double expertiseThresholdNoise = 0.0;
 
 	public double passionThreshold = 0.5;
-	public double passionThresholdNoise = 0.05;
+	public double passionThresholdNoise = 0.0;
 	
 	public double interestChangeRate = 0.01;
 	public double getInterestChangeRate() { return interestChangeRate; }
@@ -152,6 +154,11 @@ public class StemStudents extends SimState
 	public void setCoordinationLevel(double val) { coordinationLevel = val; }
 	public Object domCoordinationLevel() { return new Interval(0.0,1.0); }
 	
+	public int activityMatchingMethod = 0;
+	public int getActivityMatchingMethod() { return activityMatchingMethod;	}
+	public void setActivityMatchingMethod(int val) { activityMatchingMethod = val;	}
+	public Object domActivityMatchingMethod() { return new String[] { "Random", "InOrder", "FriendChain" }; }
+	
 //	public int[] getFriendCounts() {
 //		int [] counts = new int[numStudents];
 //		int index = 0;
@@ -161,12 +168,54 @@ public class StemStudents extends SimState
 //		return counts;
 //	}
 	
-	public double getActivitiesWithFriends() {
+	public String getActivitiesWithFriends() {
 		if ((dataLogger == null) || (dataLogger.activitiesDone == 0))
-			return 0;
-		return dataLogger.activitiesDoneWithFriends / (double)dataLogger.activitiesDone;
+			return "N/A";
+		return String.format("%.1f%%", 100 * dataLogger.activitiesDoneWithFriends / (double)dataLogger.activitiesDone);
 	}
 	
+	public double participationMultiplier = 0.22;
+	public double getParticipationMultiplier() { return participationMultiplier; }
+	public void setParticipationMultiplier(double val) { participationMultiplier = val; }
+	public Object domParticipationMultiplier() { return new Interval(0.0, 1.0); }
+
+
+//	double[] expectedActivitiesPerDay = new double[numStudents];
+//	public double[] getExpectedActivitiesPerDay() {
+//		Arrays.fill(expectedActivitiesPerDay, 0);
+//		if ((students != null) && !students.isEmpty()) {
+//			for (int i = 0; i < numStudents; i++) {
+//				int activitiesPerYear = 0;
+//				for (int j = 0; j < NUM_ACTIVITY_TYPES; j++) {
+//					int opportunities = activityTypes.get(j).calcOpportunitiesPerYear();
+////					activitiesPerYear += opportunities * students.get(i).participationRates[j] * 
+////							(activityTypes.get(j).name.equals("Class") ? 1 : participationMultiplier);
+//					activitiesPerYear += opportunities * students.get(i).participationRates[j];
+//				}
+//				expectedActivitiesPerDay[i] = activitiesPerYear / 365.0;
+//			}
+//		}
+//		
+//		return expectedActivitiesPerDay;
+//	}
+
+	/** Extent to which activities are coordinated with current school topic. */
+	public double mentorProbability = 0.0;
+	public double getMentorProbability() { return mentorProbability; }
+	public void setMentorProbability(double val) { mentorProbability = val; }
+	public Object domMentorProbability() { return new Interval(0.0,1.0); }
+	
+	public double getRatioOfInterested() {
+		int total = 0;
+		for (int i = 0; i < students.size(); i++)
+			for (int j = 0; j < NUM_TOPICS; j++)
+				if (students.get(i).interest.topics[j] > interestThreshold) {
+					total++;
+					break;
+				}
+		
+		return total / (double)numStudents;			
+	}
 	
 
 	public StemStudents(long seed, String[] args) {
@@ -210,6 +259,9 @@ public class StemStudents extends SimState
 			
 			if (activityTypes.size() != NUM_ACTIVITY_TYPES)
 				System.err.format("Error: %d activity types read from file, should be %d.\n", activityTypes.size(), NUM_ACTIVITY_TYPES);
+			
+			internet = activityTypes.get(11);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("Problem Reading in Activities");
@@ -240,9 +292,7 @@ public class StemStudents extends SimState
 		students.clear();
 		BufferedReader initInterests = null;
 		
-		/*
-		 * Read in initial student info and interests from data file
-		 */
+		//Read in initial student info and interests from data file
 		try {
 			initInterests = new BufferedReader(new FileReader("./data/initialStudentInput.csv"));
 			initInterests.readLine(); //Read in the header line of the file.
@@ -415,10 +465,8 @@ public class StemStudents extends SimState
 		return true;
 	}
 	
-	
 	/**
-	 * Match participants to activities such that friends are kept together
-	 * as much as possible.
+	 * Match participants to activities randomly.
 	 */
 	private void matchParticipantsToActivities_Random(ArrayList<Student> participants, ArrayList<Activity> activities) {
 		ArrayList<Activity> nonFullActivities = new ArrayList<Activity>(activities);
@@ -430,13 +478,14 @@ public class StemStudents extends SimState
 		}
 	}
 	
-	
 	/**
-	 * Match participants to activities such that friends are kept together
-	 * as much as possible.
+	 * Match participants to activities by looping through participants in order.
+	 * This only works because the artificial social network was created by starting
+	 * with a ring, which means students adjacent in the list are more likely to be
+	 * friends.
 	 */
 	private void matchParticipantsToActivities_InOrder(ArrayList<Student> participants, ArrayList<Activity> activities) {
-		
+
 		int pIndex = 0;
 		for (Activity a : activities) {
 			for ( ; pIndex < participants.size() && !a.isFull(); pIndex++)
@@ -445,20 +494,14 @@ public class StemStudents extends SimState
 			if (pIndex >= participants.size())
 				break;
 		}
-		
-		int total = 0;
-		for (Activity a : activities)
-			total += ((RepeatingActivity)a).potentialParticipants.size();
-		if (total != participants.size())
-			System.err.format("Error in matchParticipantsToActivities: %d participants != %d assigned.\n", total, participants.size());
 	}
 	
 	
 	/**
-	 * Match participants to activities such that friends are kept together
-	 * as much as possible.
+	 * Match participants to activities by adding a participant, then his/her friends,
+	 * then their friends, etc. Uses a depth-first search.
 	 */
-	private void matchParticipantsToActivities(ArrayList<Student> participants, ArrayList<Activity> activities) {
+	private void matchParticipantsToActivities_FriendChain(ArrayList<Student> participants, ArrayList<Activity> activities) {
 		ArrayList<Student> participantsCopy = new ArrayList<Student>(participants);
 		
 		for (Activity a : activities) {
@@ -468,14 +511,11 @@ public class StemStudents extends SimState
 			if (participantsCopy.isEmpty())
 				break;
 		}
-		
-		int total = 0;
-		for (Activity a : activities)
-			total += ((RepeatingActivity)a).potentialParticipants.size();
-		if (total != participants.size())
-			System.err.format("Error in matchParticipantsToActivities: %d participants != %d assigned.\n", total, participants.size());
 	}
 	
+	/**
+	 * Recursive function for adding chains of friends in a depth-first manner.
+	 */
 	private void addFriendChain(Student s, Activity a, ArrayList<Student> participants) {
 		if (a.isFull())
 			return;
@@ -486,7 +526,20 @@ public class StemStudents extends SimState
 			if (participants.contains(f))
 				addFriendChain(f, a, participants);
 	}
-	
+
+	private void matchParticipantsToActivities(ArrayList<Student> participants, ArrayList<Activity> activities) {
+		switch (activityMatchingMethod) {
+		case 0:	matchParticipantsToActivities_Random(participants, activities);			break;
+		case 1:	matchParticipantsToActivities_InOrder(participants, activities);		break;
+		case 2: matchParticipantsToActivities_FriendChain(participants, activities);	break;
+		}
+
+		int total = 0;
+		for (Activity a : activities)
+			total += ((RepeatingActivity)a).potentialParticipants.size();
+		if (total != participants.size())
+			System.err.format("Error in matchParticipantsToActivities: %d participants != %d assigned.\n", total, participants.size());
+	}
 	
 	/** Create a new set of repeating activities and assign participants. */
 	private void organizeRepeatingActivities() {
@@ -509,9 +562,15 @@ public class StemStudents extends SimState
 			
 			// assign participants to activities
 			int numActivities = (int)Math.ceil(allParticipants.size() / (double)type.maxParticipants);
+			int remainingParticipants = allParticipants.size();
 			ArrayList<Activity> activities = new ArrayList<Activity>();
 			for (int j = 0; j < numActivities; j++) {
 				RepeatingActivity a = RepeatingActivity.createFromType(this, type);
+				
+				// calculate the number of participants to make the groups as evenly sized as possible
+				a.maxParticipants = (int)Math.ceil(remainingParticipants / (double)(numActivities-j));
+				remainingParticipants -= a.maxParticipants;
+				
 				// assign leaders to activiy
 				while (a.leaders.size() < type.numLeaders)
 					a.leaders.add(createRandomAdult());
@@ -523,7 +582,16 @@ public class StemStudents extends SimState
 			// add this repeating activity to the list
 			for (Activity a : activities)
 				repeatingActivities.add((RepeatingActivity)a);
+			
+//			System.out.format("%20s: ", type.name);
+//			for (Activity a : activities)
+//				System.out.format("%d ", ((RepeatingActivity)a).potentialParticipants.size());
+//			System.out.println();
 		}
+	}
+	
+	private boolean receivesMentoringToday(Student s) {
+		return random.nextBoolean(mentorProbability);			
 	}
 	
 	/**
@@ -550,6 +618,15 @@ public class StemStudents extends SimState
 		MTFUtilities.shuffle(students, random);
 		for (Student s : students) {
 			s.incrementCounters();
+			// consider mentoring
+			boolean isMentored = receivesMentoringToday(s);
+			if (isMentored) {
+				// create an internet activity tailored to this student
+				Activity a = Activity.createFromType(this, internet, s.interest.createFocusedVector());
+				a.addParticipant(s);
+				s.activities.add(a);
+				activities.add(a);				
+			}
 			// loop through activities in random order
 			MTFUtilities.shuffle(indices, random);
 			for (int i : indices) {
@@ -561,6 +638,9 @@ public class StemStudents extends SimState
 				
 				if (type.isRepeating)
 					continue;	// repeating activities are handled above
+				
+				if (isMentored && (type == internet))
+					continue;	// don't double-schedule internet
 				
 				if (willDoToday(s, type))
 					createOrJoinActivity(s, activities, type);				
@@ -735,12 +815,33 @@ public class StemStudents extends SimState
 		return false;		
 	}
 	
+	private double ave(double[] array) {
+		double total = 0;
+		int n;
+		for (n = 0; n < array.length; n++)
+			total += array[n];
+		
+		return (n == 0) ? 0 : (total / n);
+	}
 
 	@Override
 	public void finish() {
 		super.finish();
 		dataLogger.close();
-		System.out.println(getActivitiesWithFriends());
+		
+//		for (int i = 0; i < NUM_ACTIVITY_TYPES; i++)
+//			System.out.format("%f, ", (dataLogger.activitiesDoneWithFriendsAll[i] / (double)dataLogger.activityCounts[i]));
+//		System.out.println(getActivitiesWithFriends());
+
+//		System.out.format("%f, %f\n", mentorProbability, getRatioOfInterested());
+		
+		// 0:FriendRule, 1:ParentRule, 3:LeaderRuleV2, 5:ChoiceRuleV2
+		// 0, 1, 3, 5
+		System.out.format("%f, %f, %f, %f, %f, %f\n", mentorProbability, getRatioOfInterested(), 
+				ave(dataLogger.netEffectOfRules[0]),
+				ave(dataLogger.netEffectOfRules[1]),
+				ave(dataLogger.netEffectOfRules[3]),
+				ave(dataLogger.netEffectOfRules[5]));
 	}
 	
 	public static void main(String[] args) {

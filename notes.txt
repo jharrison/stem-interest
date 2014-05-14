@@ -88,7 +88,7 @@ In 2013:
 
 TODO:
 Data logging:
-[ ] Effect of individual activites
+[ ] Effect of individual activities
 
 Graphs:
 [x]	Histogram of interest distribution (x3)
@@ -157,7 +157,7 @@ epsilon = N(0,sigma^2)
 
 Issues with the rules:
 Solo activities always result in a decrease in interest
-	[ ] Make rules only have effect when they are relevant, e.g. with solo activities, lack of friends isn't relevant
+	[x] Make rules only have effect when they are relevant, e.g. with solo activities, lack of friends isn't relevant
 
 	
 Problems with data:

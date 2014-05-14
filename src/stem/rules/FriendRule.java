@@ -24,7 +24,7 @@ public class FriendRule extends Rule
 	@Override
 	public void apply(Student s, Activity a) {
 		// Don't even fire this rule if this is a solo activity
-		if (a.type.maxParticipants == 1)
+		if (a.maxParticipants == 1)
 			return;
 		// count friends
 		int friendCount = a.countParticipants(s.friends);
