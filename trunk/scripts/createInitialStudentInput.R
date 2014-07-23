@@ -21,6 +21,7 @@ survey5 <- surveyAll[surveyAll$ID == 1 & !is.na(surveyAll$ID),];
 # Get only select columns to be pulled in by ABM
 #   Survey_number, Sex, Elementary School Code, Science Teacher Code
 #   Stuff I do
+#   Who Encourages You
 #   Stuff that interests me
 #   Earth/Space Index, Human/Bio Index, Tech/Eng Index
 
@@ -31,6 +32,21 @@ A <- data.frame(Survey_number, Sex, School_code, Teacher_code,
                 Afterschool_me, Talk_me, Summer_camp_me,
                 Hike_outdoors_me, Garden_me, Experiments_me, Read_me,
                 Internet_me, Computer_me, TV_me, Build_me,
+                Library_parents,       Library_siblings,       Library_friends,       Library_no_one,
+                Museum_parents,        Museum_siblings,        Museum_friends,        Museum_no_one,
+                Scouts_parents,        Scouts_siblings,        Scouts_friends,        Scouts_no_one,
+                National_park_parents, National_park_siblings, National_park_friends, National_park_no_one,
+                Afterschool_parents,   Afterschool_siblings,   Afterschool_friends,   Afterschool_no_one,
+                Talk_parents,          Talk_siblings,          Talk_friends,          Talk_no_one,
+                Summer_camps_parents,  Summer_camps_siblings,  Summer_camps_friends,  Summer_camps_no_one,
+                Hike_outdoors_parents, Hike_outdoors_siblings, Hike_outdoors_friends, Hike_outdoor_no_one,
+                Garden_parents,        Garden_siblings,        Garden_friends,        Garden_no_one,
+                Experiment_parents,    Experiment_siblings,    Experiment_friends,    Experiment_no_one,
+                Read_parents,          Read_siblings,          Read_friends,          Read_no_one,
+                Internet_parents,      Internet_siblings,      Internet_friends,      Internet_no_one,
+                Computer_parents,      Computer_siblings,      Computer_friends,      Computer_no_one,
+                TV_parents,            TV_siblings,            TV_friends,            TV_no_one,
+                Build_parents,         Build_sibings,          Build_friends,         Build_no_one,
                 Stars_planets, mix_materials, Weather, Human_body,
                 Traits, Dinosaurs, Fish_hunt, Earthquakes,
                 Instruments, Diseases, Dangerous_plants_animals,
@@ -57,6 +73,18 @@ for (i in 5:ncol(A))
 badRecord <- A$Museum_me == max(A$Museum_me,na.rm=TRUE) & !is.na(A$Museum_me);
 A$Museum_me[badRecord] = 4;
 
+# I have some max values that are greater than 1.  Let's set all to one
+# I have some NA's, let's set these to 0.
+# Library_parents has max value of 2.  Let's set it to 1
+for (i in 20:79)
+{
+  badRecord <- is.na(A[,i]);
+  A[badRecord,i] = 0;
+  badRecord <- A[,i] > 1;
+  A[badRecord,i] = 1;
+}
+
+  
 # Keep only records that have no NA's in columns 5:19 (Stuff I Do) & 43:45 (Interest Vector).
 attach(A);
 JJ <- !is.na(Library_me) & !is.na(Museum_me) & !is.na(Scouts_me) & !is.na(National_Parks_me) & !is.na(Afterschool_me) &
@@ -68,15 +96,62 @@ detach(A);
 # This leaves me with 129 records out of 174
 B <- A[JJ,];
 
+
+# Now encode the Encouragement section
+# Each youth will have a 4-digit code in this order
+#  parents = 1 (not selected) or 2 (selected)
+#  siblings = 1 (not selected) or 2 (selected)
+#  friends = 1 (not selected) or 2 (selected)
+#  no_one = 1 (not selected) or 2 (selected)
+N = dim(B)[1];
+Encourage = data.frame(Library_encourage=rep(0,N), Museum_encourage=rep(0,N), Scouts_encourage=rep(0,N), 
+                  National_park_encourage=rep(0,N), Afterschool_encourage=rep(0,N), 
+                  Talk_encourage=rep(0,N), Summer_camps_encourage=rep(0,N), 
+                  Hike_outdoors_encourage=rep(0,N), Garden_encourage=rep(0,N), Experiment_encourage=rep(0,N),
+                  Read_encourage=rep(0,N), Internet_encourage=rep(0,N), Computer_encourage=rep(0,N), 
+                  TV_encourage=rep(0,N), Build_encourage=rep(0,N));
+for (j in 1:dim(Encourage)[2])
+{
+  i = j + 19;  # To get the column in B that I want
+  Encourage[,j] = (B[,i]+1)*1000 + (B[,i+1]+1)*100 + (B[,i+2]+1)*10 + (B[,i+3]+1);  
+}
+
+# Now to combine the B dataframe (minus all the encouragement stuff) with Encourage
+attach(B); 
+attach(Encourage);
+BB <- data.frame(Survey_number, Sex, School_code, Teacher_code,
+                Library_me, Museum_me, Scouts_me, National_Parks_me,
+                Afterschool_me, Talk_me, Summer_camp_me,
+                Hike_outdoors_me, Garden_me, Experiments_me, Read_me,
+                Internet_me, Computer_me, TV_me, Build_me,
+                Library_encourage, Museum_encourage, Scouts_encourage, 
+                National_park_encourage, Afterschool_encourage, 
+                Talk_encourage, Summer_camps_encourage, 
+                Hike_outdoors_encourage, Garden_encourage, Experiment_encourage,
+                Read_encourage, Internet_encourage, Computer_encourage, 
+                TV_encourage, Build_encourage,
+                Stars_planets, mix_materials, Weather, Human_body,
+                Traits, Dinosaurs, Fish_hunt, Earthquakes,
+                Instruments, Diseases, Dangerous_plants_animals,
+                Planets_space, Buildings_bridges, Eat_exercise,
+                Engines, Rocks_minerals, Computers_cell_phones,
+                Puzzels_math, Food_flowers, Maps, Invent,
+                Community_green, Pets,
+                Earth_space, Human_bio, Tech_eng);
+detach(B);
+detach(Encourage);
+
+
+
 # Now I want to duplicate some of the records to get back to 174
-I <- sample.int(nrow(B), size = nrow(A)-nrow(B));
-C <- data.frame(B[I,]);  # Duplicated records
+I <- sample.int(nrow(BB), size = nrow(A)-nrow(BB));
+C <- data.frame(BB[I,]);  # Duplicated records
 # Change the survey number so that it stays unique.  I'm going to multiply by 1000;
 C$Survey_number <- C$Survey_number*1000;
 
 # Final data for outputing to csv file for ABM.
 # Take original data B and append resampled records in C.
-D <- rbind(B,C);
+D <- rbind(BB,C);
 
 filename <- "initialStudentInput.csv"
 write.table(D, filename, quote=FALSE, sep=',', row.names=FALSE);
