@@ -21,13 +21,15 @@ public class ChoiceRuleV2 extends Rule
 		switch (a.type.degreeOfChoice) {
 		case 0: // Low: decrease interest and participation
 			s.decreaseInterest(a, weight, this);
-			s.decreaseParticipationRate(a.type.id);
+//			s.decreaseParticipationRate(a.type.id);
+			s.decreaseParticipationRate(a, true);
 			break;
 		case 1: // Moderate: no change
 			break;
 		case 2: // High: increase interest and participation
 			s.increaseInterest(a, weight, this);
-			s.increaseParticipationRate(a.type.id);
+//			s.increaseParticipationRate(a.type.id);
+			s.increaseParticipationRate(a, true);
 			break;
 		}
 	}

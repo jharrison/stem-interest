@@ -68,10 +68,15 @@ public class LeaderRule extends Rule
 			}
 		}
 		//Change probability of participation for the next time
+//		if (goodExperience > 0)
+//			s.increaseParticipationRate(a.type.id);
+//		else if (goodExperience < 0)
+//			s.decreaseParticipationRate(a.type.id);
+
 		if (goodExperience > 0)
-			s.increaseParticipationRate(a.type.id);
+			s.increaseParticipationRate(a, true);
 		else if (goodExperience < 0)
-			s.decreaseParticipationRate(a.type.id);
+			s.decreaseParticipationRate(a, true);
 	}
 
 }

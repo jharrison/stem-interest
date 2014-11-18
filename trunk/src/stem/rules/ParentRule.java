@@ -2,6 +2,7 @@ package stem.rules;
 
 import stem.Adult;
 import stem.Student;
+import stem.Student.Encouragement;
 import stem.activities.Activity;
 
 /**
@@ -32,12 +33,15 @@ public class ParentRule extends Rule
 				
 		if (parentPresent) {
 			s.increaseInterest(a, weight, this);
-			s.increaseParticipationRate(a.type.id);
+//			s.increaseParticipationRate(a.type.id);
+			s.increaseParticipationRate(a, true);
 		}
-		
-		if (a.isParentEncouraged) {
+
+//		if (a.isParentEncouraged) {
+		if (s.activityEncouragement[a.type.id][Encouragement.Parent.ordinal()]) {
 			s.increaseInterest(a, weight, this);
-			s.increaseParticipationRate(a.type.id);
+//			s.increaseParticipationRate(a.type.id);
+			s.increaseParticipationRate(a, true);
 		}
 
 	}

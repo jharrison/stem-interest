@@ -33,7 +33,7 @@ public class Activity implements Steppable
 
 	public boolean isSchoolRelated = false;
 	public boolean isVoluntary = false;
-	public boolean isParentEncouraged = false;
+//	public boolean isParentEncouraged = false;  // this is no longer needed
 	
 	/** how often this activity is repeated */
 	public int daysBetween;	
@@ -110,7 +110,7 @@ public class Activity implements Steppable
 
 		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
 		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
-		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
+//		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
 		
 		return a;
 	}
@@ -122,7 +122,7 @@ public class Activity implements Steppable
 
 		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
 		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
-		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
+//		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
 		
 		return a;
 	}

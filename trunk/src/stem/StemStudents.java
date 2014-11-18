@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 
 import masoncsc.util.MTFUtilities;
 
@@ -64,6 +65,7 @@ public class StemStudents extends SimState
 
 	public DataLogger dataLogger;
 	public String outputFilename = "";
+	public String youthLogFilename = "youthLog.csv";
 	
     String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
     		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
@@ -100,7 +102,7 @@ public class StemStudents extends SimState
 	public int getMaxActivitiesPerDay() { return maxActivitiesPerDay; }
 	public void setMaxActivitiesPerDay(int val) { maxActivitiesPerDay = val; }
 	
-	public double interestThreshold = 0.75;
+	public double interestThreshold = 0.5;
 	public double getInterestThreshold() { return interestThreshold; }
 	public void setInterestThreshold(double val) { interestThreshold = val; }
 	public Object domInterestThreshold() { return new Interval(0.0, 1.0); }
@@ -127,7 +129,7 @@ public class StemStudents extends SimState
 	public void setInterestChangeRate(double val) { interestChangeRate = val; }
 	public Object domInterestChangeRate() { return new Interval(0.0, 1.0); }
 
-	public double interestDecayRate = 0.993;
+	public double interestDecayRate = 1.0;
 	public double getInterestDecayExponent() { return interestDecayRate; }
 	public void setInterestDecayExponent(double val) { interestDecayRate = val; }
 	public Object domInterestDecayExponent() { return new Interval(0.0, 1.0); }
@@ -142,7 +144,7 @@ public class StemStudents extends SimState
 
 	/** How much to change the participation rate in an activity if interest has
 	 * been increased or decreased. */
-	public double participationChangeRate = 0.05;
+	public double participationChangeRate = 0.0;
 	public double getParticipationChangeRate() { return participationChangeRate; }
 	public void setParticipationChangeRate(double val) { participationChangeRate = val; }
 	public Object domParticipationChangeRate() { return new Interval(0.0,0.5); }
@@ -174,7 +176,7 @@ public class StemStudents extends SimState
 		return String.format("%.1f%%", 100 * dataLogger.activitiesDoneWithFriends / (double)dataLogger.activitiesDone);
 	}
 	
-	public double participationMultiplier = 0.22;
+	public double participationMultiplier = 1.0;
 	public double getParticipationMultiplier() { return participationMultiplier; }
 	public void setParticipationMultiplier(double val) { participationMultiplier = val; }
 	public Object domParticipationMultiplier() { return new Interval(0.0, 1.0); }
@@ -301,6 +303,9 @@ public class StemStudents extends SimState
 			ex.printStackTrace();
 		}
 		
+		// create a hash map to check for duplicate IDs
+		HashMap<Integer, Student> studentsByID = new HashMap<Integer, Student>(); 
+		
 		for (int i = 0; i < numStudents; i++) {
 			String line = null;
 			try {
@@ -323,6 +328,13 @@ public class StemStudents extends SimState
 			possiblyRandomize(s);
 			s.parent = createRandomAdult();
 			students.add(s);
+			
+			if (studentsByID.containsKey(s.id)) {
+				System.err.format("Error: Duplicate student ID found (%d)", s.id);
+				System.exit(-1);
+			}
+			else
+				studentsByID.put(s.id, s);
 		}
 		// Close the buffered reader
 		try {
@@ -715,10 +727,15 @@ public class StemStudents extends SimState
 	public void studentParticipated(Student s, Activity a) {
 		dataLogger.studentParticipated(s, a);
 	}
-	
+
 	/** Event that is triggered when a student's interest levels are changed. */
 	public void studentInterestChanged(Student s, Activity a, int topicIndex, double delta, Rule r) {
 		dataLogger.studentInterestChanged(s, a, topicIndex, delta, r);
+	}
+	
+	/** Event that is triggered when a student's interest levels are changed. */
+	public void studentParticipationChanged(Student s, Activity a, double delta, Rule r) {
+		dataLogger.studentParticipationChanged(s, a, delta, r);
 	}
 	
 	
@@ -775,10 +792,19 @@ public class StemStudents extends SimState
 		
 		schedule.scheduleRepeating(dataLogger, DATA_LOGGER_ORDER, 1.0);
 		
+
+		schedule.scheduleRepeating(new Steppable() {
+			@Override
+			public void step(SimState state) {
+				if (state.schedule.getSteps() % 365 == 0)
+				dataLogger.writeYouthLog(youthLogFilename);
+			}
+			});
+		
 		schedule.scheduleRepeating(new Steppable() {
 			public void step(SimState state) {
 				date.add(Calendar.DATE, 1);
-				if (state.schedule.getSteps() > 1461)	// 4 years (including one leap day)
+				if (state.schedule.getSteps() >= 1460)	// 4 years
 					state.kill();
 			}
 		}, CALENDAR_ORDER, 1.0);
@@ -815,7 +841,7 @@ public class StemStudents extends SimState
 		return false;		
 	}
 	
-	private double ave(double[] array) {
+	private double average(double[] array) {
 		double total = 0;
 		int n;
 		for (n = 0; n < array.length; n++)
@@ -824,24 +850,57 @@ public class StemStudents extends SimState
 		return (n == 0) ? 0 : (total / n);
 	}
 
+	private double median(double[] array) {
+	
+		Arrays.sort(array);
+		int middle = array.length / 2;
+		if (array.length % 2 == 1)
+			return array[middle];
+		else
+			return (array[middle-1] + array[middle]) * 0.5;
+	}
+	
+	
+	private void printRunSummary() {
+		System.out.println();
+		
+	//		for (int i = 0; i < NUM_ACTIVITY_TYPES; i++)
+	//		System.out.format("%f, ", (dataLogger.activitiesDoneWithFriendsAll[i] / (double)dataLogger.activityCounts[i]));
+	//	System.out.println(getActivitiesWithFriends());
+	
+	//	System.out.format("%f, %f\n", mentorProbability, getRatioOfInterested());
+	
+	// 0:FriendRule, 1:ParentRule, 3:LeaderRuleV2, 5:ChoiceRuleV2
+	// 0, 1, 3, 5
+//		
+//	System.out.format("%f, %f, %f, %f, %f, %f\n", mentorProbability, getRatioOfInterested(), 
+//			average(dataLogger.netEffectOfRules[0]),
+//			average(dataLogger.netEffectOfRules[1]),
+//			average(dataLogger.netEffectOfRules[3]),
+//			average(dataLogger.netEffectOfRules[5]));
+		// 
+		double[] adHocActivitiesDone = dataLogger.activitiesDoneWatcher.getDataPoint();
+		double[] organizedActivitiesDone = dataLogger.organizedActivitiesDoneWatcher.getDataPoint();
+
+		System.out.format("Ad hoc activities per day.    Average: %.2f, Median: %.2f\n", average(adHocActivitiesDone), median(adHocActivitiesDone));
+		System.out.format("Organized activities per day. Average: %.2f, Median: %.2f\n", average(organizedActivitiesDone), median(organizedActivitiesDone));
+		
+		System.out.println();
+		System.out.println("id, aveInt, actPerDay");
+		
+		double steps = schedule.getSteps();
+		for (Student s : students) {
+			System.out.format("%d, %f, %f\n", s.id, s.interest.getAverage(), (s.activitiesDone / steps));
+		}
+			
+			
+	}
+
 	@Override
 	public void finish() {
 		super.finish();
 		dataLogger.close();
-		
-//		for (int i = 0; i < NUM_ACTIVITY_TYPES; i++)
-//			System.out.format("%f, ", (dataLogger.activitiesDoneWithFriendsAll[i] / (double)dataLogger.activityCounts[i]));
-//		System.out.println(getActivitiesWithFriends());
-
-//		System.out.format("%f, %f\n", mentorProbability, getRatioOfInterested());
-		
-		// 0:FriendRule, 1:ParentRule, 3:LeaderRuleV2, 5:ChoiceRuleV2
-		// 0, 1, 3, 5
-		System.out.format("%f, %f, %f, %f, %f, %f\n", mentorProbability, getRatioOfInterested(), 
-				ave(dataLogger.netEffectOfRules[0]),
-				ave(dataLogger.netEffectOfRules[1]),
-				ave(dataLogger.netEffectOfRules[3]),
-				ave(dataLogger.netEffectOfRules[5]));
+		printRunSummary();
 	}
 	
 	public static void main(String[] args) {

@@ -12,7 +12,7 @@ public class ActivityType
 	public int maxParticipants;
 	public float probSchoolRelated;
 	public float probVoluntary;
-	public float probParentEncouraged;
+	public float probParentEncouraged;	// this isn't used anymore
 	public int daysBetween;
 	public int numRepeats;
 	public int meetingsBetweenTopicChange;

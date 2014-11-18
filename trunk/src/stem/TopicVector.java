@@ -59,6 +59,15 @@ public class TopicVector
 	 */
 	public TopicVector createFocusedVector() {
 		TopicVector fv = new TopicVector(0, 0, 0);
+		int largestIndex = getMainTopicIndex();
+		fv.topics[largestIndex] = 1.0;
+		return fv;
+	}
+	
+	/**
+	 * Get the index of the main topic in the vector.
+	 */
+	public int getMainTopicIndex() {
 		double largestValue = Double.NEGATIVE_INFINITY;
 		int largestIndex = 0;
 		for (int i = 0; i < VECTOR_SIZE; i++)
@@ -66,9 +75,7 @@ public class TopicVector
 				largestValue = topics[i];
 				largestIndex = i;
 			}
-		
-		fv.topics[largestIndex] = 1.0;
-		return fv;
+		return largestIndex;
 	}
 	
 	/**
