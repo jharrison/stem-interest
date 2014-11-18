@@ -124,9 +124,9 @@ Ideas from meeting (12/16):
 [x] Make the organized activities (scouts, after-school, summer camp) repeat with the same participants
 [x] Add a column to activityTypes.csv for scheduling priority (i.e. school and other activities are higher than ad hoc ones)
 [ ] Create a new spreadsheet for adults who'll lead different activities
-[ ] Design an algorithm for matching students to activity instances (of a given type) that keep friends together
+[x] Design an algorithm for matching students to activity instances (of a given type) that keep friends together
 [x] Change everything in the model to run for 4 years instead of 3. (including csv files)
-[ ] Bring MersenneTwister into the project and use it for shuffling.
+[x] Bring MersenneTwister into the project and use it for shuffling.
 [ ] MakeFriendRule needs to consider inter-gender friend probability
 [x] Verify that the correct number of repeating activities are being created
 [x] Create a mechanism to allow for schedule adjustment (synergy)

@@ -43,11 +43,16 @@ public class FriendRule extends Rule
 		}
 		// Now adjust prob. of doing activity again based on good/bad experience
 		// Note that goodExperience may still be 0 if student is interested in the topics
-		if (goodExperience > 0)
-			s.increaseParticipationRate(a.type.id);
-		else if (goodExperience < 0)
-			s.decreaseParticipationRate(a.type.id);
+//		if (goodExperience > 0)
+//			s.increaseParticipationRate(a.type.id);
+//		else if (goodExperience < 0)
+//			s.decreaseParticipationRate(a.type.id);
 		
+		if (goodExperience > 0)
+			s.increaseParticipationRate(a, true);
+		else if (goodExperience < 0)
+			s.decreaseParticipationRate(a, true);
+
 		s.model.dataLogger.friendRuleFired(a, (goodExperience > 0));
 	}
 

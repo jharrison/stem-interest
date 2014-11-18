@@ -69,7 +69,7 @@ public class RepeatingActivity extends Activity
 
 		a.isSchoolRelated = model.random.nextDouble() < type.probSchoolRelated;
 		a.isVoluntary = model.random.nextDouble() < type.probVoluntary;
-		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
+//		a.isParentEncouraged = model.random.nextDouble() < type.probParentEncouraged;
 		
 		return a;
 	}

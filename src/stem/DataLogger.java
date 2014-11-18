@@ -1,7 +1,13 @@
 package stem;
 
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
 import masoncsc.datawatcher.*;
 import masoncsc.util.Pair;
@@ -21,6 +27,7 @@ public class DataLogger implements Steppable
 	DoubleArrayWatcher averageInterestWatcher;
 	DoubleArrayWatcher[] interestWatcher = new DoubleArrayWatcher[StemStudents.NUM_TOPICS];
 	DoubleArrayWatcher activitiesDoneWatcher;
+	DoubleArrayWatcher organizedActivitiesDoneWatcher;
 
 	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Tech/Eng Index");
 	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Earth/Space Index");
@@ -44,10 +51,14 @@ public class DataLogger implements Steppable
 
 	public double[][] netEffectOfActivities = new double[StemStudents.NUM_ACTIVITY_TYPES][StemStudents.NUM_TOPICS];
 	public double[][] netEffectOfRules;	// to be initialize in the constructor
+	
+	public double[][] netEffectOfRulesOnParticipation;	// to be initialize in the constructor
 
 	public long activitiesDone = 0;
 	public long activitiesDoneWithFriends = 0;
 	public long[] activitiesDoneWithFriendsAll = new long[StemStudents.NUM_ACTIVITY_TYPES];		
+	
+	DataOutputStream youthLogFile = null;
 
 
 	public DataLogger(StemStudents model) {
@@ -76,6 +87,8 @@ public class DataLogger implements Steppable
 		for (double[] row : netEffectOfActivities)
 			Arrays.fill(row, 0.0);
 		netEffectOfRules = new double[model.ruleSet.rules.size()][StemStudents.NUM_TOPICS];
+
+		netEffectOfRulesOnParticipation = new double[model.ruleSet.rules.size()][StemStudents.NUM_ACTIVITY_TYPES];
 		
 		dataWatchers.clear();
 		
@@ -177,9 +190,9 @@ public class DataLogger implements Steppable
 			@Override
 			protected void updateDataPoint() {
 				for (int i = 0; i < model.students.size(); i++)
-					data[i] = model.students.get(i).activitiesDone / Math.max(model.schedule.getSteps(), 1.0);	// all activities
+//					data[i] = model.students.get(i).activitiesDone / Math.max(model.schedule.getSteps(), 1.0);	// all activities
 //					data[i] = model.students.get(i).organizedActivitiesDone / Math.max(model.schedule.getSteps(), 1.0);	// organized
-//					data[i] = (model.students.get(i).activitiesDone - model.students.get(i).organizedActivitiesDone) / Math.max(model.schedule.getSteps(), 1.0);	// ad hoc
+					data[i] = (model.students.get(i).activitiesDone - model.students.get(i).organizedActivitiesDone) / Math.max(model.schedule.getSteps(), 1.0);	// ad hoc
 			}
 			
 			@Override
@@ -188,6 +201,25 @@ public class DataLogger implements Steppable
 			}
 		};
 		dataWatchers.add(activitiesDoneWatcher);
+        
+		organizedActivitiesDoneWatcher = new DoubleArrayWatcher() {
+			// anonymous constructor
+			{
+				data = new double[model.numStudents];
+			}
+
+			@Override
+			protected void updateDataPoint() {
+				for (int i = 0; i < model.students.size(); i++)
+					data[i] = model.students.get(i).organizedActivitiesDone / Math.max(model.schedule.getSteps(), 1.0);	// organized activities
+			}
+			
+			@Override
+			public String getCSVHeader() {
+				return null;
+			}
+		};
+		dataWatchers.add(organizedActivitiesDoneWatcher);
 		
 		if (!model.outputFilename.isEmpty()) {
 			interestTrendFileWriter = new FileDataWriter();
@@ -251,6 +283,15 @@ public class DataLogger implements Steppable
 		int ruleIndex = model.ruleSet.rules.indexOf(r);
 		netEffectOfRules[ruleIndex][topicIndex] += delta;
 	}
+
+
+	/** Event that is triggered when a student's interest levels are changed. */
+	public void studentParticipationChanged(Student s, Activity a, double delta, Rule r) {
+
+		int ruleIndex = model.ruleSet.rules.indexOf(r);
+		netEffectOfRulesOnParticipation[ruleIndex][a.type.id] += delta;
+		
+	}
 	
 	public void friendRuleFired(Activity a, boolean friendPresent) {
 		activitiesDone++;
@@ -264,11 +305,67 @@ public class DataLogger implements Steppable
 	public void step(SimState arg0) {
 		for (DataWatcher<?> dw : dataWatchers)
 			dw.update();
+		
+//		if (arg0.schedule.getSteps() % 365 == 0)
+//			writeYouthLog(model.youthLogFilename);
+	}
+	
+	public void writeYouthLog(String filename) {
+		
+		try {
+			if (youthLogFile == null) {
+				youthLogFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filename)));
+			
+				// write headers first time through
+				youthLogFile.writeBytes("Step, ID, Sex, Intr1, Intr2, Intr3, ActDone, OrgActDone, ActDoneWithFriends, OrgActDoneWithFriends, ParentEnc, SiblingEnc, FriendEnc");
+				youthLogFile.writeBytes("\n");
+			}
+			
+			// sort students by ID
+			Collections.sort(model.students, new Comparator<Student>() {
+				public int compare(Student s1, Student s2) {
+					return s1.id - s2.id;
+				}
+			});
+
+			// write data for each student
+			StringBuilder sb = new StringBuilder();
+			for (Student s : model.students) {
+				sb = new StringBuilder();
+				sb.append(model.schedule.getSteps()).append(", ");
+				sb.append(s.id).append(", ");
+				sb.append(s.isFemale ? "F" : "M").append(", ");
+				sb.append(String.format("%.6f", s.interest.topics[0])).append(", ");
+				sb.append(String.format("%.6f", s.interest.topics[1])).append(", ");
+				sb.append(String.format("%.6f", s.interest.topics[2])).append(", ");
+				sb.append(s.activitiesDone).append(", ");
+				sb.append(s.organizedActivitiesDone).append(", ");
+				sb.append(s.activitiesDoneWithFriends).append(", ");
+				sb.append(s.organizedActivitiesDoneWithFriends).append(", ");
+				sb.append(s.calcParentEncouragement()).append(", ");
+				sb.append(s.calcSiblingEncouragement()).append(", ");
+				sb.append(s.calcFriendEncouragement());
+				
+				sb.append("\n");
+				youthLogFile.writeBytes(sb.toString());
+			}
+			
+//			youthLogFile.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public void close() {
 		if (interestTrendFileWriter != null)
 			interestTrendFileWriter.close();
+		
+		if (youthLogFile != null) try {
+			youthLogFile.close();
+		}
+		catch (IOException e) { e.printStackTrace(); }
 	}
 
 }

@@ -20,6 +20,7 @@ public class Parameters
     	run = ParamUtils.getInt(paramDB, "Run", run);
     	model.coordinationLevel = ParamUtils.getDouble(paramDB, "CoordinationLevel", model.coordinationLevel);
     	model.outputFilename = ParamUtils.getString(paramDB, "OutputFilename", "");
+    	model.youthLogFilename = ParamUtils.getString(paramDB, "YouthLogFilename", model.youthLogFilename);
 
     	model.interestThreshold = ParamUtils.getDouble(paramDB, "InterestThreshold", model.interestThreshold);
     	model.interestThresholdNoise = ParamUtils.getDouble(paramDB, "InterestThresholdNoise", model.interestThresholdNoise);

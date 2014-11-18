@@ -24,7 +24,7 @@ public class ScienceClass extends RepeatingActivity
 		type.numParents = 0;
 		type.maxParticipants = 30;
 		type.daysBetween = 1;
-//		type.isRepeating = true;  // not used yet
+		type.isRepeating = true;  // not used yet
 		type.numRepeats = 1096;
 		type.meetingsBetweenTopicChange = 15;
 		type.onSchoolDay = true;
@@ -36,7 +36,7 @@ public class ScienceClass extends RepeatingActivity
 		
 		isSchoolRelated = true;
 		isVoluntary = false;
-		isParentEncouraged = false;
+//		isParentEncouraged = false;
 
 //		topics.add(new TopicVector(1.0, 0.0, 0.0));
 //		topics.add(new TopicVector(0.0, 1.0, 0.0));

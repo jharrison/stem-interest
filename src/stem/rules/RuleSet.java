@@ -15,6 +15,7 @@ public class RuleSet
 	ChoiceRule choiceRule = new ChoiceRule();
 	ChoiceRuleV2 choiceRuleV2 = new ChoiceRuleV2();
 	MakeFriendRule makeFriendRule = new MakeFriendRule();
+	public EncouragementRule encouragementRule = new EncouragementRule();
 	
 	public RuleSet() {
 		rules.add(friendRule);
@@ -24,6 +25,7 @@ public class RuleSet
 		rules.add(choiceRule);
 		rules.add(choiceRuleV2);
 		rules.add(makeFriendRule);
+		rules.add(encouragementRule);
 		
 		leaderRule.isActive = false;
 		choiceRule.isActive = false;
@@ -68,5 +70,8 @@ public class RuleSet
 	
 	public boolean getMakeFriendRuleEnabled() { return makeFriendRule.isActive; }
 	public void setMakeFriendRuleEnabled(boolean val) { makeFriendRule.isActive = val; }	
+	
+	public boolean getEncouragementRuleEnabled() { return encouragementRule.isActive; }
+	public void setEncouragementRuleEnabled(boolean val) { encouragementRule.isActive = val; }	
 
 }

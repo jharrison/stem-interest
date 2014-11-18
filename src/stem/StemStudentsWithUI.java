@@ -1,4 +1,4 @@
-package stem;
+	package stem;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ import edu.uci.ics.jung.algorithms.shortestpath.DistanceStatistics;
 import masoncsc.util.ChartUtils;
 
 import sim.display.ChartUtilities;
+import sim.display.ChartUtilities.ProvidesDoubleDoubles;
 import sim.display.ChartUtilities.ProvidesDoubles;
 import sim.display.Console;
 import sim.display.Controller;
@@ -35,11 +36,15 @@ import sim.portrayal.Inspector;
 import sim.portrayal.SimpleInspector;
 import sim.portrayal.inspector.TabbedInspector;
 import sim.util.Bag;
+import sim.util.Double2D;
 import sim.util.Interval;
 import sim.util.media.chart.ChartGenerator;
 import sim.util.media.chart.HistogramGenerator;
 import sim.util.media.chart.HistogramSeriesAttributes;
+import sim.util.media.chart.ScatterPlotGenerator;
+import sim.util.media.chart.ScatterPlotSeriesAttributes;
 import sim.util.media.chart.TimeSeriesChartGenerator;
+import stem.Student.Encouragement;
 import stem.network.NetworkDisplay;
 
 /**
@@ -61,8 +66,10 @@ public class StemStudentsWithUI extends GUIState
     private ArrayList<ChartGenerator> chartGenerators = new ArrayList<ChartGenerator>();
     HistogramGenerator aveInterestHist;
     HistogramGenerator activitiesDoneHist;
+    HistogramGenerator organizedActivitiesDoneHist;
     HistogramGenerator[] interestHist = new HistogramGenerator[StemStudents.NUM_TOPICS];
     TimeSeriesChartGenerator aveInterestTimeSeries;
+    ScatterPlotGenerator interestVsParticipationGen;
 
     // Gender ratios
     DefaultCategoryDataset genderRatioDataset = new DefaultCategoryDataset();
@@ -96,11 +103,12 @@ public class StemStudentsWithUI extends GUIState
     {
         TabbedInspector i = new TabbedInspector();
 
-        i.setVolatile(true);
-        i.addInspector(new SimpleInspector(model, this), "System");
+        i.setVolatile(false);
+        i.addInspector(new SimpleInspector(model, this), "Main");
         i.addInspector(new SimpleInspector(new NetworkProperties(this), this), "Network");
         i.addInspector(new SimpleInspector(new LeaderProperties(this), this), "Leaders");
         i.addInspector(new SimpleInspector(model.ruleSet, this), "Rules");
+        i.addInspector(new SimpleInspector(new MetricsProperties(this), this), "Metrics");
 
         return i;
     }
@@ -153,6 +161,12 @@ public class StemStudentsWithUI extends GUIState
 		}
 		activitiesDoneHist.updateSeries(0, model.dataLogger.activitiesDoneWatcher.getDataPoint());
 		activitiesDoneHist.update(ChartGenerator.FORCE_KEY, true);
+		
+		organizedActivitiesDoneHist.updateSeries(0, model.dataLogger.organizedActivitiesDoneWatcher.getDataPoint());
+		organizedActivitiesDoneHist.update(ChartGenerator.FORCE_KEY, true);
+		
+		interestVsParticipationGen.updateSeries(0, getInterestVsParticipation());
+		interestVsParticipationGen.update(ChartGenerator.FORCE_KEY, true);
 	}
 
 	public void init(final Controller c) {
@@ -195,8 +209,11 @@ public class StemStudentsWithUI extends GUIState
 		c.registerFrame(NetworkDisplay.frame);
 		NetworkDisplay.frame.setVisible(false);
 
-		activitiesDoneHist = ChartUtils.attachHistogram(null, 7, "Activities Done per Day", "Number of Activities per Day", "Count", controller);
+		activitiesDoneHist = ChartUtils.attachHistogram(null, 7, "Ad Hoc Activities Done per Day", "Number of Ad Hoc Activities per Day", "Count", controller);
 		activitiesDoneHist.getFrame().setVisible(false);
+		
+		organizedActivitiesDoneHist = ChartUtils.attachHistogram(null, 7, "Organized Activities Done per Day", "Number of Organized Activities per Day", "Count", controller);
+		organizedActivitiesDoneHist.getFrame().setVisible(false);
 
 		
 		// create gender ratio bar chart
@@ -228,7 +245,6 @@ public class StemStudentsWithUI extends GUIState
 					double[] counts = new double[model.students.size()];
 					for (int i = 0; i < model.students.size(); i++)
 						counts[i] = model.activityTypes.get(activityIndex).mapActivityCountToLikert(model.students.get(i).activityCounts[activityIndex]);
-					System.out.println("provide: " + counts[0]);
 					return counts;
 				}});
 			
@@ -241,6 +257,19 @@ public class StemStudentsWithUI extends GUIState
 //				}
 //			}, 5);
 		}
+		
+		interestVsParticipationGen = ChartUtilities.buildScatterPlotGenerator(this, "Interest vs Participation", "Average Interest Level", "Activities per Day");
+		ScatterPlotSeriesAttributes interestVsParticipationAttr = ChartUtilities.addSeries(interestVsParticipationGen, "Youth");
+		interestVsParticipationAttr.setShapeNum(0);
+		interestVsParticipationAttr.setSymbolOpacity(0.3);
+		interestVsParticipationGen.setXAxisRange(0, 3.1);
+		interestVsParticipationGen.setYAxisRange(-0.1, 1.0);
+//		ChartUtilities.scheduleSeries(this, interestVsParticipationAttr, new ProvidesDoubleDoubles() {
+//			public double[][] provide() {
+//				return getInterestVsParticipation();
+//			}
+//		});
+//		ChartUtilities.scheduleSeries(this, interestVsParticipationAttr, null);
 		
 		((Console)controller).setSize(400, 534);
 	}
@@ -299,6 +328,30 @@ public class StemStudentsWithUI extends GUIState
         c.registerFrame(frame);
         
         return chart;
+	}
+	
+	
+	public Double2D[] convertToDouble2DArray(double[][] array) {
+		int n = array.length;
+		Double2D[] points = new Double2D[n];
+		for (int i = 0; i < n; i++) {
+			points[i] = new Double2D(array[i][0], array[i][1]);
+		}
+		
+		return points;
+	}
+	
+	public double[][] getInterestVsParticipation() {
+		int n = model.students.size();
+		double[][] array = new double[2][n];
+
+		for (int i = 0; i < n; i++) {
+			Student s = model.students.get(i);
+			array[0][i] = s.activitiesDone / Math.max(model.schedule.getSteps(), 1.0);
+			array[1][i] = s.interest.getAverage();
+		}
+		
+		return array;
 	}
 	
 	public void studentSelected(Student s) {
@@ -422,6 +475,75 @@ public class StemStudentsWithUI extends GUIState
 			
 			return samples;
 		}
+	}
+	
+	public class MetricsProperties {
+		StemStudents model;
+		StemStudentsWithUI modelUI;
+		
+		public MetricsProperties(StemStudentsWithUI modelUI) {
+			this.modelUI = modelUI;
+			this.model = modelUI.model;
+		}
+		
+		private int activity = 0;
+		public int getActivity() { return activity; }
+		public void setActivity(int val) { activity = val; }
+		public Object domActivity() { return model.getActivityNames(); }
+		
+		public int[] getEncouragementLevel() {
+			int[] array = new int[model.students.size()];
+			for (int i = 0; i < model.students.size(); i++) {
+				Student s = model.students.get(i);
+				int count = 0;
+				if (s.activityEncouragement[activity][Encouragement.Parent.ordinal()])
+					count++;
+				if (s.activityEncouragement[activity][Encouragement.Sibling.ordinal()])
+					count++;
+				if (s.activityEncouragement[activity][Encouragement.Friend.ordinal()])
+					count++;
+				
+				array[i] = count;
+			}
+			
+			return array;
+		}
+		
+		private double average(double[] array) {
+			double sum = 0;
+			for (double value : array)
+				sum += value;
+			return sum / array.length;
+		}
+		
+		public Double2D[] getInterestVsActivitiesPerDay() {
+			Double2D[] array = new Double2D[model.students.size()];
+			
+			for (int i = 0; i < model.students.size(); i++) {
+				Student s = model.students.get(i);
+				double aveInterest = s.interest.getAverage();
+				
+				double activitiesPerDay = s.activitiesDone / Math.max(model.schedule.getSteps(), 1.0);
+				array[i] = new Double2D(activitiesPerDay, aveInterest);
+			}
+			
+			return array;
+		}	
+		
+		public Double2D[] getInterestVsParticipation() {
+			Double2D[] array = new Double2D[model.students.size()];
+			
+			for (int i = 0; i < model.students.size(); i++) {
+				Student s = model.students.get(i);
+				double aveInterest = s.interest.getAverage();
+				
+				double aveParticipation = average(s.participationRates);
+				array[i] = new Double2D(aveParticipation, aveInterest);
+			}
+			
+			return array;
+		}
+		
 	}
 
 	public static void main(String[] args) {

@@ -32,6 +32,8 @@ public class Student
 	/** Count of activities this student has done. */
 	public int activitiesDone = 0;
 	public int organizedActivitiesDone = 0;
+	public int activitiesDoneWithFriends = 0;
+	public int organizedActivitiesDoneWithFriends = 0;
 
 	/** List of responses the student gave to the "stuff I do" questions. */
 	private int [] stuffIDo = new int[StemStudents.NUM_ACTIVITY_TYPES];
@@ -52,6 +54,15 @@ public class Student
 	 */
 	double [] participationRates = new double[StemStudents.NUM_ACTIVITY_TYPES];
 	public double [] getParticipationRates() { return participationRates; }
+	
+//	public class Encouragement {
+//		public static final int PARENT = 0;
+//		public static final int SIBLING = 1;
+//		public static final int FRIEND = 2;
+//		public static final int NO_ONE = 3;
+//	}
+	public enum Encouragement {	Parent, Sibling, Friend, NoOne };
+	public boolean [][] activityEncouragement = new boolean[StemStudents.NUM_ACTIVITY_TYPES][4];
 	
 	
 	public ArrayList<Student> friends = new ArrayList<Student>();
@@ -93,6 +104,12 @@ public class Student
 		activitiesDone++;
 		if (activity.type.isRepeating)
 			organizedActivitiesDone++;
+		
+		if (activity.contains(friends)) {
+			activitiesDoneWithFriends++;
+			if (activity.type.isRepeating)
+				organizedActivitiesDoneWithFriends++;
+		}
 
 		model.studentParticipated(this, activity);
 	}
@@ -152,7 +169,7 @@ public class Student
 			decreaseInterest(a, i, weight, r);
 	}
 	
-	public void increaseParticipationRate(int activityID)
+	private void increaseParticipationRate(int activityID)
 	{
 		//Don't change prob. of participating in school
 		if (activityID == (StemStudents.NUM_ACTIVITY_TYPES - 1))
@@ -164,7 +181,15 @@ public class Student
 			participationRates[activityID] = 1.0;
 	}
 	
-	public void decreaseParticipationRate(int activityID)
+	public void increaseParticipationRate(Activity a, boolean checkThreshold) {
+		if (checkThreshold && model.ruleSet.encouragementRule.isActive)
+			if (interest.topics[a.content.getMainTopicIndex()] <= interestThreshold)
+				return;
+		
+		increaseParticipationRate(a.type.id);
+	}
+	
+	private void decreaseParticipationRate(int activityID)
 	{
 		//Don't change prob. of participating in school
 		if (activityID == (StemStudents.NUM_ACTIVITY_TYPES - 1))
@@ -175,6 +200,14 @@ public class Student
 		if (participationRates[activityID] < 0.0)
 			participationRates[activityID] = 0.0;
 	}
+
+	public void decreaseParticipationRate(Activity a, boolean checkThreshold) {
+		if (checkThreshold && model.ruleSet.encouragementRule.isActive)
+			if (interest.topics[a.content.getMainTopicIndex()] <= interestThreshold)
+				return;
+		
+		decreaseParticipationRate(a.type.id);
+	}
 	
 	public double[] getInterest() {
 		return interest.topics;
@@ -182,6 +215,42 @@ public class Student
 
 	public double getAverageInterest() {
 		return interest.getAverage();
+	}
+	
+	private double calcEncouragement(Encouragement encType) {
+		double encouragement = 0;
+		
+		for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++)
+			if (activityEncouragement[i][encType.ordinal()])
+				encouragement++;
+		
+		return encouragement / StemStudents.NUM_ACTIVITY_TYPES;
+	}
+	
+	public double calcParentEncouragement() {
+		return calcEncouragement(Encouragement.Parent);
+	}
+	
+	public double calcSiblingEncouragement() {
+		return calcEncouragement(Encouragement.Sibling);
+	}
+	
+	public double calcFriendEncouragement() {
+		return calcEncouragement(Encouragement.Friend);
+	}
+	
+	private static void parseEncouragement(String s, boolean[] flags) {
+		if (s.length() != flags.length) {
+			System.err.format("Error in parseEncouragement: s (%d) and flags (%d) aren't the same length.\n", s.length(), flags.length);
+			return;
+		}
+		
+		for (int i = 0; i < s.length(); i++) 
+			switch(s.charAt(i)) {
+				case '1':	flags[i] = false;	break;
+				case '2':	flags[i] = true;	break;
+				default:	System.err.format("Error in parseEncouragement: invalid character: %c\n", s.charAt(i));
+			}
 	}
 	
 	public static Student parseStudent(StemStudents model, String line) {
@@ -224,11 +293,16 @@ public class Student
 		// hard-code school for everyday
 		student.stuffIDo[15] = 5;
 		student.participationRates[15] = 1.0;
-		// skip 19-41: Stuff that interests me
-		// read 42, 43, 44: interest levels for the three aggregate categories
-		double earthInterest 	= Double.parseDouble(tokens[42]);
-		double humanInterest 	= Double.parseDouble(tokens[43]);
-		double techInterest 	= Double.parseDouble(tokens[44]);
+		
+		// 19-33: encouragement for the 15 activities
+		for (int i = 0; i < 15; i++)
+			parseEncouragement(tokens[i+19], student.activityEncouragement[i]);
+
+		// skip 34-56: Stuff that interests me
+		// read 57, 58, 59: interest levels for the three aggregate categories
+		double earthInterest 	= Double.parseDouble(tokens[57]);
+		double humanInterest 	= Double.parseDouble(tokens[58]);
+		double techInterest 	= Double.parseDouble(tokens[59]);
 
 		student.interest = new TopicVector(techInterest, earthInterest, humanInterest);
 		
