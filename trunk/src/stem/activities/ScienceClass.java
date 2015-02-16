@@ -19,7 +19,7 @@ public class ScienceClass extends RepeatingActivity
 		
 		type = new ActivityType();
 		type.name = "Class";
-		type.id = 15;
+		type.id = 20;
 		type.numLeaders = 1;
 		type.numParents = 0;
 		type.maxParticipants = 30;

@@ -279,8 +279,8 @@ public class Student
 			student.isFemale = (Integer.parseInt(tokens[1]) == 1);
 		// skip 2: school
 		student.teacher = tokens[3].trim();
-		// read 4-18: the 15 activities
-		for (int i = 0; i < 15; i++)
+		// read 4-23: the 20 activities
+		for (int i = 0; i < (StemStudents.NUM_ACTIVITY_TYPES-1); i++)
 		{
 			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
 //			student.participationRates[i] = participationRate[student.stuffIDo[i]];
@@ -291,18 +291,18 @@ public class Student
 				student.participationRates[i] *= model.participationMultiplier;
 		}
 		// hard-code school for everyday
-		student.stuffIDo[15] = 5;
-		student.participationRates[15] = 1.0;
+		student.stuffIDo[20] = 5;
+		student.participationRates[20] = 1.0;
 		
-		// 19-33: encouragement for the 15 activities
-		for (int i = 0; i < 15; i++)
-			parseEncouragement(tokens[i+19], student.activityEncouragement[i]);
+		// 24-43: encouragement for the 20 activities
+		for (int i = 0; i < (StemStudents.NUM_ACTIVITY_TYPES-1); i++)
+			parseEncouragement(tokens[i+24], student.activityEncouragement[i]);
 
-		// skip 34-56: Stuff that interests me
-		// read 57, 58, 59: interest levels for the three aggregate categories
-		double earthInterest 	= Double.parseDouble(tokens[57]);
-		double humanInterest 	= Double.parseDouble(tokens[58]);
-		double techInterest 	= Double.parseDouble(tokens[59]);
+		// skip 44-66: Stuff that interests me
+		// read 67, 68, 69: interest levels for the three aggregate categories
+		double earthInterest 	= Double.parseDouble(tokens[67]);
+		double humanInterest 	= Double.parseDouble(tokens[68]);
+		double techInterest 	= Double.parseDouble(tokens[69]);
 
 		student.interest = new TopicVector(techInterest, earthInterest, humanInterest);
 		

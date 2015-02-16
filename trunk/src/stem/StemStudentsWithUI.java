@@ -489,7 +489,7 @@ public class StemStudentsWithUI extends GUIState
 		private int activity = 0;
 		public int getActivity() { return activity; }
 		public void setActivity(int val) { activity = val; }
-		public Object domActivity() { return model.getActivityNames(); }
+		public Object domActivity() { return model.activityNames; }
 		
 		public int[] getEncouragementLevel() {
 			int[] array = new int[model.students.size()];

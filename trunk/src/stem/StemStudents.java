@@ -41,7 +41,7 @@ public class StemStudents extends SimState
 	
 	Parameters params;
 
-	public static final int NUM_ACTIVITY_TYPES = 16;
+	public static final int NUM_ACTIVITY_TYPES = 21;
 	public static final int NUM_TOPICS = 3;	
 	
 	public GregorianCalendar date;
@@ -67,9 +67,11 @@ public class StemStudents extends SimState
 	public String outputFilename = "";
 	public String youthLogFilename = "youthLog.csv";
 	
-    String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
-    		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
-    public String[] getActivityNames() { return activityNames; }
+//    String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
+//    		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
+
+    public String[] activityNames = new String[1];
+//    public String[] getActivityNames() { return activityNames; }
 	
 	
 	// Start getters/setters here =======================================================
@@ -90,17 +92,21 @@ public class StemStudents extends SimState
 	/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
 	public double closeTriadProbability = 0.05;	
 	
-	static public int numStudents = 174;  //# from survey that have valid values
+	static public int numStudents = 144;  //# from survey that have valid values
 	public int getNumYouth() { return numStudents; }
 	public void setNumYouth(int val) { numStudents = val; }
 
-	public int classSize = 17; //Approx. # from data.  Adjusted slightly to get same number in each class.
+	public int classSize = 18; //Approx. # from data.  Adjusted slightly to get same number in each class.
 	public int getClassSize() { return classSize; }
 	public void setClassSize(int val) { classSize = val; }
 
 	public int maxActivitiesPerDay = 3;	
 	public int getMaxActivitiesPerDay() { return maxActivitiesPerDay; }
 	public void setMaxActivitiesPerDay(int val) { maxActivitiesPerDay = val; }
+
+	protected int runDuration = 365;
+	public int getRunDuration() { return runDuration; }
+	public void setRunDuration(int val) { runDuration = val; }
 	
 	public double interestThreshold = 0.5;
 	public double getInterestThreshold() { return interestThreshold; }
@@ -129,16 +135,16 @@ public class StemStudents extends SimState
 	public void setInterestChangeRate(double val) { interestChangeRate = val; }
 	public Object domInterestChangeRate() { return new Interval(0.0, 1.0); }
 
-	public double interestDecayRate = 1.0;
-	public double getInterestDecayExponent() { return interestDecayRate; }
-	public void setInterestDecayExponent(double val) { interestDecayRate = val; }
-	public Object domInterestDecayExponent() { return new Interval(0.0, 1.0); }
+	public double interestDecayRate = 1.0;	// this is currently unused, so the accessors are hidden
+//	public double getInterestDecayExponent() { return interestDecayRate; }
+//	public void setInterestDecayExponent(double val) { interestDecayRate = val; }
+//	public Object domInterestDecayExponent() { return new Interval(0.0, 1.0); }
 	
-	public boolean randomizeInterests = false;
+	public boolean randomizeInterests = false;	// this is currently unused, so the accessors are hidden
 //	public boolean getRandomizeInterests() { return randomizeInterests; }
 //	public void setRandomizeInterests(boolean val) { randomizeInterests = val; }
 	
-	public boolean randomizeStuffIDo = false;
+	public boolean randomizeStuffIDo = false;	// this is currently unused, so the accessors are hidden
 //	public boolean getRandomizeStuffIDo() { return randomizeStuffIDo; }
 //	public void setRandomizeStuffIDo(boolean val) { randomizeStuffIDo = val; }
 
@@ -203,6 +209,7 @@ public class StemStudents extends SimState
 
 	/** Extent to which activities are coordinated with current school topic. */
 	public double mentorProbability = 0.0;
+
 	public double getMentorProbability() { return mentorProbability; }
 	public void setMentorProbability(double val) { mentorProbability = val; }
 	public Object domMentorProbability() { return new Interval(0.0,1.0); }
@@ -262,7 +269,12 @@ public class StemStudents extends SimState
 			if (activityTypes.size() != NUM_ACTIVITY_TYPES)
 				System.err.format("Error: %d activity types read from file, should be %d.\n", activityTypes.size(), NUM_ACTIVITY_TYPES);
 			
-			internet = activityTypes.get(11);
+			// init the activity names based on the info read from the file
+			activityNames = new String[activityTypes.size()];
+			for (int i = 0; i < activityTypes.size(); i++)
+				activityNames[i] = activityTypes.get(i).name;
+			
+			internet = activityTypes.get(15);
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -797,14 +809,15 @@ public class StemStudents extends SimState
 			@Override
 			public void step(SimState state) {
 				if (state.schedule.getSteps() % 365 == 0)
-				dataLogger.writeYouthLog(youthLogFilename);
+					dataLogger.writeYouthLog(youthLogFilename);
+//				System.out.println(state.schedule.getSteps());
 			}
-			});
+		});
 		
 		schedule.scheduleRepeating(new Steppable() {
 			public void step(SimState state) {
 				date.add(Calendar.DATE, 1);
-				if (state.schedule.getSteps() >= 1460)	// 4 years
+				if (state.schedule.getSteps() >= runDuration)	
 					state.kill();
 			}
 		}, CALENDAR_ORDER, 1.0);
@@ -886,12 +899,18 @@ public class StemStudents extends SimState
 		System.out.format("Organized activities per day. Average: %.2f, Median: %.2f\n", average(organizedActivitiesDone), median(organizedActivitiesDone));
 		
 		System.out.println();
-		System.out.println("id, aveInt, actPerDay");
+//		System.out.println("id, aveInt, actPerDay");
+//		
+//		double steps = schedule.getSteps();
+//		for (Student s : students) {
+//			System.out.format("%d, %f, %f\n", s.id, s.interest.getAverage(), (s.activitiesDone / steps));
+//		}
 		
-		double steps = schedule.getSteps();
-		for (Student s : students) {
-			System.out.format("%d, %f, %f\n", s.id, s.interest.getAverage(), (s.activitiesDone / steps));
-		}
+		System.out.format("Net Effect of Encouragement: Parent: %.2f, Sibling: %.2f, Friend: %.2f, NoOne: %.2f\n", 
+				dataLogger.netEffectOfEncouragementOnInterest[0],
+				dataLogger.netEffectOfEncouragementOnInterest[1],
+				dataLogger.netEffectOfEncouragementOnInterest[2],
+				dataLogger.netEffectOfEncouragementOnInterest[3]);
 			
 			
 	}

@@ -24,7 +24,7 @@ public class RuleSet
 		rules.add(leaderRuleV2);
 		rules.add(choiceRule);
 		rules.add(choiceRuleV2);
-		rules.add(makeFriendRule);
+//		rules.add(makeFriendRule);
 		rules.add(encouragementRule);
 		
 		leaderRule.isActive = false;
@@ -68,8 +68,8 @@ public class RuleSet
 	public void setChoiceRuleV2Weight(double val) { choiceRuleV2.weight = val; }
 	public Object domChoiceRuleV2Weight() { return new Interval(0.0, 5.0); }
 	
-	public boolean getMakeFriendRuleEnabled() { return makeFriendRule.isActive; }
-	public void setMakeFriendRuleEnabled(boolean val) { makeFriendRule.isActive = val; }	
+//	public boolean getMakeFriendRuleEnabled() { return makeFriendRule.isActive; }
+//	public void setMakeFriendRuleEnabled(boolean val) { makeFriendRule.isActive = val; }	
 	
 	public boolean getEncouragementRuleEnabled() { return encouragementRule.isActive; }
 	public void setEncouragementRuleEnabled(boolean val) { encouragementRule.isActive = val; }	

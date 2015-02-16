@@ -51,8 +51,9 @@ public class DataLogger implements Steppable
 
 	public double[][] netEffectOfActivities = new double[StemStudents.NUM_ACTIVITY_TYPES][StemStudents.NUM_TOPICS];
 	public double[][] netEffectOfRules;	// to be initialize in the constructor
-	
+
 	public double[][] netEffectOfRulesOnParticipation;	// to be initialize in the constructor
+	public double[] netEffectOfEncouragementOnInterest;	// to be initialize in the constructor
 
 	public long activitiesDone = 0;
 	public long activitiesDoneWithFriends = 0;
@@ -89,6 +90,7 @@ public class DataLogger implements Steppable
 		netEffectOfRules = new double[model.ruleSet.rules.size()][StemStudents.NUM_TOPICS];
 
 		netEffectOfRulesOnParticipation = new double[model.ruleSet.rules.size()][StemStudents.NUM_ACTIVITY_TYPES];
+		netEffectOfEncouragementOnInterest = new double[4]; // Parent, Sibling, Friend, NoOne
 		
 		dataWatchers.clear();
 		
@@ -282,6 +284,13 @@ public class DataLogger implements Steppable
 		
 		int ruleIndex = model.ruleSet.rules.indexOf(r);
 		netEffectOfRules[ruleIndex][topicIndex] += delta;
+		
+		for (int i = 0; i < 4; i++) {
+			if (s.activityEncouragement[a.type.id][i])
+				netEffectOfEncouragementOnInterest[i] += delta;
+			else
+				netEffectOfEncouragementOnInterest[i] -= delta;
+		}
 	}
 
 
@@ -364,6 +373,7 @@ public class DataLogger implements Steppable
 		
 		if (youthLogFile != null) try {
 			youthLogFile.close();
+			youthLogFile = null;
 		}
 		catch (IOException e) { e.printStackTrace(); }
 	}

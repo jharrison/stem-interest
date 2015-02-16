@@ -33,14 +33,12 @@ public class ParentRule extends Rule
 				
 		if (parentPresent) {
 			s.increaseInterest(a, weight, this);
-//			s.increaseParticipationRate(a.type.id);
 			s.increaseParticipationRate(a, true);
 		}
 
-//		if (a.isParentEncouraged) {
+		// if a parent has encouraged this activity, increase interest and participation
 		if (s.activityEncouragement[a.type.id][Encouragement.Parent.ordinal()]) {
 			s.increaseInterest(a, weight, this);
-//			s.increaseParticipationRate(a.type.id);
 			s.increaseParticipationRate(a, true);
 		}
 
