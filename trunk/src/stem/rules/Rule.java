@@ -16,6 +16,18 @@ abstract public class Rule
 	
 	/** How much does this rule change interest? [0,3] */
 	public double weight = 1.0;
+
+
+	public Rule() {}
+	
+	public Rule(double weight) {
+		this.weight = weight;
+	}
+	
+	public Rule(boolean isActive, double weight) {
+		this.isActive = isActive;
+		this.weight = weight;
+	}
 	
 	abstract public void apply(Student s, Activity a);
 

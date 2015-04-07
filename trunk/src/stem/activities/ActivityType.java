@@ -118,24 +118,29 @@ public class ActivityType
 		String[] tokens = line.split(",");
 
 		ActivityType at = new ActivityType();
-		at.id = Integer.parseInt(tokens[0]);
-		at.name = tokens[1].trim();
-		at.content = new TopicVector(Double.parseDouble(tokens[2]),	Double.parseDouble(tokens[3]), Double.parseDouble(tokens[4]));						
-		at.numLeaders = Integer.parseInt(tokens[5]);
-		at.numParents = Integer.parseInt(tokens[6]);
-		at.maxParticipants = Integer.parseInt(tokens[7]);
-		at.probSchoolRelated = Float.parseFloat(tokens[8]);
-		at.probVoluntary = Float.parseFloat(tokens[9]);
-		at.probParentEncouraged = Float.parseFloat(tokens[10]);
-		at.daysBetween = Integer.parseInt(tokens[11]);
-		at.numRepeats = Integer.parseInt(tokens[12]);
-		at.meetingsBetweenTopicChange = Integer.parseInt(tokens[13]);
-		at.onSchoolDay = Boolean.parseBoolean(tokens[14]);
-		at.onWeekendDay = Boolean.parseBoolean(tokens[15]);
-		at.onSummer = Boolean.parseBoolean(tokens[16]);
-		at.withFriendsOnly = Boolean.parseBoolean(tokens[17]);
+		int index = 0;
+		at.id = Integer.parseInt(tokens[index++]);
+		at.name = tokens[index++].trim();
+		at.content = new TopicVector(0);
+		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
+			at.content.topics[i] = Double.parseDouble(tokens[index++]);
+		at.numLeaders = Integer.parseInt(tokens[index++]);
+		at.numParents = Integer.parseInt(tokens[index++]);
+		at.maxParticipants = Integer.parseInt(tokens[index++]);
+//		at.probSchoolRelated = Float.parseFloat(tokens[8]);
+//		at.probVoluntary = Float.parseFloat(tokens[9]);
+//		at.probParentEncouraged = Float.parseFloat(tokens[10]);
+		at.daysBetween = Integer.parseInt(tokens[index++]);
+		at.isRepeating = Boolean.parseBoolean(tokens[index++]);
+		at.numRepeats = Integer.parseInt(tokens[index++]);
+		at.priority = Integer.parseInt(tokens[index++]);
+//		at.meetingsBetweenTopicChange = Integer.parseInt(tokens[13]);
+		at.onSchoolDay = Boolean.parseBoolean(tokens[index++]);
+		at.onWeekendDay = Boolean.parseBoolean(tokens[index++]);
+		at.onSummer = Boolean.parseBoolean(tokens[index++]);
+		at.withFriendsOnly = Boolean.parseBoolean(tokens[index++]);
 		
-		String choice = tokens[18].trim();
+		String choice = tokens[index++].trim();
 		if (choice.equals("LOW"))
 			at.degreeOfChoice = 0;
 		else if (choice.equals("MODERATE"))
@@ -145,9 +150,6 @@ public class ActivityType
 		else 
 			System.err.println("ActivityType degreeOfChoice is not LOW | MODERATE | HIGH\nIt was read in as " + choice + "\nline");
 
-		at.isRepeating = Boolean.parseBoolean(tokens[19]);
-		at.priority = Integer.parseInt(tokens[20]);
-		
 		return at;
 	}
 	

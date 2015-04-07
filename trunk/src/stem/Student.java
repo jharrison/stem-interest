@@ -18,7 +18,7 @@ import stem.rules.Rule;
  * @version 0.1, October 12, 2012
  * 
  */
-public class Student
+public class Student implements Comparable<Student>
 {
 	public StemStudents model;
 	public boolean isFemale = true;
@@ -300,13 +300,16 @@ public class Student
 
 		// skip 44-66: Stuff that interests me
 		// read 67, 68, 69: interest levels for the three aggregate categories
-		double earthInterest 	= Double.parseDouble(tokens[67]);
-		double humanInterest 	= Double.parseDouble(tokens[68]);
-		double techInterest 	= Double.parseDouble(tokens[69]);
-
-		student.interest = new TopicVector(techInterest, earthInterest, humanInterest);
+		student.interest = new TopicVector(0);
+		for (int i = 0; i < TopicVector.VECTOR_SIZE; i++)
+			student.interest.topics[i] = Double.parseDouble(tokens[67 + i]);
 		
 		return student;
+	}
+
+	@Override
+	public int compareTo(Student o) {
+		return this.id - o.id;
 	}
 
 }

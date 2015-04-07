@@ -41,7 +41,7 @@ public class ScienceClass extends RepeatingActivity
 //		topics.add(new TopicVector(1.0, 0.0, 0.0));
 //		topics.add(new TopicVector(0.0, 1.0, 0.0));
 //		topics.add(new TopicVector(0.0, 0.0, 1.0));
-		topics.add(new TopicVector(0.5, 0.5, 0.5));
+//		topics.add(new TopicVector(0.5, 0.5, 0.5, 0.5));
 	}
 
 	@Override

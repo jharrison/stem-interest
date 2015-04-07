@@ -38,5 +38,10 @@ public class Parameters
     	model.activityMatchingMethod = ParamUtils.getInt(paramDB, "ActivityMatchingMethod", model.activityMatchingMethod);
     	
     	model.mentorProbability = ParamUtils.getDouble(paramDB, "MentorProbability", model.mentorProbability);
+
+    	model.friendRuleWeight 		= ParamUtils.getDouble(paramDB, "FriendRuleWeight", model.friendRuleWeight);
+    	model.choiceRuleV2Weight 	= ParamUtils.getDouble(paramDB, "ChoiceRuleWeight", model.choiceRuleV2Weight);
+    	model.parentRuleWeight	 	= ParamUtils.getDouble(paramDB, "ParentRuleWeight", model.parentRuleWeight);
+    	model.leaderRuleV2Weight 	= ParamUtils.getDouble(paramDB, "LeaderRuleWeight", model.leaderRuleV2Weight);
     }
 }

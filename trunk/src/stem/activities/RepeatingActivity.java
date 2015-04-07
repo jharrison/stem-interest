@@ -60,8 +60,8 @@ public class RepeatingActivity extends Activity
 	
 	static public RepeatingActivity createFromType(StemStudents model, ActivityType type) {
 		// This is a hack and I'm not proud of it
-		if (type.name.equals("Class"))
-			return new ScienceClass();
+//		if (type.name.equals("Class"))
+//			return new ScienceClass();
 		
 		RepeatingActivity a = new RepeatingActivity(type.content);
 		a.type = type;
