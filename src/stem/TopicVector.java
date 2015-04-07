@@ -17,7 +17,7 @@ import ec.util.MersenneTwisterFast;
  */
 public class TopicVector
 {
-	static public int VECTOR_SIZE = 3;
+	static public int VECTOR_SIZE = 4;
 	static public double MAX_INTEREST = 1.0;
 	static public double MIN_INTEREST = 0.0;
 	
@@ -26,10 +26,15 @@ public class TopicVector
 	public TopicVector() {
 	}
 
+	public TopicVector(double initialValue) {
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			topics[i] = initialValue;
+	}
+
 	/** Copy constructor. */
 	public TopicVector(TopicVector other) {
 		for (int i = 0; i < VECTOR_SIZE; i++)
-			this.topics[i] = other.topics[i];
+			topics[i] = other.topics[i];
 	}
 	
 	/*
@@ -38,11 +43,12 @@ public class TopicVector
 	 * @param a2 This is the second element of TopicVector
 	 * @param a3 This is the third element of TopicVector
 	 */
-	public TopicVector(double a1, double a2, double a3) {
-		topics[0] = a1;
-		topics[1] = a2;
-		topics[2] = a3;
-	}
+//	public TopicVector(double a1, double a2, double a3, double a4) {
+//		topics[0] = a1;
+//		topics[1] = a2;
+//		topics[2] = a3;
+//		topics[3] = a4;
+//	}
 	
 	public double getAverage() {
 		double total = 0;
@@ -58,7 +64,7 @@ public class TopicVector
 	 * will be 1.
 	 */
 	public TopicVector createFocusedVector() {
-		TopicVector fv = new TopicVector(0, 0, 0);
+		TopicVector fv = new TopicVector(0);
 		int largestIndex = getMainTopicIndex();
 		fv.topics[largestIndex] = 1.0;
 		return fv;
@@ -87,30 +93,44 @@ public class TopicVector
 	}
 	
 	public TopicVector plus(TopicVector other) {
-		return new TopicVector(
-				topics[0] + other.topics[0], 
-				topics[1] + other.topics[1], 
-				topics[2] + other.topics[2]);
+		TopicVector tv = new TopicVector(this);
+
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			tv.topics[i] += other.topics[i];
+		
+		return tv;
 	}
 	
 	public TopicVector weightedCombination(TopicVector other, double weight) {
-		return new TopicVector(
-				weight * topics[0] + (1 - weight) * other.topics[0], 
-				weight * topics[1] + (1 - weight) * other.topics[1], 
-				weight * topics[2] + (1 - weight) * other.topics[2]);
+		TopicVector tv = new TopicVector();
+
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			tv.topics[i] = weight * topics[i] + (1 - weight) * other.topics[i];
+		
+		return tv;
 	}	
 	
 	static public TopicVector weightedCombination(TopicVector v1, TopicVector v2, double weight) {
-		return new TopicVector(
-				weight * v1.topics[0] + (1 - weight) * v2.topics[0], 
-				weight * v1.topics[1] + (1 - weight) * v2.topics[1], 
-				weight * v1.topics[2] + (1 - weight) * v2.topics[2]);
+		TopicVector tv = new TopicVector();
+
+		for (int i = 0; i < VECTOR_SIZE; i++)
+			tv.topics[i] = weight * v1.topics[i] + (1 - weight) * v2.topics[i];
+		
+		return tv;
 	}
 	
 	@Override
 	public String toString() {
-		//TODO generalize this for any vector size
-		return String.format("[%.3f, %.3f, %.3f]", topics[0], topics[1], topics[2]);
+		StringBuilder sb = new StringBuilder("[");
+		
+		for (int i = 0; i < topics.length; i++) {
+			if (i > 0)
+				sb.append(", ");
+			sb.append(String.format("%.3f", topics[i]));
+		}
+		sb.append("]");
+		
+		return sb.toString();
 	}
 	
 	static public TopicVector createRandom(MersenneTwisterFast random) {

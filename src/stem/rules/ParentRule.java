@@ -11,8 +11,6 @@ import stem.activities.Activity;
  * <li>
  * When parents are participants in an activity, interest increases. 
  * <li>
- * When no parents are participants in an activity, interest decreases. 
- * <li>
  * When parents actively broker access to activities to
  * allow children to pursue interest, interest increases.
  * </ul>

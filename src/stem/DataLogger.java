@@ -29,9 +29,12 @@ public class DataLogger implements Steppable
 	DoubleArrayWatcher activitiesDoneWatcher;
 	DoubleArrayWatcher organizedActivitiesDoneWatcher;
 
-	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>("Tech/Eng Index");
-	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>("Earth/Space Index");
-	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>("Human/Bio Index");
+	TimeSeriesDataStore<Double> interest1Series = new TimeSeriesDataStore<Double>(StemStudents.TOPIC_NAMES[0]);
+	TimeSeriesDataStore<Double> interest2Series = new TimeSeriesDataStore<Double>(StemStudents.TOPIC_NAMES[1]);
+	TimeSeriesDataStore<Double> interest3Series = new TimeSeriesDataStore<Double>(StemStudents.TOPIC_NAMES[2]);
+	TimeSeriesDataStore<Double> interest4Series = new TimeSeriesDataStore<Double>(StemStudents.TOPIC_NAMES[3]);
+
+	TimeSeriesDataStore<Double> proportionOfInterestedYouth = new TimeSeriesDataStore<Double>("Proportion of Youth Above Interest Threshold");
 	
 	ArrayList<DataWatcher> dataWatchers = new ArrayList<DataWatcher>();
 	
@@ -76,6 +79,18 @@ public class DataLogger implements Steppable
         	total += s.interest.topics[topicIndex];
         
         return total / model.students.size();
+	}	
+	
+	public double calcAverageInterest() {
+		if (model.students.size() == 0)
+			return 0;
+		
+        double total = 0;
+        for (Student s : model.students)
+        	for (int j = 0; j < StemStudents.NUM_TOPICS; j++) 
+				total += s.interest.topics[j];
+        
+        return total / (model.students.size() * StemStudents.NUM_TOPICS);
 	}
 
 	public void init() {
@@ -182,6 +197,39 @@ public class DataLogger implements Steppable
                 return "Step, " + interest3Series.getDescription();
             }
         });
+
+        interest4Series.clear();
+        dataWatchers.add(new PairDataWatcher<Long, Double>() {
+            { addListener(interest4Series); }
+
+            @Override
+            protected void updateDataPoint() {
+                final long currentStep = model.schedule.getSteps();
+                dataPoint = new Pair<Long, Double>(currentStep, calcAverageInterest(3));
+            }
+
+            @Override
+            public String getCSVHeader() {
+                return "Step, " + interest4Series.getDescription();
+            }
+        });
+
+        proportionOfInterestedYouth.clear();
+        dataWatchers.add(new PairDataWatcher<Long, Double>() {
+            { addListener(proportionOfInterestedYouth); }
+
+            @Override
+            protected void updateDataPoint() {
+                final long currentStep = model.schedule.getSteps();
+                dataPoint = new Pair<Long, Double>(currentStep, calcProportionOfInterested());
+            }
+
+            @Override
+            public String getCSVHeader() {
+                return "Step, " + proportionOfInterestedYouth.getDescription();
+            }
+        });
+        
         
 		activitiesDoneWatcher = new DoubleArrayWatcher() {
 			// anonymous constructor
@@ -236,6 +284,7 @@ public class DataLogger implements Steppable
 	                dataList.add(String.valueOf(calcAverageInterest(0)));
 	                dataList.add(String.valueOf(calcAverageInterest(1)));
 	                dataList.add(String.valueOf(calcAverageInterest(2)));
+	                dataList.add(String.valueOf(calcAverageInterest(3)));
 	                dataList.add(String.valueOf(model.coordinationLevel));
 	                dataList.add(String.valueOf(model.interestThreshold));
 	                dataList.add(String.valueOf(model.interestThresholdNoise));
@@ -252,13 +301,25 @@ public class DataLogger implements Steppable
 	
 	            @Override
 	            public String getCSVHeader() {
-	                String header = "Run, Step, AveIntr1, AveIntr2, AveIntr3, Coordination, IntrThresh, IntrThreshNs, ldrExp, ldrExpNs, ldrPsn, ldrPsnNs, expThr, expThrNs, psnThr, psnThrNs";
+	                String header = "Run, Step, AveIntr1, AveIntr2, AveIntr3, AveIntr4, Coordination, IntrThresh, IntrThreshNs, ldrExp, ldrExpNs, ldrPsn, ldrPsnNs, expThr, expThrNs, psnThr, psnThrNs";
 	                return header + "\n";
 	            }
 			};
 			dataWatchers.add(interestTrendWatcher);
 		}
 		
+	}
+	
+	public double calcProportionOfInterested() {
+		int total = 0;
+		for (int i = 0; i < model.students.size(); i++)
+			for (int j = 0; j < StemStudents.NUM_TOPICS; j++)
+				if (model.students.get(i).interest.topics[j] > model.interestThreshold) {
+					total++;
+					break;
+				}
+		
+		return total / (double)model.numStudents;			
 	}
 	
 	public void start() {
@@ -288,8 +349,6 @@ public class DataLogger implements Steppable
 		for (int i = 0; i < 4; i++) {
 			if (s.activityEncouragement[a.type.id][i])
 				netEffectOfEncouragementOnInterest[i] += delta;
-			else
-				netEffectOfEncouragementOnInterest[i] -= delta;
 		}
 	}
 
@@ -326,16 +385,12 @@ public class DataLogger implements Steppable
 				youthLogFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filename)));
 			
 				// write headers first time through
-				youthLogFile.writeBytes("Step, ID, Sex, Intr1, Intr2, Intr3, ActDone, OrgActDone, ActDoneWithFriends, OrgActDoneWithFriends, ParentEnc, SiblingEnc, FriendEnc");
+				youthLogFile.writeBytes("Step, ID, Sex, Intr1, Intr2, Intr3, Intr4, ActDone, OrgActDone, ActDoneWithFriends, OrgActDoneWithFriends, ParentEnc, SiblingEnc, FriendEnc");
 				youthLogFile.writeBytes("\n");
 			}
 			
 			// sort students by ID
-			Collections.sort(model.students, new Comparator<Student>() {
-				public int compare(Student s1, Student s2) {
-					return s1.id - s2.id;
-				}
-			});
+			Collections.sort(model.students);
 
 			// write data for each student
 			StringBuilder sb = new StringBuilder();
@@ -347,6 +402,7 @@ public class DataLogger implements Steppable
 				sb.append(String.format("%.6f", s.interest.topics[0])).append(", ");
 				sb.append(String.format("%.6f", s.interest.topics[1])).append(", ");
 				sb.append(String.format("%.6f", s.interest.topics[2])).append(", ");
+				sb.append(String.format("%.6f", s.interest.topics[3])).append(", ");
 				sb.append(s.activitiesDone).append(", ");
 				sb.append(s.organizedActivitiesDone).append(", ");
 				sb.append(s.activitiesDoneWithFriends).append(", ");

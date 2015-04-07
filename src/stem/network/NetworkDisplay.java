@@ -132,7 +132,7 @@ public class NetworkDisplay implements Steppable {
 		frame.getContentPane().add(jp);
 		frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		frame.pack();
-		frame.setVisible(true);
+//		frame.setVisible(true);
 	}
 
 	@SuppressWarnings("unchecked")
