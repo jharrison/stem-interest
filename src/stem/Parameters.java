@@ -22,8 +22,13 @@ public class Parameters
     	model.outputFilename = ParamUtils.getString(paramDB, "OutputFilename", "");
     	model.youthLogFilename = ParamUtils.getString(paramDB, "YouthLogFilename", model.youthLogFilename);
 
+    	model.maxActivitiesPerDay = ParamUtils.getInt(paramDB, "MaxActivitiesPerDay", model.maxActivitiesPerDay);
+
     	model.interestThreshold = ParamUtils.getDouble(paramDB, "InterestThreshold", model.interestThreshold);
     	model.interestThresholdNoise = ParamUtils.getDouble(paramDB, "InterestThresholdNoise", model.interestThresholdNoise);
+    	model.interestChangeRate = ParamUtils.getDouble(paramDB, "InterestChangeRate", model.interestChangeRate);
+    	model.participationChangeRate = ParamUtils.getDouble(paramDB, "ParticipationChangeRate", model.participationChangeRate);
+    	model.participationMultiplier = ParamUtils.getDouble(paramDB, "ParticipationMultiplier", model.participationMultiplier);
     	
     	model.leaderExpertise = ParamUtils.getDouble(paramDB, "LeaderExpertise", model.leaderExpertise);
     	model.leaderExpertiseNoise = ParamUtils.getDouble(paramDB, "LeaderExpertiseNoise", model.leaderExpertiseNoise);
@@ -40,8 +45,8 @@ public class Parameters
     	model.mentorProbability = ParamUtils.getDouble(paramDB, "MentorProbability", model.mentorProbability);
 
     	model.friendRuleWeight 		= ParamUtils.getDouble(paramDB, "FriendRuleWeight", model.friendRuleWeight);
-    	model.choiceRuleV2Weight 	= ParamUtils.getDouble(paramDB, "ChoiceRuleWeight", model.choiceRuleV2Weight);
+    	model.choiceRuleWeight 	= ParamUtils.getDouble(paramDB, "ChoiceRuleWeight", model.choiceRuleWeight);
     	model.parentRuleWeight	 	= ParamUtils.getDouble(paramDB, "ParentRuleWeight", model.parentRuleWeight);
-    	model.leaderRuleV2Weight 	= ParamUtils.getDouble(paramDB, "LeaderRuleWeight", model.leaderRuleV2Weight);
+    	model.leaderRuleWeight 	= ParamUtils.getDouble(paramDB, "LeaderRuleWeight", model.leaderRuleWeight);
     }
 }

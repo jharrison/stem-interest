@@ -10,7 +10,7 @@ import stem.rules.Rule;
 /**
  * Student (Child/Youth) 
  * <p>Each begins with a level of interest in a particular
- * cluster of science topics (e.g., “astronomy”). When a child/youth has an
+ * cluster of science topics (e.g., ‚Äúastronomy‚Äù). When a child/youth has an
  * interaction in a science activity, their interest level changes.</p>
  * 
  * @author Joey Harrison
@@ -52,7 +52,7 @@ public class Student implements Comparable<Student>
 	 * This was moved into Students so that the probs can evolve depending upon
 	 * participation
 	 */
-	double [] participationRates = new double[StemStudents.NUM_ACTIVITY_TYPES];
+	public double [] participationRates = new double[StemStudents.NUM_ACTIVITY_TYPES];
 	public double [] getParticipationRates() { return participationRates; }
 	
 //	public class Encouragement {
@@ -217,6 +217,14 @@ public class Student implements Comparable<Student>
 		return interest.getAverage();
 	}
 	
+	public double getAverageParticipationRate() {
+		double total = 0;
+		for (int i = 0; i < participationRates.length; i++)
+			total += participationRates[i];
+		
+		return total / participationRates.length;
+	}
+	
 	private double calcEncouragement(Encouragement encType) {
 		double encouragement = 0;
 		
@@ -270,7 +278,8 @@ public class Student implements Comparable<Student>
 //		final double[] participationRate = new double[] {0, 0, 0.25, 0.5, 0.75, 1.0};
 		
 		String[] tokens = line.split(",");
-		student.id = Integer.parseInt(tokens[0]);
+		double temp = Double.parseDouble(tokens[0]);
+		student.id = (int)temp;
 		
 		// 1st column: gender, 0 for male, 1 for female
 		if (tokens[1].equalsIgnoreCase("NA"))
@@ -283,12 +292,8 @@ public class Student implements Comparable<Student>
 		for (int i = 0; i < (StemStudents.NUM_ACTIVITY_TYPES-1); i++)
 		{
 			student.stuffIDo[i] = Integer.parseInt(tokens[i+4]);
-//			student.participationRates[i] = participationRate[student.stuffIDo[i]];
 			student.participationRates[i] = model.activityTypes.get(i).mapLikertToParticpationRate(student.stuffIDo[i]);
-			
-			// scale the participation rates (except school) to bring the rates down to the level we expect
-			if (!model.activityTypes.get(i).name.equals("Class"))
-				student.participationRates[i] *= model.participationMultiplier;
+//			student.participationRates[i] = student.stuffIDo[i];
 		}
 		// hard-code school for everyday
 		student.stuffIDo[20] = 5;

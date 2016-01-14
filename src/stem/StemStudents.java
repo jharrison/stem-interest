@@ -13,7 +13,12 @@ import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 
+import jsc.independentsamples.SmirnovTest;
+
+import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest;
+
 import masoncsc.util.MTFUtilities;
+import masoncsc.util.Stats;
 
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
@@ -27,6 +32,9 @@ import stem.activities.RepeatingActivity;
 import stem.network.*;
 import stem.rules.Rule;
 import stem.rules.RuleSet;
+import stem.tuning.MersenneTwisterFastApache;
+
+import sim.util.*;
 
 /**
  * An agent-based model of students interest in STEM with SYNERGIES project.
@@ -47,8 +55,9 @@ public class StemStudents extends SimState
 	
 	public GregorianCalendar date;
 
-	ArrayList<Student> students = new ArrayList<Student>();
-	ArrayList<Student> students7th = new ArrayList<Student>();
+	public ArrayList<Student> students = new ArrayList<Student>();
+	public ArrayList<Student> students7th = new ArrayList<Student>();
+	public ArrayList<Student> students8th = new ArrayList<Student>();
 	ArrayList<ActivityType> activityTypes = new ArrayList<ActivityType>();
 	ActivityType internet = null;	// mentoring will focus on this activity type
 
@@ -68,6 +77,8 @@ public class StemStudents extends SimState
 	public DataLogger dataLogger;
 	public String outputFilename = "";
 	public String youthLogFilename = "youthLog.csv";
+	
+	public boolean printFitness = true;
 	
 //    String[] activityNames = new String[] { "Library", "Museum", "Scouts", "NationalParks", "Afterschool", 
 //    		"Talk", "SummerCamp", "Hike", "Garden", "Experiments", "Read", "Internet", "Computer", "TV", "Build", "Class" };
@@ -92,13 +103,22 @@ public class StemStudents extends SimState
 	public double makeFriendProbability = 0.01;
 
 	/** Probability of closing a triad, i.e. become friends with a friend of a friend. */
+//	@MasonProperty(order=5)
 	public double closeTriadProbability = 0.05;	
+
+//	@MasonProperty(order=6)
+	public double[] testArray = { 1, 2, 3 };
+	
 	
 	static public int numStudents = 140;  //# from survey that have valid values
+//	@MasonProperty(order=1)
 	public int getNumYouth() { return numStudents; }
 	public void setNumYouth(int val) { numStudents = val; }
+	public String nameNumYouth() { return "Number of Youth"; }
+	public String desNumYouth() { return "Number of Youth in the Model"; }
 
 	public int classSize = 18; //Approx. # from data.  Adjusted slightly to get same number in each class.
+//	@MasonProperty(order=2)
 	public int getClassSize() { return classSize; }
 	public void setClassSize(int val) { classSize = val; }
 
@@ -109,30 +129,18 @@ public class StemStudents extends SimState
 	protected int runDuration = 365;
 	public int getRunDuration() { return runDuration; }
 	public void setRunDuration(int val) { runDuration = val; }
-	
-	public double interestThreshold = 0.5;
+
+	public double interestThreshold = 0.94842540355904636; // 0.5;
 	public double getInterestThreshold() { return interestThreshold; }
 	public void setInterestThreshold(double val) { interestThreshold = val; }
 	public Object domInterestThreshold() { return new Interval(0.0, 1.0); }
-	
-	public double interestThresholdNoise = 0.0;
+
+	public double interestThresholdNoise = 0.00946183819792444; // 0.0;
 	public double getInterestThresholdNoise() { return interestThresholdNoise; }
 	public void setInterestThresholdNoise(double val) { interestThresholdNoise = val; }
 	public Object domInterestThresholdNoise() { return new Interval(0.0, 1.0); }
 
-	public double leaderExpertise = 0.5;
-	public double leaderExpertiseNoise = 0.0;
-	
-	public double leaderPassion = 0.5;
-	public double leaderPassionNoise = 0.0;
-	
-	public double expertiseThreshold = 0.5;
-	public double expertiseThresholdNoise = 0.0;
-
-	public double passionThreshold = 0.5;
-	public double passionThresholdNoise = 0.0;
-	
-	public double interestChangeRate = 0.01;
+	public double interestChangeRate = 0.001;
 	public double getInterestChangeRate() { return interestChangeRate; }
 	public void setInterestChangeRate(double val) { interestChangeRate = val; }
 	public Object domInterestChangeRate() { return new Interval(0.0, 1.0); }
@@ -146,13 +154,13 @@ public class StemStudents extends SimState
 //	public boolean getRandomizeInterests() { return randomizeInterests; }
 //	public void setRandomizeInterests(boolean val) { randomizeInterests = val; }
 	
-	public boolean randomizeStuffIDo = false;	// this is currently unused, so the accessors are hidden
-//	public boolean getRandomizeStuffIDo() { return randomizeStuffIDo; }
-//	public void setRandomizeStuffIDo(boolean val) { randomizeStuffIDo = val; }
+	public boolean randomizeParticipationRates = false;	// this is currently unused, so the accessors are hidden
+//	public boolean getRandomizeParticipationRates() { return randomizeParticipationRates; }
+//	public void setRandomizeParticipationRates(boolean val) { randomizeParticipationRates = val; }
 
 	/** How much to change the participation rate in an activity if interest has
 	 * been increased or decreased. */
-	public double participationChangeRate = 0.001;
+	public double participationChangeRate = 0.0; // 0.001;
 	public double getParticipationChangeRate() { return participationChangeRate; }
 	public void setParticipationChangeRate(double val) { participationChangeRate = val; }
 	public Object domParticipationChangeRate() { return new Interval(0.0,0.5); }
@@ -162,8 +170,20 @@ public class StemStudents extends SimState
 	public double getParticipationMultiplier() { return participationMultiplier; }
 	public void setParticipationMultiplier(double val) { participationMultiplier = val; }
 	public Object domParticipationMultiplier() { return new Interval(0.0, 1.0); }
+	
+	/** Properties of adult leaders */
+	public double leaderExpertise = 0.18071591495957151; // 0.5;
+	public double leaderExpertiseNoise = 0.06630778916338272; // = 0.0;
 
+	public double leaderPassion = 0.11527919391589679; // 0.5;
+	public double leaderPassionNoise = 0.07878072569768096; // 0.0;
+	
+	public double expertiseThreshold = 0.5;
+	public double expertiseThresholdNoise = 0.0;
 
+	public double passionThreshold = 0.5;
+	public double passionThresholdNoise = 0.0;
+	
 	/** Extent to which activities are coordinated with current school topic. */
 	public double coordinationLevel = 0.0;
 //	public double getCoordinationLevel() { return coordinationLevel; }
@@ -192,24 +212,7 @@ public class StemStudents extends SimState
 	
 
 
-//	double[] expectedActivitiesPerDay = new double[numStudents];
-//	public double[] getExpectedActivitiesPerDay() {
-//		Arrays.fill(expectedActivitiesPerDay, 0);
-//		if ((students != null) && !students.isEmpty()) {
-//			for (int i = 0; i < numStudents; i++) {
-//				int activitiesPerYear = 0;
-//				for (int j = 0; j < NUM_ACTIVITY_TYPES; j++) {
-//					int opportunities = activityTypes.get(j).calcOpportunitiesPerYear();
-////					activitiesPerYear += opportunities * students.get(i).participationRates[j] * 
-////							(activityTypes.get(j).name.equals("Class") ? 1 : participationMultiplier);
-//					activitiesPerYear += opportunities * students.get(i).participationRates[j];
-//				}
-//				expectedActivitiesPerDay[i] = activitiesPerYear / 365.0;
-//			}
-//		}
-//		
-//		return expectedActivitiesPerDay;
-//	}
+
 
 	/** Extent to which activities are coordinated with current school topic. */
 	public double mentorProbability = 0.0;
@@ -219,13 +222,17 @@ public class StemStudents extends SimState
 	public Object domMentorProbability() { return new Interval(0.0,1.0); }
 	
 	
-	public double friendRuleWeight = 1.0;
-	public double choiceRuleV2Weight = 1.0;
-	public double parentRuleWeight = 1.0;
-	public double leaderRuleV2Weight = 0.9;
+	public double friendRuleWeight = 0.20004421974661746; // 1.0;
+	public double choiceRuleWeight = 0.23159159447967126; // 1.0;
+	public double parentRuleWeight = 0.32469239696194879; // 1.0;
+	public double leaderRuleWeight = 0.47357174957063619; // 0.9;
 
 	public StemStudents(long seed, String[] args) {
 		super(seed);
+		
+		System.out.println("Working Directory = " +
+	              System.getProperty("user.dir"));
+		
 		params = new Parameters(this, args);
 		ruleSet = new RuleSet(this);
 		dataLogger = new DataLogger(this);
@@ -235,6 +242,11 @@ public class StemStudents extends SimState
 		
 		readActivityTypes();
 //		testActivityTypes();
+		
+		ruleSet.initWeights(this);
+		
+		Arrays.fill(totalActivities, 0);
+		years = 0;
 	}
 	
 	private void testActivityTypes() {
@@ -287,14 +299,14 @@ public class StemStudents extends SimState
 	
 	/**
 	 * Checks the model parameters and possibly randomize the given student's
-	 * interests and stuffIDo.
+	 * interests and participation rates.
 	 * @param s
 	 */
 	public void possiblyRandomize(Student s) {
 		if (randomizeInterests)
 			s.interest = TopicVector.createRandom(random);
 		
-		if (randomizeStuffIDo)
+		if (randomizeParticipationRates)
 			for (int i = 0; i < 15; i++)
 				s.participationRates[i] = random.nextDouble();
 	}
@@ -349,7 +361,29 @@ public class StemStudents extends SimState
 			e.printStackTrace();
 		}
 		
+		// see if we need to duplicate students 
+		if (studentList.size() != numStudents) {
+			int resamples = numStudents - studentList.size();
+			for (int i = 0; i < resamples; i++) {
+				Student s = studentList.get(i);
+				studentList.add(s);
+				//TODO fix duplicate IDs
+			}
+		}
+		
 		return studentList;
+	}
+	
+	/**
+	 * Scale all the participation rates (except school) by the given multiplier.
+	 */
+	public void scaleParticipation(ArrayList<Student> studentList, double multiplier) {
+		for (Student s : studentList) {
+			for (int i = 0; i < activityTypes.size(); i++) {
+				if (!activityTypes.get(i).name.equals("Class"))
+					s.participationRates[i] *= multiplier;
+			}
+		}
 	}
 	
 	private void initStudentNetwork() {
@@ -562,7 +596,6 @@ public class StemStudents extends SimState
 	
 	/** Create a new set of repeating activities and assign participants. */
 	private void organizeRepeatingActivities() {
-
 		repeatingActivities.clear();
 		ArrayList<Student> allParticipants = new ArrayList<Student>();
 		
@@ -760,25 +793,58 @@ public class StemStudents extends SimState
 		
 		// Read in the characteristics of each activity
 		readActivityTypes();
+		
+		ruleSet.initWeights(this);
 
 		students = readStudentsFromFile("./data/initialStudentInput.csv");
+		scaleParticipation(students, participationMultiplier);
 		students7th = readStudentsFromFile("./data/seventhGradeStudentInput.csv");
+		scaleParticipation(students7th, participationMultiplier);
+		students8th = readStudentsFromFile("./data/eighthGradeStudentInput.csv");
+		scaleParticipation(students8th, participationMultiplier);
 		
-		compareStudents(students, "6th grader (before simulation)", students7th, "7th grader (from data)");
+//		compareStudents(students, "6th grader (before simulation)", students7th, "7th grader (from data)");
 		
 		initStudentNetwork();
 		dataLogger.init();
 		dataLogger.start();
 
-		final int ORGANIZE_ORDER = 0;
-		final int ACTIVITIES_ORDER = 1;
-		final int DATA_LOGGER_ORDER = 2;
-		final int CALENDAR_ORDER = 3;
+		final int DATA_LOGGER_ORDER = 0;
+		final int CHECK_STOP_ORDER = 1;
+		final int ORGANIZE_ORDER = 2;
+		final int ACTIVITIES_ORDER = 3;
+		final int CALENDAR_ORDER = 4;
+		
+		schedule.scheduleRepeating(dataLogger, DATA_LOGGER_ORDER, 1.0);
+
+		schedule.scheduleRepeating(0.0, DATA_LOGGER_ORDER, new Steppable() {
+			@Override
+			public void step(SimState state) {
+				dataLogger.writeYouthLog(youthLogFilename);
+//				System.out.format("---- Log it 2! (%d)\n", schedule.getSteps());
+				
+				if (state.schedule.getSteps() == 365)
+					compareStudents(students, "7th grade (after simulation)", students7th, "7th grade (from data)");
+				else if (state.schedule.getSteps() == 730)
+					compareStudents(students, "8th grade (after simulation)", students8th, "8th grade (from data)");
+			}
+		}, 365);
+		
+		schedule.scheduleRepeating(new Steppable() {
+			public void step(SimState state) {
+				if (state.schedule.getSteps() >= runDuration)	{
+//					System.out.println("---- Shut it down!");
+					state.kill();
+				}
+			}
+		}, CHECK_STOP_ORDER, 1.0);
 		
 		// Once per year, organize the repeating activities
 		schedule.scheduleRepeating(0.0, ORGANIZE_ORDER, new Steppable() {
 			@Override
-			public void step(SimState arg0) {
+			public void step(SimState state) {
+				if (state.schedule.getSteps() >= runDuration)
+					return;
 				organizeRepeatingActivities();
 			}
 		}, 365);
@@ -786,38 +852,21 @@ public class StemStudents extends SimState
 		schedule.scheduleRepeating(new Steppable() {
 			@Override
 			public void step(SimState state) {
+				if (state.schedule.getSteps() >= runDuration)
+					return;
 //				printDayInfo();
 //				coordinatedTopic = scienceClasses.get(0).content;
 //				System.out.format("Step: %d, CoordinatedTopic: %s\n", schedule.getSteps(), coordinatedTopic);
+//				System.out.format("doActivitiesForDay() Step: %d\n", schedule.getSteps());
 				doActivitiesForDay();
 				decayInterests();
-				
-//				int totalFriendCount = 0;
-//				for (Student s : students)
-//					totalFriendCount += s.friends.size();
-//				System.out.format("Network link count: %d, totalFriendCount: %d\n", network.getEdgeCount(), totalFriendCount);
 			}
 		}, ACTIVITIES_ORDER, 1.0);
 		
-
-		
-		schedule.scheduleRepeating(dataLogger, DATA_LOGGER_ORDER, 1.0);
-		
-
-		schedule.scheduleRepeating(new Steppable() {
-			@Override
-			public void step(SimState state) {
-				if (state.schedule.getSteps() % 365 == 0)
-					dataLogger.writeYouthLog(youthLogFilename);
-//				System.out.println(state.schedule.getSteps());
-			}
-		});
 		
 		schedule.scheduleRepeating(new Steppable() {
 			public void step(SimState state) {
 				date.add(Calendar.DATE, 1);
-				if (state.schedule.getSteps() >= runDuration)	
-					state.kill();
 			}
 		}, CALENDAR_ORDER, 1.0);
 	}
@@ -831,13 +880,13 @@ public class StemStudents extends SimState
 	}
 	
 	/** Is the given day a school day? */
-	private boolean isSchoolDay(Calendar date) {
+	public boolean isSchoolDay(Calendar date) {
 		//TODO make this more comprehensive, e.g. exclude breaks
 		return !isWeekend(date) && !isSummer(date);
 	}
 
 	/** Is the given day a weekend? */
-	private boolean isWeekend(Calendar date) {
+	public boolean isWeekend(Calendar date) {
 		int day = date.get(Calendar.DAY_OF_WEEK);
 		if ((day == Calendar.SATURDAY) || (day == Calendar.SUNDAY))
 			return true;
@@ -845,7 +894,7 @@ public class StemStudents extends SimState
 	}
 
 	/** Is the given day in the summer break? */
-	private boolean isSummer(Calendar date) {
+	public boolean isSummer(Calendar date) {
 		int day = date.get(Calendar.DAY_OF_YEAR);
 		if ((day > 158) && (day < 247))
 			return true;
@@ -911,9 +960,10 @@ public class StemStudents extends SimState
 				dataLogger.netEffectOfEncouragementOnInterest[2],
 				dataLogger.netEffectOfEncouragementOnInterest[3]);
 
-		System.out.format("AveIntr: %f, PropOfIntr: %f, LeaderExp: %f, Noise: %f, MatchingMethod: %d, FriendCopart: %f, IntrThresh: %f, IntrThreshNoise: %f\n", 
+		System.out.format("AveIntr: %f, PropOfIntr: %f, LeaderExp: %f, LeaderExpNoise: %f, LeaderPassion: %f, LeaderPassionNoise: %f, MatchingMethod: %d, FriendCopart: %f, IntrThresh: %f, IntrThreshNoise: %f\n", 
 				dataLogger.calcAverageInterest(), dataLogger.calcProportionOfInterested(),
 				leaderExpertise, leaderExpertiseNoise,
+				leaderPassion, leaderPassionNoise,
 				activityMatchingMethod,
 				dataLogger.activitiesDoneWithFriends / (double)dataLogger.activitiesDone,
 				interestThreshold, interestThresholdNoise);
@@ -928,8 +978,13 @@ public class StemStudents extends SimState
 //	public double[] getInterestDiffs4() { return interestDiffs[3]; }
 	
 	public void compareStudents(ArrayList<Student> students1, String name1, ArrayList<Student> students2, String name2) {
-//		compareStudents_SSE(students1, students2);
-		compareStudents_Averages(students1, name1, students2, name2);
+		if (printFitness) {
+			System.out.println();
+	//		compareStudents_SSE(students1, students2);
+			compareStudents_Averages(students1, name1, students2, name2);
+			compareStudents_KS(students1, name1, students2, name2);
+//			compareStudents_ABE(students1, name1, students2, name2, true);
+		}
 	}
 	
 	public void compareStudents_SSE(ArrayList<Student> students1, ArrayList<Student> students2) {
@@ -985,15 +1040,167 @@ public class StemStudents extends SimState
 		
 		System.out.format("Average %s: %.2f, Average %s: %.2f, Difference: %.2f\n", name1, ave1, name2, ave2, (ave2-ave1));
 	}
+	public double compareStudents_KS(ArrayList<Student> students1, String name1, ArrayList<Student> students2, String name2) {
+		return compareStudents_KS(students1, name1, students2, name2, true);
+	}
+	
+	private double ksStatistic(double[] a, double[] b, KolmogorovSmirnovTest ksTest) {
+		
+		try {
+			SmirnovTest sTest = new SmirnovTest(a, b);
+
+			return sTest.getStatistic() / (a.length * b.length);
+		}
+		catch (IllegalArgumentException e) {
+//			System.err.format("KS Error: %s\n", e.toString());
+//						
+//			for (int i = 0; i < a.length; i++) {
+//				System.err.format("%f, %f\n", a[i], b[i]);
+//			}
+			
+			// it appears that the 
+			return ksTest.kolmogorovSmirnovStatistic(a, b);
+		}
+
+		
+//		return ksTest.kolmogorovSmirnovStatistic(a, b);
+	}
+	
+	public double compareStudents_KS(ArrayList<Student> students1, String name1, ArrayList<Student> students2, String name2, boolean verbose) {
+    	double val = 0;
+    	if (verbose)
+    		System.out.format("KS Statistic comparison of %s and %s\n", name1, name2);
+    	
+    	KolmogorovSmirnovTest ksTest = new KolmogorovSmirnovTest(new MersenneTwisterFastApache(random));
+    	
+    	ArrayList<Student> s1 = students1;
+    	ArrayList<Student> s2 = students2;
+    	int n = s1.size();
+
+		double [] v1 = new double[n];
+		double [] v2 = new double[n];
+		double error;
+		double topicError = 0;
+    	
+    	// add up the distributions in the different interest levels
+    	for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
+    		for (int j = 0; j < n; j++) {
+    			v1[j] = s1.get(j).interest.topics[i];
+    			v2[j] = s2.get(j).interest.topics[i];
+    		}
+
+//    		ks = ksTest.kolmogorovSmirnovStatistic(v1, v2);
+    		error = ksStatistic(v1, v2, ksTest);
+    		topicError += error;
+    		if (verbose)
+    			System.out.format("Topic %d KS: %.2f KSa: %.2f (%s)\n", i, error, ksTest.kolmogorovSmirnovStatistic(v1, v2), TOPIC_NAMES[i]);
+    	}
+    	topicError /= TopicVector.VECTOR_SIZE;	// average them
+    	
+    	// add the error for participation rate    	
+    	double activityError = 0;
+    	for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
+    		for (int j = 0; j < n; j++) {
+    			v1[j] = s1.get(j).participationRates[i];
+    			v2[j] = s2.get(j).participationRates[i];
+    		}
+    		
+//    		ks = ksTest.kolmogorovSmirnovStatistic(v1, v2);
+    		error = ksStatistic(v1, v2, ksTest);
+    		activityError += error;
+
+    		if (verbose)
+    			System.out.format("Activity %2d KS: %.2f, KSa: %.2f, (%s)\n", i, error, ksTest.kolmogorovSmirnovStatistic(v1, v2), activityNames[i]);
+    	}
+    	activityError /= NUM_ACTIVITY_TYPES;   
+    	val = (topicError + activityError) / 2.0;
+    	
+    	if (verbose)
+    		System.out.format("Total KS: %.3f = (%.3f + %.3f)/2\n", val, topicError, activityError);
+		
+		return val;
+	}
+
+	
+	public double compareStudents_ABE(ArrayList<Student> students1, String name1, ArrayList<Student> students2, String name2, boolean verbose) {
+    	double val = 0;
+    	if (verbose)
+    		System.out.format("Area Between ECDF comparison of %s and %s\n", name1, name2);
+    	
+    	KolmogorovSmirnovTest ksTest = new KolmogorovSmirnovTest(new MersenneTwisterFastApache(random)); // for comparison
+    	
+    	ArrayList<Student> s1 = students1;
+    	ArrayList<Student> s2 = students2;
+    	int n = s1.size();
+
+		double [] v1 = new double[n];
+		double [] v2 = new double[n];
+		double error;
+		double topicError = 0;
+    	
+    	// add up the error for interest levels in each topic
+    	for (int i = 0; i < TopicVector.VECTOR_SIZE; i++) {
+    		for (int j = 0; j < n; j++) {
+    			v1[j] = s1.get(j).interest.topics[i];
+    			v2[j] = s2.get(j).interest.topics[i];
+    		}
+
+    		error = Stats.calcAreaBetweenECDFs(v1, v2);
+    		topicError += error;
+    		if (verbose)
+    			System.out.format("Topic %d KS: %.2f ABE: %.3f (%s)\n", i, ksStatistic(v1, v2, ksTest), error, TOPIC_NAMES[i]);
+    	}
+    	topicError /= TopicVector.VECTOR_SIZE;	// average them
+    	
+    	// add the error for participation rates for each activity
+    	double activityError = 0;
+    	for (int i = 0; i < NUM_ACTIVITY_TYPES; i++) {
+    		for (int j = 0; j < n; j++) {
+    			v1[j] = s1.get(j).participationRates[i];
+    			v2[j] = s2.get(j).participationRates[i];
+    		}    		
+
+    		error = Stats.calcAreaBetweenECDFs(v1, v2);
+    		activityError += error;
+
+    		if (verbose)
+    			System.out.format("Activity %2d KS: %.2f, ABE: %.3f, (%s)\n", i, ksStatistic(v1, v2, ksTest), error, activityNames[i]);
+    	}
+    	activityError /= NUM_ACTIVITY_TYPES;   
+    	val = (topicError + activityError) / 2.0;
+    	
+    	if (verbose)
+    		System.out.format("Total Error: %.3f = (%.3f + %.3f)/2\n", val, topicError, activityError);
+		
+		return val;
+	}
+	
+	public double years = 0;
+	public double[] totalActivities = new double[numStudents];
+	
+	private void incrementTotalActivities() {
+		years++;
+		Collections.sort(students);
+
+		double[] adHoc = dataLogger.activitiesDoneWatcher.getDataPoint();
+		double[] organized = dataLogger.organizedActivitiesDoneWatcher.getDataPoint();
+		
+		for (int i = 0; i < students.size(); i++) {
+			totalActivities[i] += adHoc[i] + organized[i];
+		}
+	}
+		
 
 	@Override
 	public void finish() {
 		super.finish();
 		dataLogger.close();
 		printRunSummary();
-		compareStudents(students, "7th grader (after simulation)", students7th, "7th grader (from data)");
+//		compareStudents(students, "7th grader (after simulation)", students7th, "7th grader (from data)");
+		
+		incrementTotalActivities();
 	}
-	
+
 	public static void main(String[] args) {
         doLoop(new MakesSimState()
         {

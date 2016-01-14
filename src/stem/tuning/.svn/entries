@@ -1,0 +1,49 @@
+10
+
+dir
+0
+https://stem-students.googlecode.com/svn/trunk/src/stem/tuning
+https://stem-students.googlecode.com/svn
+add
+
+
+
+
+
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+46883a90-869f-ece3-d1fb-cc689642acf6
+
+MersenneTwisterFastApache.java
+file
+
+
+
+add
+
+ParameterTuningProblem.java
+file
+
+
+
+add
+
+tuning.params
+file
+
+
+
+add
+

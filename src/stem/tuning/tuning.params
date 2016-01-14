@@ -1,0 +1,116 @@
+# Copyright 2006 by Sean Luke and George Mason University
+# Licensed under the Academic Free License version 3.0
+# See the file "LICENSE" for more information
+#
+# This is ecj parameter file for the desirability coefficient
+# calculations. It uses simple real valued EA.
+
+parent.0 = @ec.Evolve ec.params
+
+eval.problem = stem.tuning.ParameterTuningProblem
+
+state = 				ec.simple.SimpleEvolutionState
+init = 					ec.simple.SimpleInitializer
+finish = 	        		ec.simple.SimpleFinisher
+exch = 					ec.simple.SimpleExchanger
+breed =					ec.simple.SimpleBreeder
+eval =					ec.simple.SimpleEvaluator
+stat =					ec.simple.SimpleStatistics
+generations =				50
+quit-on-run-complete =			true
+pop = 					ec.Population
+pop.subpops =				1
+pop.subpop.0 = 				ec.Subpopulation
+pop.subpop.0.duplicate-retries =	2
+pop.subpop.0.species =                  ec.vector.FloatVectorSpecies
+pop.subpop.0.species.pipe = 		ec.vector.breed.VectorMutationPipeline
+pop.subpop.0.species.pipe.source.0 = 	ec.vector.breed.VectorCrossoverPipeline
+pop.subpop.0.species.pipe.source.0.source.0 = ec.select.TournamentSelection
+pop.subpop.0.species.pipe.source.0.source.1 = same
+
+pop.subpop.0.species.fitness =		ec.simple.SimpleFitness
+pop.subpop.0.species.ind =		ec.vector.DoubleVectorIndividual
+pop.subpop.0.species.mutation-bounded =	true
+
+# Default legal values for weights
+pop.subpop.0.species.min-gene =	0.0
+pop.subpop.0.species.max-gene =	1.0
+
+# 0) interestThreshold
+# 1) interestThresholdNoise
+# 2) interestChangeRate
+# 3) participationChangeRate
+# 4) participationMultiplier
+# 5) leaderExpertise
+# 6) leaderExpertiseNoise
+# 7) leaderPassion
+# 8) leaderPassionNoise
+# 9) friendRuleWeight
+# 10) choiceRuleWeight
+# 11) parentRuleWeight
+# 12) leaderRuleWeight
+
+# Interest Threshold
+pop.subpop.0.species.min-gene.0 = 0.85
+pop.subpop.0.species.max-gene.0 = 0.95
+#pop.subpop.0.species.mutation-prob.0 = 0
+# Interest threshold noise
+pop.subpop.0.species.min-gene.1 = 0.0
+pop.subpop.0.species.max-gene.1 = 1.0
+# Interest change rate
+pop.subpop.0.species.min-gene.2 = 0.001
+pop.subpop.0.species.max-gene.2 = 0.001
+pop.subpop.0.species.mutation-prob.2 = 0
+# Participation change rate
+pop.subpop.0.species.min-gene.3 = 0.000
+pop.subpop.0.species.max-gene.3 = 1.000
+#pop.subpop.0.species.mutation-prob.3 = 0
+# Participation multiplier
+pop.subpop.0.species.min-gene.4 = 0.1
+pop.subpop.0.species.max-gene.4 = 1.0
+#pop.subpop.0.species.mutation-prob.4 = 0
+# Leader expertise
+pop.subpop.0.species.min-gene.5 = 0.0
+pop.subpop.0.species.max-gene.5 = 1.0
+# Leader expertise noise
+pop.subpop.0.species.min-gene.6 = 0.0
+pop.subpop.0.species.max-gene.6 = 1.0
+# Leader passion
+pop.subpop.0.species.min-gene.7 = 0.0
+pop.subpop.0.species.max-gene.7 = 1.0
+# Leader passion noise
+pop.subpop.0.species.min-gene.8 = 0.0
+pop.subpop.0.species.max-gene.8 = 1.0
+
+# Friend rule weight
+pop.subpop.0.species.min-gene.9 = 0.0
+pop.subpop.0.species.max-gene.9 = 1.0
+# Choice rule weight
+pop.subpop.0.species.min-gene.10 = 0.0
+pop.subpop.0.species.max-gene.10 = 1.0
+# Parent rule weight
+pop.subpop.0.species.min-gene.11 = 0.0
+pop.subpop.0.species.max-gene.11 = 1.0
+# Leader rule weight
+pop.subpop.0.species.min-gene.12 = 0.0
+pop.subpop.0.species.max-gene.12 = 1.0
+
+
+# Only need to specify these if they're overriding the default values
+
+
+# You can change this to whatever you want, though Booth requires a genome size of 2
+pop.subpop.0.species.genome-size = 13
+
+# ECJ will complain if this isn't set even if we don't use it, so here's a default
+pop.subpop.0.species.crossover-type = two
+
+select.tournament.size = 		2
+pop.subpop.0.species.mutation-prob =  1.0
+pop.subpop.0.species.mutation-stdev = 0.05
+pop.subpop.0.species.mutation-type = gauss
+
+pop.subpop.0.size =			100
+stat.file				$out.stat
+
+fitness-metric	= KS

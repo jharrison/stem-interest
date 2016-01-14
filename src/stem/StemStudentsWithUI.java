@@ -1,7 +1,10 @@
-	package stem;
+package stem;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Map;
 
 import org.jfree.chart.ChartFactory;
@@ -22,6 +25,7 @@ import edu.uci.ics.jung.algorithms.metrics.Metrics;
 import edu.uci.ics.jung.algorithms.shortestpath.DistanceStatistics;
 
 import masoncsc.util.ChartUtils;
+import masoncsc.util.Stats;
 
 import sim.display.ChartUtilities;
 import sim.display.ChartUtilities.ProvidesDoubleDoubles;
@@ -45,6 +49,7 @@ import sim.util.media.chart.ScatterPlotGenerator;
 import sim.util.media.chart.ScatterPlotSeriesAttributes;
 import sim.util.media.chart.TimeSeriesChartGenerator;
 import stem.Student.Encouragement;
+import stem.activities.ActivityType;
 import stem.network.NetworkDisplay;
 
 /**
@@ -551,6 +556,144 @@ public class StemStudentsWithUI extends GUIState
 			}
 			
 			return array;
+		}
+		
+		public double[] getParticipationRates() {
+			double[] array = new double[model.students.size()];
+
+			for (int i = 0; i < model.students.size(); i++) {
+				Student s = model.students.get(i);
+				array[i] = s.participationRates[this.activity];
+			}
+			
+			return array;
+		}
+		
+		double[] expectedActivitiesPerDay = new double[StemStudents.numStudents];
+		/**
+		 * Get the expected number of activities per day. 
+		 * @return
+		 */
+		public double[] getExpectedActivitiesPerDay() {
+			Arrays.fill(expectedActivitiesPerDay, 0);
+			if ((model.students == null) || model.students.isEmpty())
+				return expectedActivitiesPerDay;
+			
+			for (int i = 0; i < StemStudents.numStudents; i++) {
+				int activitiesPerYear = 0;
+				Student s = model.students.get(i);
+				for (int j = 0; j < StemStudents.NUM_ACTIVITY_TYPES; j++) {
+					ActivityType at = model.activityTypes.get(j);
+					double opportunities = at.calcOpportunitiesPerYear() / (double)at.daysBetween;
+					activitiesPerYear += opportunities * s.participationRates[j];
+				}
+				expectedActivitiesPerDay[i] = activitiesPerYear / 365.0;
+			}
+			
+			return expectedActivitiesPerDay;
+		}
+
+		
+		public double[] getTotalActivitiesPerDay() {
+			if ((model == null) || (model.dataLogger == null) || (model.dataLogger.activitiesDoneWatcher == null))
+				return null;
+			
+			double[] totalActivitiesPerDay = new double[StemStudents.numStudents];
+			double[] adHoc = model.dataLogger.activitiesDoneWatcher.getDataPoint();
+			double[] organized = model.dataLogger.organizedActivitiesDoneWatcher.getDataPoint();
+
+			for (int i = 0; i < StemStudents.numStudents; i++) {
+				totalActivitiesPerDay[i] = adHoc[i] + organized[i];
+			}
+			
+			return totalActivitiesPerDay;
+		}
+		
+		public double[] getTotalActivitiesPerDayAveraged() {
+			double[] totalActivitiesPerDay = new double[StemStudents.numStudents];
+			double years = Math.max(1, model.years);
+
+			for (int i = 0; i < StemStudents.numStudents; i++) {
+				totalActivitiesPerDay[i] = model.totalActivities[i] / years;
+			}
+			
+			return totalActivitiesPerDay;
+		}
+		
+		public boolean getCompareActivitiesPerDay() { return false; }
+		public void setCompareActivitiesPerDay(boolean val) {
+			double[] expected = getExpectedActivitiesPerDay();
+			double[] actual = getTotalActivitiesPerDay();
+			double[] averaged = getTotalActivitiesPerDayAveraged();
+
+			double abe = Stats.calcAreaBetweenECDFs(expected, actual);
+			double abeAve = Stats.calcAreaBetweenECDFs(expected, averaged);
+			System.out.format("ActivitiesPerDay ABE, expected vs actual: %.3f, expected vs average of %d years: %.3f\n", abe, (int)model.years, abeAve);
+			
+			int[] expectedCounts = getExpectedActivityCounts();
+			int[] actualCounts = model.dataLogger.activityCounts;
+			for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++) {
+				ActivityType at = model.activityTypes.get(i);
+				System.out.format("Expected: %6d, Actual %6d, (%s)\n", expectedCounts[i], actualCounts[i], at.name);
+			}
+			
+		}
+		
+		private double canDoToday(ActivityType at, int day) {
+			Calendar date = new GregorianCalendar(2012, 8, 4);	// Sept 4th. Month is zero-based for some strange reason
+			date.add(Calendar.DATE, day);
+			
+			boolean schoolDay = model.isSchoolDay(date);
+			boolean weekend = model.isWeekend(date);
+			boolean summer = model.isSummer(date);
+
+			// is this a valid day for this activity?
+			if ((schoolDay && !at.onSchoolDay) ||
+				(weekend && !at.onWeekendDay) ||
+				(summer && !at.onSummer))
+				return 0;
+			
+			return 1;
+		}
+		
+		private double calcExpectedActivitiesPerYear(ActivityType at, double p) {
+			double[] e = new double[365];
+			int b = at.daysBetween;
+
+			for (int i = 0; i < 365; i++) {
+				e[i] = canDoToday(at, i);
+				if (e[i] == 0)
+					continue;
+				
+				e[i] = p;
+				
+				for (int j = 1; j < b; j++) {
+					if ((i-j) >= 0)
+						e[i] *= (1-e[i-j]);
+				}		
+				
+			}
+			
+			double totalExp = 0;
+			for (int i = 0; i < 365; i++)
+				totalExp += e[i];
+
+			return totalExp;
+		}
+		
+		public int[] getExpectedActivityCounts() {
+			int[] counts = new int[StemStudents.NUM_ACTIVITY_TYPES];
+			Arrays.fill(counts, 0);
+			for (int i = 0; i < StemStudents.NUM_ACTIVITY_TYPES; i++) {
+				ActivityType at = model.activityTypes.get(i);
+				double opportunities = at.calcOpportunitiesPerYear() / (double)at.daysBetween;
+				for (Student s : model.students) {
+//					counts[i] += Math.ceil(opportunities * s.participationRates[i]);
+					counts[i] += calcExpectedActivitiesPerYear(at, s.participationRates[i]);
+				}
+			}
+			
+			return counts;
 		}
 		
 	}

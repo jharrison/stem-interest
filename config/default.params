@@ -3,3 +3,73 @@ print-params = true
 
 
 CoordinationLevel = 0.0
+
+
+
+# Best one using KS statistic
+# Batch 01
+#InterestThreshold = 0.7670956436133866
+#InterestThresholdNoise = 0.36322658948450803
+#InterestChangeRate = 0.001
+#ParticipationChangeRate = 0.0
+#ParticipationMultiplier = 1.0
+#LeaderExpertise = 0.15626166519656262
+#LeaderExpertiseNoise = 0.02854762344538568
+#LeaderPassion = 0.09623030163399478
+#LeaderPassionNoise = 0.20309058882522432
+#FriendRuleWeight = 0.03312049887547014
+#ChoiceRuleWeight = 0.23575997632996185
+#ParentRuleWeight = 0.3021476555559125
+#LeaderRuleWeight = 0.6398431394647569
+
+# KS Statistic, let InterestThreshold range from 0.85 to 0.95
+# Batch 05
+InterestThreshold = 0.94842540355904636
+InterestThresholdNoise = 0.00946183819792444
+InterestChangeRate = 0.00100000000000000
+ParticipationChangeRate = 0.00000000000000000
+ParticipationMultiplier = 1.00000000000000000
+LeaderExpertise = 0.18071591495957151
+LeaderExpertiseNoise = 0.06630778916338272
+LeaderPassion = 0.11527919391589679
+LeaderPassionNoise = 0.07878072569768096
+FriendRuleWeight = 0.20004421974661746
+ChoiceRuleWeight = 0.23159159447967126
+ParentRuleWeight = 0.32469239696194879
+LeaderRuleWeight = 0.47357174957063619
+
+#InterestThreshold = 0.95
+#InterestThresholdNoise = 0.19038469272178146
+#InterestChangeRate = 0.001
+#ParticipationChangeRate = 0.0
+#ParticipationMultiplier = 1.0
+#LeaderExpertise = 0.08764412316899747
+#LeaderExpertiseNoise = 0.18556888134263366
+#LeaderPassion = 0.032270299912660234
+#LeaderPassionNoise = 0.3581155462140681
+#FriendRuleWeight = 0.05760752510956673
+#ChoiceRuleWeight = 0.5582164731307246
+#ParentRuleWeight = 0.029928072876952018
+#LeaderRuleWeight = 0.4887439567819521
+
+#InterestThreshold = 0.9122684438900477
+#InterestThresholdNoise = 0.06549448176801141
+#InterestChangeRate = 0.001
+#ParticipationChangeRate = 0.30591251542332404
+#ParticipationMultiplier = 8.820979832581677E-4
+#LeaderExpertise = 0.3640367167073035
+#LeaderExpertiseNoise = 0.576619136167764
+#LeaderPassion = 0.08632578782625253
+#LeaderPassionNoise = 0.6354882337971963
+#FriendRuleWeight = 0.5786385928709333
+#ChoiceRuleWeight = 0.6196297261307846
+#ParentRuleWeight = 0.06880737327373893
+#LeaderRuleWeight = 0.39218670959525825
+
+
+# This was for testing the actual vs expected number of activities 
+#InterestChangeRate = 0.0
+#ParticipationChangeRate = 0.0
+#ParticipationMultiplier = 1.0
+#MaxActivitiesPerDay = 100
+
